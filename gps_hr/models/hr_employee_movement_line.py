@@ -1,0 +1,128 @@
+# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+from odoo import api,fields, models,_, SUPERUSER_ID
+from odoo.exceptions import ValidationError
+from odoo.tools.config import config
+
+                
+class HrEmployeeMovementLine(models.Model):
+    _inherit = "hr.employee.document"
+    _name="hr.employee.movement.line"
+    _description="Detalle de Movimientos de Empleados"
+
+    date_process = fields.Date("Fecha de Vencimiento", default=fields.Date.today(), required=True)
+
+    employee_id = fields.Many2one("hr.employee", "Empleado", required=True)
+    contract_id = fields.Many2one("hr.contract", "Contrato", required=True)
+
+    type = fields.Selection([("discount", "Descuento Diferido"),
+                             ("batch", "Lote Manual"),
+                             ("batch_automatic", "Lote Automático")], "Tipo", required=True, default="discount")
+
+    process_id=fields.Many2one("hr.employee.movement","Documento",ondelete="cascade")
+
+    total_historic=fields.Monetary("Valor Original",digits=(16,2),default=0.00,required=True)
+    total=fields.Monetary("Valor",digits=(16,2),default=0.01,required=True)
+    total_to_paid=fields.Monetary("Por Aplicar",digits=(16,2),default=0.00,required=False,store=True,compute="_compute_total")
+    total_paid=fields.Monetary("Aplicado",digits=(16,2),default=0.00,required=False,store=True,compute="_compute_total")
+    total_pending=fields.Monetary("Pendiente",digits=(16,2),default=0.00,required=False,store=True,compute="_compute_total")
+
+    quota=fields.Integer(string="Cuota",default=1,required=True)
+
+    locked_edit=fields.Boolean(related="process_id.locked_edit",store=False,readonly=True)
+    payment = fields.Boolean(related="process_id.payment", store=False, readonly=True)
+    account = fields.Boolean(related="process_id.account", store=False, readonly=True)
+
+    payslip_input_ids=fields.One2many("hr.payslip.input","movement_id","Aplicaciones en Nomina")
+
+    _order="process_id desc,id asc"
+
+    def replicate_fields_parent(self):
+        self.company_id=self.process_id.company_id.id
+        self.currency_id = self.process_id.currency_id.id
+        self.rule_id = self.process_id.rule_id.id
+        self.category_id = self.process_id.category_id.id
+        self.category_code = self.process_id.category_code
+        self.type = self.process_id.type
+        if self.process_id.employee_id:
+            self.employee_id=self.process_id.employee_id.id
+        if self.process_id.contract_id:
+            self.contract_id=self.process_id.contract_id.id
+            self.job_id = self.process_id.contract_id.job_id.id
+            self.department_id = self.process_id.contract_id.department_id.id
+        else:
+            self.contract_id=False
+            self.job_id=False
+            self.department_id=False
+
+    @api.onchange('employee_id','date_process')
+    def onchange_rule_employee_id(self):
+        brw_employee = self.employee_id
+        self.env["hr.employee.movement"].set_employee_info(self, brw_employee)
+        self.update_date_info()
+        brw_document = self
+        brw_rule = brw_document.rule_id
+        brw_company = brw_document.company_id
+        date_process = brw_document.date_process
+        OBJ_FX = self.env["dynamic.function"].sudo()
+        if brw_rule:
+            if brw_rule.type != 'payslip':
+                variables = {"model_name": self._name,
+                                 "brw_rule": brw_rule,
+                                 "brw_company": brw_company,
+                                 "brw_contract": brw_document.contract_id,
+                                 "brw_employee": brw_employee,
+                                 "date_process": date_process,
+                                 "brw_document": brw_document
+                                 }
+                result = OBJ_FX.execute(brw_rule.domain_select, variables)
+                self.update((result.get("result", {})))
+                #########################################################
+                result = OBJ_FX.execute(brw_rule.process_select, variables)
+                values_update=result.get("result", {})
+                if "total" in values_update:
+                    values_update["total_historic"]=values_update["total"]
+                self.update(values_update)
+        else:
+            self.name = None
+            self.total=0.00
+            self.total_historic=0.00
+
+    def action_approved(self):
+        for brw_each in self:
+            if brw_each.total<=0.00:
+                raise ValidationError(_("La linea con ID # %s debe ser mayor a 0.00 para %s cuota %s") % (brw_each.id,brw_each.employee_id.name,brw_each.quota))
+            brw_each.validate_employee_values()
+        values =super(HrEmployeeMovementLine,self).action_approved()
+        self._compute_total()
+        return values
+
+    @api.onchange('total')
+    def onchange_total(self):
+        warning={}
+        if self.total<0.00:
+            self.total=0.00
+            self.total_historic=0.00
+            warning={"title":_("Advertencia"),"message":_("El valor ingresado debe ser superior a 0.00. Si el valor es igual a 0.00, debe ser eliminado.")}
+        if warning:
+            return {"warning":warning}
+
+    @api.depends('state','payslip_input_ids','payslip_input_ids.amount','payslip_input_ids.payslip_id')
+    def _compute_total(self):
+        for brw_each in self:
+            brw_each.update_total()
+
+    def update_total(self):
+        DEC = 2
+        for brw_each in self:
+            total_to_paid=0.00
+            total_paid=0.00
+            if brw_each.state not in ("draft","cancelled"):#paid,#approved
+                total_to_paid = brw_each.total#siempre tomara el valor a pagar como reflejo de lo que debera pagar
+                for brw_line in brw_each.payslip_input_ids:
+                    if brw_line.payslip_id.state!='cancel':
+                        total_paid += brw_line.amount
+            brw_each.total_to_paid = round(total_to_paid, DEC)
+            brw_each.total_paid = round(total_paid, DEC)
+            brw_each.total_pending = round(total_to_paid-total_paid, DEC)

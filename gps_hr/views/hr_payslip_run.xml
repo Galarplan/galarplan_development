@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+<odoo>
+	<data>
+
+
+                <record model="ir.ui.view"
+                id="hr_payslip_run_form_view_inherit">
+            <field name="name">hr.payslip.run.view.inherit</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+            <field name="arch" type="xml">
+
+                <button name="%(hr_payroll.action_hr_payslip_by_employees)d" position="attributes">
+                    <attribute name="icon">fa-users</attribute>
+                </button>
+   <field name="country_code" position="after">
+       <field name="currency_id" invisible="1" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+            <field name="total_in" />
+            <field name="total_out" />
+            <field name="total_provision" />
+            <field name="total" />
+
+            </field>
+
+                <field name="company_id" position="after">
+                    <field name="month_id" attrs="{'readonly':[('state','!=','draft')]}"
+                    options="{'no_create':True,'no_edit':True,'no_open':True}"
+                    />
+                    <field name="year" attrs="{'readonly':[('state','!=','draft')]}"/>
+                </field>
+<field name="company_id" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+
+
+ <label for="date_start"  position="before">
+      <field name="type_struct_id" required="1"
+             attrs="{'readonly':[('state','!=','draft')]}"
+             options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+ </label>
+
+
+
+
+
+
+                 <field name="company_id" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                    <attribute name="force_save">1</attribute>
+                     <attribute name="options">{'no_create':True,'no_edit':True,'no_open':True}</attribute>
+                </field>
+
+
+
+                <xpath expr="//form/sheet" position="inside">
+            <notebook>
+                <page string="Detalle" name="page_detalle">
+                    <field name="slip_ids" context="{'hide_parent':True}" attrs="{'readonly':[('state','!=','draft')]}" />
+                </page>
+                <page string="Asiento" name="page_moves" attrs="{'invisible':[('state','in',('draft','cancel'))]}">
+                    <field name="move_line_ids"  readonly="1"/>
+                </page>
+
+
+
+            </notebook>
+
+                </xpath>
+
+
+                <button name="action_validate" position="after">
+                    <button name="restore_movements" type="object"
+                            string="Restaurar"
+                             icon="fa-pencil" attrs="{'invisible':['|',('slip_ids','=',[]),('state','!=','draft')]}"
+                            />
+                    <button name="compute_sheets" type="object"
+                            string="Calcular"
+                          icon="fa-cogs" attrs="{'invisible':['|',('slip_ids','=',[]),('state','!=','draft')]}"
+                            />
+                    <button name="action_verify" type="object"
+                            string="Confirmar"
+                            icon="fa-check" attrs="{'invisible':['|',('slip_ids','=',[]),('state','!=','draft')]}"
+                            />
+                </button>
+                <button name="action_validate" position="attributes">
+    <attribute name="invisible">1</attribute>
+</button>
+ <button name="action_draft" position="attributes">
+    <attribute name="icon">fa-rotate-left</attribute>
+</button>
+            </field>
+                </record>
+
+
+
+              <record model="ir.ui.view"
+                id="hr_payslip_run_tree_view_inherit">
+            <field name="name">hr.payslip.run.tree.view.inherit</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_tree"/>
+            <field name="arch" type="xml">
+
+
+   <field name="company_id" position="after">
+            <field name="total_in" />
+            <field name="total_out" />
+            <field name="total_provision" />
+            <field name="total" />
+ <field name="currency_id" invisible="1" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+            </field>
+            </field>
+              </record>
+
+	</data>
+
+</odoo>

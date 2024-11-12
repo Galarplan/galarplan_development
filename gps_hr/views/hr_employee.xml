@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<odoo>
+	<data>
+
+	
+      <record model="ir.ui.view"
+                id="hr_employee_form_view_inherit">
+            <field name="name">hr.employee.view.inherit</field>
+            <field name="model">hr.employee</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="talent_human.custom_view_employee_form"/>
+            <field name="arch" type="xml">
+
+	<field name="condicion_rol" position="after">
+		<field name="previous_day_contract" />
+	</field>
+			</field>
+	  </record>
+
+
+
+	</data>
+</odoo>

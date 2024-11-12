@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+
+ <menuitem name="Lotes de Egresos" id="hr_employee_movement_view_out_menu"
+              action="hr_employee_movement_view_out_action" parent="talent_human.menu_discount_employees"
+              sequence="1" />
+              
+
+    <menuitem name="Egresos" id="hr_employee_movement_line_out_view_menu"
+              action="hr_employee_movement_line_out_view_action" parent="talent_human.menu_discount_employees"
+              sequence="2" />
+
+
+   <menuitem name="Préstamos y Anticipos" id="hr_employee_movement_discount_menu"
+              action="hr_employee_movement_view_discount_action" parent="talent_human.menu_discount_employees"
+              sequence="3" />
+              
+              <menuitem name="Cuotas de Préstamos y Anticipos" id="hr_employee_movement_line_discount_menu"
+              action="hr_employee_movement_line_discount_view_action" parent="talent_human.menu_discount_employees"
+              sequence="4" />
+
+              
+        <menuitem name="Ingresos" id="hr_employee_movement_view_in_parent_menu"
+               parent="hr.menu_hr_root"
+              sequence="7" />
+              
+                <menuitem name="Lotes de Ingresos" id="hr_employee_movement_view_in_menu"
+              action="hr_employee_movement_view_in_action" parent="hr_employee_movement_view_in_parent_menu"
+              sequence="1" />
+
+    <menuitem name="Ingresos" id="hr_employee_movement_line_in_menu"
+              action="hr_employee_movement_line_in_view_action" parent="hr_employee_movement_view_in_parent_menu"
+              sequence="2" />
+              
+
+</odoo>

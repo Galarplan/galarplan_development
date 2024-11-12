@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="hr_payslip_move_view_search"
+            model="ir.ui.view">
+        <field name="name">hr.payslip.move.search</field>
+        <field name="model">hr.payslip.move</field>
+        <field name="type">search</field>
+        <field eval="8" name="priority"/>
+        <field name="arch" type="xml">
+            <search string="Movimientos">
+
+
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_payslip_move_view_tree"
+            model="ir.ui.view">
+        <field name="name">hr.payslip.move.tree</field>
+        <field name="model">hr.payslip.move</field>
+        <field name="type">tree</field>
+        <field eval="8" name="priority"/>
+        <field name="arch" type="xml">
+            <tree string="Movimientos">
+
+                <field name="payslip_id" options="{'no_create':True,'no_edit':True,'no_open':True}" optional="hide"/>
+                <field name="rule_id"  options="{'no_create':True,'no_edit':True,'no_open':True}" optional="hide"/>
+                <field name="account_id" options="{'no_create':True,'no_edit':True,'no_open':True}" />
+                <field name="employee_id" options="{'no_create':True,'no_edit':True,'no_open':True}" />
+                <field name="debit" sum="total" options="{'currency_field': 'currency_id'}"/>
+                <field name="credit" sum="total" options="{'currency_field': 'currency_id'}"/>
+      <field name="currency_id" invisible="1"   options="{'no_create':True,'no_open':True,'no_edit':True}"  />
+
+
+            </tree>
+        </field>
+    </record>
+
+</odoo>

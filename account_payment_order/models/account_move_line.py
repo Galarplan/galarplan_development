@@ -24,7 +24,7 @@ class AccountMoveLine(models.Model):
         string="Payment lines",
         check_company=True,
     )
-
+    
     @api.depends("move_id", "move_id.partner_bank_id", "move_id.payment_mode_id")
     def _compute_partner_bank_id(self):
         for ml in self:

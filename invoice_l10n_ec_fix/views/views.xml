@@ -1,0 +1,60 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+<!--
+    <record model="ir.ui.view" id="invoice_l10n_ec_fix.list">
+      <field name="name">invoice_l10n_ec_fix list</field>
+      <field name="model">invoice_l10n_ec_fix.invoice_l10n_ec_fix</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name"/>
+          <field name="value"/>
+          <field name="value2"/>
+        </tree>
+      </field>
+    </record>
+-->
+
+    <!-- actions opening views on models -->
+<!--
+    <record model="ir.actions.act_window" id="invoice_l10n_ec_fix.action_window">
+      <field name="name">invoice_l10n_ec_fix window</field>
+      <field name="res_model">invoice_l10n_ec_fix.invoice_l10n_ec_fix</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+-->
+
+    <!-- server action to the one above -->
+<!--
+    <record model="ir.actions.server" id="invoice_l10n_ec_fix.action_server">
+      <field name="name">invoice_l10n_ec_fix server</field>
+      <field name="model_id" ref="model_invoice_l10n_ec_fix_invoice_l10n_ec_fix"/>
+      <field name="state">code</field>
+      <field name="code">
+        action = {
+          "type": "ir.actions.act_window",
+          "view_mode": "tree,form",
+          "res_model": model._name,
+        }
+      </field>
+    </record>
+-->
+
+    <!-- Top menu item -->
+<!--
+    <menuitem name="invoice_l10n_ec_fix" id="invoice_l10n_ec_fix.menu_root"/>
+-->
+    <!-- menu categories -->
+<!--
+    <menuitem name="Menu 1" id="invoice_l10n_ec_fix.menu_1" parent="invoice_l10n_ec_fix.menu_root"/>
+    <menuitem name="Menu 2" id="invoice_l10n_ec_fix.menu_2" parent="invoice_l10n_ec_fix.menu_root"/>
+-->
+    <!-- actions -->
+<!--
+    <menuitem name="List" id="invoice_l10n_ec_fix.menu_1_list" parent="invoice_l10n_ec_fix.menu_1"
+              action="invoice_l10n_ec_fix.action_window"/>
+    <menuitem name="Server to list" id="invoice_l10n_ec_fix" parent="invoice_l10n_ec_fix.menu_2"
+              action="invoice_l10n_ec_fix.action_server"/>
+-->
+  </data>
+</odoo>

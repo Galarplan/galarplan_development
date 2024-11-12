@@ -328,7 +328,7 @@
           <field name="model">hr.employee</field>
           <field name="inherit_id" ref="hr.view_employee_form"/>
 					<field name="arch" type="xml">
-						<xpath expr="//header/button[@name='314']" position="after">
+						<xpath expr="//header/button[@name='578']" position="after">
                             <button name="action_contact_create" string="Crear Contacto" type="object" class="btn-primary" groups="base.group_system"/>
                             <button name="action_user_create" string="Crear Usuario" type="object" class="btn-primary" groups="base.group_system"/>
                         </xpath>

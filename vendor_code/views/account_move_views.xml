@@ -1,0 +1,15 @@
+<odoo>
+    <record id="view_move_form_inherit_seller" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.seller</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_date']" position="after">
+                <field name="seller_id" 
+                       options="{'no_open': True}" 
+                       placeholder="Seleccionar vendedor"
+                       attrs="{'invisible': [('move_type', 'not in', ['out_invoice', 'out_refund'])]}" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

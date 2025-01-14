@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_document_digitalization_all,Document Digitalization (All),model_document_digitalization,,1,1,1,1

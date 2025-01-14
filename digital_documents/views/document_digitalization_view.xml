@@ -1,0 +1,47 @@
+<odoo>
+    <record id="view_document_digitalization_form" model="ir.ui.view">
+        <field name="name">document.digitalization.form</field>
+        <field name="model">document.digitalization</field>
+        <field name="arch" type="xml">
+            <form string="Document Digitalization" edit="0" create="1">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+                            name="set_to_complete"
+                            string="Mark as Complete"
+                            type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [('state', '=', 'complete')]}"/>
+                    </div>
+                    <group>
+                        <field name="name" placeholder="Enter document or batch name" attrs="{'readonly': [('state', '=', 'complete')]}"/>
+                        <field name="attachment_ids" widget="many2many_binary" options="{'create': True}" attrs="{'readonly': [('state', '=', 'complete')]}"/>
+                    </group>
+                    <group>
+                        <field name="state" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_document_digitalization_tree" model="ir.ui.view">
+        <field name="name">document.digitalization.tree</field>
+        <field name="model">document.digitalization</field>
+        <field name="arch" type="xml">
+            <tree string="Document Digitalization">
+                <field name="name"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_document_digitalization" model="ir.actions.act_window">
+        <field name="name">Documents</field>
+        <field name="res_model">document.digitalization</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_document_digitalization_root" name="Document Digitalization" sequence="10" />
+    <menuitem id="menu_document_digitalization" name="Documents" parent="menu_document_digitalization_root" action="action_document_digitalization" sequence="10"/>
+</odoo>

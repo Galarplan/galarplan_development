@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- Tree View for Credit Request (Natural) -->
+    <record id="view_credit_request_tree_natural" model="ir.ui.view">
+        <field name="name">credit.request.tree.natural</field>
+        <field name="model">customer.request</field>
+        <field name="arch" type="xml">
+            <tree string="Credit Request (Natural)">
+                <field name="name"/>
+                <field name="personal_name"/>
+                <field name="document_type"/>
+                <field name="identity_document"/>
+                <field name="state"/>
+                <field name="request_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View for Credit Request (Natural) -->
+    <record id="view_credit_request_form_natural" model="ir.ui.view">
+        <field name="name">credit.request.form.natural</field>
+        <field name="model">customer.request</field>
+        <field name="arch" type="xml">
+            <form string="Credit Request (Natural)">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="personal_name"/>
+                        <field name="document_type"/>
+                        <field name="identity_document"/>
+                        <field name="sex_type"/>
+                        <field name="age"/>
+                        <field name="birthday"/>
+                        <field name="nationality"/>
+                        <field name="civil_state"/>
+                        <field name="state"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Credit Request (Natural) -->
+    <record id="action_credit_request_natural" model="ir.actions.act_window">
+        <field name="name">Credit Request (Natural)</field>
+        <field name="res_model">customer.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_credit_request_tree_natural"/>
+        <field name="domain">[('credit_request_type', '=', 'natural')]</field>
+        <field name="context">{'default_credit_request_type': 'natural'}</field>
+    </record>       
+
+</odoo>

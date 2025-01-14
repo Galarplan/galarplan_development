@@ -11,9 +11,14 @@
             <field name="type">form</field>
             <field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
             <field name="arch" type="xml">
+                <field name="journal_id" position="after">
+        <field name="account" />
+    <field name="legal_iess" invisible="1" />
+</field>
+
                 <xpath expr="//page[@name='salary_rules']" position="replace">
       <page name="salary_rules" string="Reglas Salarios">
- <field name="rule_ids" attrs="{'readonly': [('id', '=', False)]}" invisible="1">
+ <field name="rule_ids" domain="[('legal_iess','=',legal_iess)]" attrs="{'readonly': [('id', '=', False)]}" invisible="1">
                          <tree>
                             <field name="name"/>
                             <field name="code"/>
@@ -23,8 +28,12 @@
                          </tree>
                       </field>
 <newline/>
-    <field name="struct_rule_ids" />
+    <field name="struct_rule_ids" domain="[('legal_iess','=',legal_iess)]"  />
       </page>
+
+
+
+
 </xpath>
 
             </field>

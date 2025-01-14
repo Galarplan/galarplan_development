@@ -11,7 +11,21 @@ class HrEmployeeMovementLine(models.Model):
     _name="hr.employee.movement.line"
     _description="Detalle de Movimientos de Empleados"
 
+    @api.model
+    def _get_default_company_id(self):
+        return self._context.get("default_company_id",False)
+
+    company_id = fields.Many2one(
+        "res.company",
+        string="Compañia",
+        required=True,
+        copy=False ,default=_get_default_company_id
+    )
+
     date_process = fields.Date("Fecha de Vencimiento", default=fields.Date.today(), required=True)
+
+    category_id = fields.Many2one("hr.salary.rule.category", string="Categoría", compute="compute_category_id", store=True)
+
 
     employee_id = fields.Many2one("hr.employee", "Empleado", required=True)
     contract_id = fields.Many2one("hr.contract", "Contrato", required=True)
@@ -37,6 +51,8 @@ class HrEmployeeMovementLine(models.Model):
     payslip_input_ids=fields.One2many("hr.payslip.input","movement_id","Aplicaciones en Nomina")
 
     _order="process_id desc,id asc"
+
+    _check_company_auto = True
 
     def replicate_fields_parent(self):
         self.company_id=self.process_id.company_id.id

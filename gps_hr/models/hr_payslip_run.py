@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 # -*- encoding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import api,fields, models,_
-from odoo.exceptions import ValidationError,UserError
-from ...calendar_days.tools import CalendarManager,DateManager,MonthManager
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError, UserError
+
+from ...calendar_days.tools import CalendarManager, DateManager, MonthManager
 
 dtObj = DateManager()
-caObj=CalendarManager()
+caObj = CalendarManager()
+
 
 class HrPayslipRun(models.Model):
-    _inherit="hr.payslip.run"
+    _inherit = "hr.payslip.run"
 
     @api.model
     def get_default_year(self):
@@ -19,7 +21,7 @@ class HrPayslipRun(models.Model):
     @api.model
     def get_default_month_id(self):
         today = fields.Date.context_today(self)
-        srch=self.env["calendar.month"].sudo().search([('value','=',today.month)])
+        srch = self.env["calendar.month"].sudo().search([('value', '=', today.month)])
         return srch and srch[0].id or False
 
     @api.model
@@ -30,54 +32,70 @@ class HrPayslipRun(models.Model):
 
     @api.model
     def _get_default_type_struct_id(self):
-        srch=self.env["hr.payroll.structure.type"].sudo().search([])
+        srch = self.env["hr.payroll.structure.type"].sudo().search([])
         return srch and srch[0].id or False
 
-    company_id = fields.Many2one("res.company", "Compañía", required=True, default=_get_default_company_id)
+    company_id = fields.Many2one("res.company", "Compañía", required=True,default=lambda self: self.env.company,)
     currency_id = fields.Many2one(string="Moneda", related="company_id.currency_id", store=False, readonly=True)
 
-    month_id = fields.Many2one("calendar.month", "Mes", required=True,default=get_default_month_id)
-    year = fields.Integer("Año", required=True,default=get_default_year)
+    month_id = fields.Many2one("calendar.month", "Mes", required=True, default=get_default_month_id)
+    year = fields.Integer("Año", required=True, default=get_default_year)
 
-    total_in = fields.Monetary("Ingresos", digits=(16, 2), required=False, default=0.00, store=True,compute="_compute_total")
-    total_out = fields.Monetary("Egresos", digits=(16, 2), required=False, default=0.00, store=True,compute="_compute_total")
-    total_provision = fields.Monetary("Provisión", digits=(16, 2), required=False, default=0.00, store=True,compute="_compute_total")
+    total_in = fields.Monetary("Ingresos", digits=(16, 2), required=False, default=0.00, store=True,
+                               compute="_compute_total")
+    total_out = fields.Monetary("Egresos", digits=(16, 2), required=False, default=0.00, store=True,
+                                compute="_compute_total")
+    total_provision = fields.Monetary("Provisión", digits=(16, 2), required=False, default=0.00, store=True,
+                                      compute="_compute_total")
     total = fields.Monetary("Total", digits=(16, 2), required=False, default=0.00, store=True, compute="_compute_total")
 
-    type_struct_id=fields.Many2one("hr.payroll.structure.type","Tipo",required=True,default=_get_default_type_struct_id)
+    type_struct_id = fields.Many2one("hr.payroll.structure.type", "Tipo", required=True,
+                                     default=_get_default_type_struct_id)
 
-    move_line_ids=fields.One2many("hr.payslip.move","payslip_run_id","Detalle de Asiento")
+    legal_iess = fields.Boolean(string="Para Afiliados", default=True, readonly=True, related="type_struct_id.legal_iess")
+
+    move_line_ids = fields.One2many("hr.payslip.move", "payslip_run_id", "Detalle de Asiento")
+
+    date_process = fields.Date(string="Fecha de Proceso", required=False, help="Fecha de Contabilización del Rol")
+
+    start_job_mail = fields.Boolean("Enviar por correo", default=False)
+    end_job_mail = fields.Boolean("Finalizado envio de correo", default=False)
+
+    _check_company_auto = True
 
     @api.depends('slip_ids', 'state')
     def _compute_state_change(self):
         pass
 
-    @api.onchange('company_id','month_id','year','type_struct_id')
+    @api.onchange('company_id', 'month_id', 'year', 'type_struct_id')
     def onchange_company_dates(self):
-        name=None
+        name = None
         if self.company_id and self.month_id and self.year:
-            name="NOMINA DE %s DEL %s PARA %s(%s)" % (self.month_id.name,self.year,self.company_id.name,self.type_struct_id and self.type_struct_id.name or '')
-            name=name.upper()
+            name = "NOMINA DE %s DEL %s PARA %s(%s)" % (
+                self.month_id.name, self.year, self.company_id.name,
+                self.type_struct_id and self.type_struct_id.name or '')
+            name = name.upper()
         self.name = name
-        self.slip_ids=[(5,)]
+        self.slip_ids = [(5,)]
 
-    @api.onchange('month_id','year')
+    @api.onchange('month_id', 'year')
     def onchange_year_month_id(self):
         if self.month_id and self.year:
-            self.date_start=dtObj.create(self.year,self.month_id.value,1)
-            self.date_end = dtObj.create(self.year, self.month_id.value, caObj.days(self.year,self.month_id.value))
+            self.date_start = dtObj.create(self.year, self.month_id.value, 1)
+            self.date_end = dtObj.create(self.year, self.month_id.value, caObj.days(self.year, self.month_id.value))
         else:
-            self.date_start=None
-            self.date_end=None
-        self.slip_ids=[(5,)]
-        
+            self.date_start = None
+            self.date_end = None
+        self.date_process = self.date_end
+        self.slip_ids = [(5,)]
+
     @api.onchange('slip_ids', 'slip_ids.total_in', 'slip_ids.total_out', 'slip_ids.total_provision',
                   'slip_ids.total_payslip')
     def onchange_line_ids(self):
         self._origin.update_total()
 
     @api.depends('slip_ids', 'slip_ids.total_in', 'slip_ids.total_out', 'slip_ids.total_provision',
-                  'slip_ids.total_payslip')
+                 'slip_ids.total_payslip')
     def _compute_total(self):
         for brw_each in self:
             brw_each.update_total()
@@ -129,8 +147,8 @@ class HrPayslipRun(models.Model):
         return True
 
     @api.model
-    def validate_global_variables(self,year):
-        srch=self.env["th.legal.wages"].sudo().search([('name','=',year),('state','=',True)])
+    def validate_global_variables(self, year):
+        srch = self.env["th.legal.wages"].sudo().search([('name', '=', year), ('state', '=', True)])
         if not srch:
             raise ValidationError(_("Debes definir un salario basico para el año %s") % (year,))
 
@@ -146,23 +164,37 @@ class HrPayslipRun(models.Model):
             brw_each.validate_slips()
             for brw_payslip in brw_each.slip_ids:
                 brw_payslip.action_verify()
-            brw_each.write({"state":"verify"})
+            brw_each.write({"state": "verify"})
             brw_each.calculate_moves()
         return True
 
+    def action_draft(self):
+        for brw_each in self:
+            vals={"move_line_ids": [(5,)]}
+            if brw_each.move_id:
+                if brw_each.move_id.state != 'cancel':
+                    brw_each.move_id.button_draft()
+                    brw_each.move_id.button_cancel()
+                if brw_each.move_id.state != 'cancel':
+                    raise ValidationError(_("El documento contable %s debe estar anulado") % (brw_each.move_id.name,))
+                vals["move_id"]=False
+            brw_each.write(vals)
+        return super(HrPayslipRun, self).action_draft()
+
     def restore_movements(self):
         for brw_each in self:
-            if brw_each.state!='draft':
+            if brw_each.state != 'draft':
                 raise ValidationError(_("Esta acción solo puede ser ejecutada en un documento en 'borrador'"))
             if brw_each.slip_ids:
                 for brw_slip in brw_each.slip_ids:
                     brw_slip.restore_movements()
         return True
 
-
     def validate_slips(self):
-        OBJ_EMPLOYEE=self.env["hr.employee"].sudo()
+        OBJ_EMPLOYEE = self.env["hr.employee"].sudo()
         for brw_each in self:
+            if not brw_each.slip_ids:
+                raise ValidationError(_("Debe existir al menos un rol"))
             self._cr.execute("""SELECT
                 HP.EMPLOYEE_ID,COUNT(1)
             FROM HR_PAYSLIP_RUN HPR
@@ -176,7 +208,7 @@ class HrPayslipRun(models.Model):
                 brw_employee = OBJ_EMPLOYEE.browse(result[0][0])
                 raise ValidationError(
                     _("Solo puede existir una registro por empleado %s,%s veces en este documento") % (
-                    brw_employee.name, result[0][1]))
+                        brw_employee.name, result[0][1]))
             ###se valida documentos por reglas en el mismo mes
             self._cr.execute("""SELECT
                 HP.EMPLOYEE_ID,COUNT(1)
@@ -193,26 +225,243 @@ class HrPayslipRun(models.Model):
                     _("Solo puede existir una registro por empleado %s para %s en el periodo en curso %s del %s.existen %s registros en este periodo.") % (
                         brw_employee.name, brw_each.rule_id.name, brw_each.month_id.name, brw_each.year, result[0][1]))
 
+    def action_open_account_moves(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "hr.payslip.move",
+            "views": [[False, "tree"], [False, "form"], [False, "pivot"]],
+            "domain": [['payslip_run_id', '=', self.id]],
+            "context": {'default_payslip_run_id': self.id, 'search_default_grp_account_id': 1},
+            "name": "Detalle de Asientos",
+        }
+
     def calculate_moves(self):
+        def add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=["credit", "debit"],department_id=False):
+            if vals["rule_id"] in company_rules_conf:
+                conf_accounts = company_rules_conf[vals["rule_id"]]
+                for each_conf in conf_accounts:
+                    if each_conf["account_type"] in account_types:
+                        rule_vals = vals.copy()
+                        rule_vals["account_id"] = each_conf["account_id"]
+                        rule_vals[each_conf["account_type"]] = rule_vals["abs_total"]
+                        if department_id:
+                            department_srch=self.env["hr.salary.rule.account.analytic"].sudo().search(
+                                [('rule_account_id.rule_id','=',vals["rule_id"]),
+                                 ('rule_account_id.company_id', '=', each_conf["company_id"]),
+                                 ('rule_account_id.type', '=', "payslip"),
+                                 ('rule_account_id.account_id', '=', each_conf["account_id"]),
+                                 ('department_id', '=', department_id),
+                                 ]
+                            )
+                            if department_srch:
+                                if len(department_srch)>1:
+                                    raise ValidationError(_("Existe mas de un departamento para la configuracion de cuentas analiticas"))
+                                if department_srch[0].analytic_account_id:
+                                    rule_vals["analytic_account_id"]=department_srch[0].analytic_account_id.id
+                                if department_srch[0].account_id:
+                                    rule_vals["account_id"] = department_srch[0].account_id.id
+                        move_line_ids.append((0, 0, rule_vals))
+            return move_line_ids
+
         for brw_each in self:
-            TODAY=fields.Date.context_today(brw_each)
-            self._cr.execute("""delete from hr_payslip_move where payslip_run_id=%s;
-            insert into hr_payslip_move(
-    create_uid,write_uid,create_date,write_date,   payslip_run_id,   payslip_id,  employee_id,rule_id,account_id,debit,credit 
-            )          
-            select %s as create_uid,
-            %s as write_uid,%s as create_date,%s as write_date,
-            hpr.id as payslip_run_id,
-hp.id as payslip_id,
-hp.employee_id,
-hpl.salary_rule_id as rule_id,
-hsra.account_id,
-case when(hsra.account_type='debit') then coalesce(abs(hpl.total),0.00) else 0.00 end::numeric(16,2) as debit,
-case when(hsra.account_type='debit') then  0.00 else coalesce(abs(hpl.total),0.00) end::numeric(16,2) as credit
-from hr_payslip_run hpr
-inner join hr_payslip hp on hp.payslip_run_id=hpr.id
-inner join hr_payslip_line hpl on hpl.slip_id=hp.id
-inner join hr_salary_rule_account hsra on hsra.rule_id=hpl.salary_rule_id 
-	and hsra.company_id=hp.company_id
-	and hsra.type='payslip'
-where hpr.id=%s;   """,(brw_each.id,self._uid,self._uid,TODAY,TODAY,brw_each.id))
+            move_line_ids = [(5,)]
+            self._cr.execute("""WITH DISTINCTACCOUNTS AS (
+    SELECT DISTINCT HSRA.COMPANY_ID,HSRA.ACCOUNT_ID,
+        HSRA.ACCOUNT_TYPE,
+        HPL.SALARY_RULE_ID
+    FROM
+        HR_PAYSLIP_RUN HPR
+        INNER JOIN HR_PAYSLIP HP ON HP.PAYSLIP_RUN_ID = HPR.ID
+        INNER JOIN HR_PAYSLIP_LINE HPL ON HPL.SLIP_ID = HP.ID 
+        INNER JOIN HR_SALARY_RULE_ACCOUNT HSRA ON HSRA.RULE_ID = HPL.SALARY_RULE_ID
+            AND HSRA.COMPANY_ID = HP.COMPANY_ID
+            AND HSRA.TYPE = 'payslip' 
+    WHERE
+        HPR.ID = %s
+)
+SELECT 
+    DA.SALARY_RULE_ID AS RULE_ID,
+    JSON_AGG(
+        JSON_BUILD_OBJECT(
+            'account_id', DA.ACCOUNT_ID,
+            'account_type', DA.ACCOUNT_TYPE,
+            'company_id',DA.COMPANY_ID
+        )
+    ) AS ACCOUNTS
+FROM
+    DISTINCTACCOUNTS DA 
+GROUP BY  DA.SALARY_RULE_ID """, (brw_each.id,))
+            result_company_rules_conf = self._cr.fetchall()
+            company_rules_conf = dict(result_company_rules_conf)
+            SALARY_RULE_ID = self.env.ref("gps_hr.rule_SALARIO")
+            for brw_payslip in brw_each.slip_ids:
+                srch_lines = self.env["hr.payslip.line"].sudo().search([
+                    ('slip_id', '=', brw_payslip.id),
+                    ('abs_total', '!=', 0.00),
+                ])
+                if srch_lines:
+                    for brw_line in srch_lines:
+                        account_types = ["debit", "credit"]
+                        if brw_line.salary_rule_id == SALARY_RULE_ID:
+                            account_types = ["debit", ]
+                        vals = {
+                            "payslip_run_id": brw_each.id,
+                            "payslip_id": brw_line.slip_id.id,
+                            "employee_id": brw_line.employee_id.id,
+                            "rule_id": brw_line.salary_rule_id.id,
+                            "credit": 0.00,
+                            "debit": 0.00,
+                            "abs_total": brw_line.abs_total,
+                        }
+                        add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=account_types,department_id=brw_line.slip_id.department_id and brw_line.slip_id.department_id.id or False)
+
+                if brw_payslip.total_payslip != 0.00:
+                    vals = {
+                        "payslip_run_id": brw_each.id,
+                        "payslip_id": brw_payslip.id,
+                        "employee_id": brw_payslip.employee_id.id,
+                        "rule_id": SALARY_RULE_ID.id,
+                        "credit": 0.00,
+                        "debit": 0.00,
+                        "abs_total": brw_payslip.total_payslip,
+                    }
+                    add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=["credit"],department_id=brw_payslip.department_id and brw_payslip.department_id.id or False)
+            brw_each.write({"move_line_ids": move_line_ids})
+
+    def action_close(self):
+        DEC = 2
+        for brw_each in self:
+            if not brw_each.date_process or brw_each.date_process is None:
+                raise ValidationError(_("Debes elegir un fecha de proceso para contabilizar el Rol"))
+            # Validar los slips
+            brw_each.validate_slips()
+            # Procesar slips si existen
+            if brw_each.slip_ids:
+                brw_each.slip_ids.action_validate_slips()
+                brw_each.slip_ids.action_done()
+            if brw_each.type_struct_id.legal_iess:
+                # Inicializar totales de débito y crédito
+                debit, credit = 0.00, 0.00
+                # Calcular los totales de las líneas de movimiento
+                for brw_move_line in brw_each.move_line_ids:
+                    debit += brw_move_line.debit
+                    credit += brw_move_line.credit
+                # Redondear los totales
+                debit = round(debit, DEC)
+                credit = round(credit, DEC)
+                # Validar que el débito y el crédito sean equivalentes
+                if debit != credit:
+                    raise ValidationError(
+                        _("El debe y el haber siempre deben ser equivalentes para asegurar la correcta gestión de nuestras cuentas."))
+                brw_each.create_payslip_move()
+        # Llamar al metodo padre y devolver los valores
+        return super(HrPayslipRun, self).action_close()
+
+    def create_payslip_move(self):
+        OBJ_MOVE = self.env["account.move"]
+        OBJ_MOVE_LINE = self.env["account.move.line"]
+        OBJ_RULE = self.env["hr.salary.rule"].sudo()
+        for brw_each in self:
+            self._cr.execute("""SELECT AM.RULE_ID,AM.analytic_account_id,
+	AM.ACCOUNT_ID,
+	SUM(AM.DEBIT) AS DEBIT,
+	SUM(AM.CREDIT) AS CREDIT
+FROM
+	HR_PAYSLIP_MOVE AM
+WHERE
+	AM.PAYSLIP_RUN_ID = %s
+GROUP BY AM.RULE_ID, AM.ACCOUNT_ID,AM.analytic_account_id """, (brw_each.id,))
+            result = self._cr.fetchall()
+            if result:
+                vals = {
+                    "move_type": "entry",
+                    "name": "/",
+                    'narration': brw_each.name,
+                    'date': brw_each.date_process,
+                    'ref': "ROL # %s,%s" % (brw_each.id, brw_each.name),
+                    'company_id': brw_each.company_id.id,
+                }
+                if not brw_each.company_id.payslip_journal_id:
+                    raise ValidationError(
+                        _("Debes definir un diario de nómina para la compañia %s") % (brw_each.company_id.name,))
+                vals["journal_id"] = brw_each.company_id.payslip_journal_id.id
+                line_ids = [(5,)]
+                for rule_id, analytic_account_id,account_id, debit, credit in result:
+                    brw_rule = OBJ_RULE.browse(rule_id)
+                    each_line_vals={
+                        "name": brw_rule.name,
+                        'debit': debit,
+                        'credit': credit,
+                        'ref': vals["ref"],
+                        'account_id': account_id,
+                        'partner_id': brw_each.company_id.partner_id.id,
+                        'date': brw_each.date_process,
+                        "rule_id":brw_rule.id
+                    }
+                    if analytic_account_id:
+                        each_line_vals["analytic_distribution"]={str(analytic_account_id):100}
+                    line_ids += [(0, 0, each_line_vals)]
+                vals["line_ids"] = line_ids
+                brw_move = OBJ_MOVE.create(vals)
+                brw_move.action_post()
+                if brw_move.state != "posted":
+                    raise ValidationError(
+                        _("Asiento contable %s,id %s no fue publicado!") % (brw_move.name, brw_move.id))
+                brw_each.move_id = brw_move.id
+                srch_inputs=self.env["hr.payslip.input"].sudo().search([
+                    ('payslip_id.payslip_run_id','=',brw_each.id),
+                    ('move_line_id','!=',False)
+                ])
+                #
+                values_reconciles={}
+                if srch_inputs:
+                    for brw_input in srch_inputs:
+                        if not values_reconciles.get(brw_input.rule_id,False):
+                            values_reconciles[brw_input.rule_id]={
+                                "account_id":self.env["account.account"],
+                                "move_lines":self.env["account.move.line"],
+                                "type":brw_input.rule_id.category_id.code=='IN' and 'credit' or 'debit',
+                                "reverse_type": brw_input.rule_id.category_id.code == 'IN' and 'debit' or 'credit'
+                            }
+                        account_values_reconciles=values_reconciles[brw_input.rule_id]
+                        move_lines=account_values_reconciles["move_lines"]
+                        move_lines+=brw_input.move_line_id
+                        account_values_reconciles["account_id"] = brw_input.move_line_id.account_id
+                        account_values_reconciles["move_lines"]=move_lines
+                        values_reconciles[brw_input.rule_id]=account_values_reconciles
+                for each_reconcile_ky in values_reconciles:
+                    each_reconcile_accounts=values_reconciles[each_reconcile_ky]
+                    move_lines=each_reconcile_accounts["move_lines"]#asientos por reconciliar
+                    account=each_reconcile_accounts["account_id"]
+                    move_lines_srch=OBJ_MOVE_LINE.search([
+                        ('move_id','=',brw_move.id),
+                        ('account_id','=',account.id),
+                        ('move_id.state','=','posted')
+                    ])
+                    (move_lines+move_lines_srch).reconcile()
+            if not brw_each.move_id:
+                raise ValidationError(_("No se pudo generar el asiento contable "))
+            if brw_each.move_id.state != 'posted':
+                raise ValidationError(_("El asiento %s debe estar en estado publicado") % (brw_each.move_id.name), )
+
+    def print_report(self):
+        # Obtenemos la acción de reporte
+        action = self.env.ref('gps_hr.report_payslip_runs_report_xlsx_act')
+
+        if not action:
+            raise  ValidationError("No se pudo encontrar el reporte.")
+
+        # Retornamos la acción para imprimir el reporte
+        return action.report_action(self)
+
+    def send_mail_payslip(self):
+        for brw_each in self:
+            if brw_each.state in ("paid","close"):
+                if not brw_each.slip_ids:
+                    raise ValidationError(_("Al menos un empleado debe ser ingresado"))
+                brw_each.write({"start_job_mail":True})
+                for brw_line in brw_each.slip_ids:
+                    brw_line=brw_line.with_context({"internal_type":"batch"})
+                    brw_line.send_mail_payslip()
+        return True

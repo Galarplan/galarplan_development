@@ -1,2 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_credit_request_credit_request,credit_request.credit_request,model_credit_request_credit_request,base.group_user,1,1,1,1
+access_customer_request,access_customer_request,model_customer_request,base.group_user,1,1,1,1
+access_enterprise_request,access_enterprise_request,model_enterprise_request,base.group_user,1,1,1,1
+access_credit_cards,access_credit_cards,model_credit_cards,base.group_user,1,1,1,1
+access_provider_credit_request,access_provider_credit_request,model_provider_credit_request,base.group_user,1,1,1,1

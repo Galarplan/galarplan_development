@@ -5,6 +5,7 @@ from . import th_family_burden
 from . import th_disability_type
 from . import th_employee
 
+
 from . import th_transaction_type
 from . import th_sectorial_tables
 from . import hr_contract
@@ -46,3 +47,7 @@ from . import mail_channel
 
 #from . import res_users
 #from . import resource_calendar_attendance
+
+########
+#from . import hr_rubros
+from . import hr_gastos_deducibles

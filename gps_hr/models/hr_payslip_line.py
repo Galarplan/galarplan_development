@@ -13,3 +13,12 @@ class HrPayslipLine(models.Model):
     _order="category_id asc,amount desc"
 
     category_code=fields.Char(related="category_id.code",store=False,readonly=True)
+
+    abs_total = fields.Monetary("ABS Total",store=True,digits=(16,2), compute="_compute_abs_total")
+
+    @api.onchange('total')
+    @api.depends('total')
+    def _compute_abs_total(self):
+        DEC=2
+        for brw_each in self:
+            brw_each.abs_total=round(abs(brw_each.total or 0.00),DEC)

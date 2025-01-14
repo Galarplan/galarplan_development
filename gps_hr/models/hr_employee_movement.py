@@ -4,7 +4,6 @@
 from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.exceptions import ValidationError
 from odoo.tools.config import config
-from pkg_resources import require
 
 
 class HrEmployeeMovement(models.Model):
@@ -12,13 +11,27 @@ class HrEmployeeMovement(models.Model):
     _name = "hr.employee.movement"
     _description = "Movimientos de Empleados"
 
+    @api.model
+    def get_default_category_id(self):
+        code = self.get_default_category_code()
+        srch_code = self.env["hr.salary.rule.category"].sudo().search([('code', '=', code)])
+        return srch_code and srch_code[0].id or False
+
+    company_id = fields.Many2one(
+        "res.company",
+        string="Compañia",
+        required=True,
+        copy=False,
+        default=lambda self: self.env.company,
+    )
+
     type = fields.Selection([("discount", "Descuento Diferido"),
                              ("batch", "Lote Manual"),
                              ("batch_automatic", "Lote Automático")], "Tipo", required=True, default="discount")
 
     line_ids = fields.One2many("hr.employee.movement.line", "process_id", "Detalle")
-
     total = fields.Monetary(store=True, compute="_compute_total")
+
     total_to_paid = fields.Monetary(store=True, compute="_compute_total")
     total_paid = fields.Monetary(store=True, compute="_compute_total")
     total_pending = fields.Monetary(store=True, compute="_compute_total")
@@ -28,6 +41,12 @@ class HrEmployeeMovement(models.Model):
     locked_compute = fields.Boolean("Bloquear Cálculos", default=True, compute="_compute_rule_values")
     payment = fields.Boolean("Genera Pago", default=False, compute="_compute_rule_values")
     account = fields.Boolean("Contabilizar", default=False, compute="_compute_rule_values")
+
+    category_id = fields.Many2one("hr.salary.rule.category", string="Categoría", default=get_default_category_id)
+
+    filter_iess=fields.Boolean(string="Solo Afiliados",default=True)
+
+    _check_company_auto = True
 
     @api.onchange('rule_id')
     def onchange_rule_id(self):
@@ -40,20 +59,20 @@ class HrEmployeeMovement(models.Model):
 
     def update_rules(self):
         for brw_each in self:
-            locked_edit=False
+            locked_edit = False
             locked_import = True
             locked_compute = True
-            payment=False
+            payment = False
             account = False
             if brw_each.rule_id:
                 locked_edit = brw_each.rule_id.locked_edit
                 locked_import = brw_each.rule_id.locked_import
-                locked_compute=brw_each.rule_id.locked_compute
+                locked_compute = brw_each.rule_id.locked_compute
                 payment = brw_each.rule_id.payment
                 account = brw_each.rule_id.account
             brw_each.locked_edit = locked_edit
             brw_each.locked_import = locked_import
-            brw_each.locked_compute=locked_compute
+            brw_each.locked_compute = locked_compute
             brw_each.payment = payment
             brw_each.account = account
 
@@ -82,14 +101,15 @@ class HrEmployeeMovement(models.Model):
             brw_each.total_paid = round(total_paid, DEC)
             brw_each.total_pending = round(total_pending, DEC)
 
-    @api.onchange('company_id')
+    @api.onchange('company_id','filter_iess')
     def onchange_company_id(self):
-        self.employee_id=False
-        self.contract_id=False
-        self.job_id=False
-        self.department_id=False
-        self.name=None
-        self.line_ids=[(5,)]
+        self.employee_id = False
+        self.contract_id = False
+        self.job_id = False
+        self.department_id = False
+        self.name = None
+        self.rule_id=False
+        self.line_ids = [(5,)]
 
     @api.onchange('company_id', 'rule_id', 'employee_id', 'contract_id', 'date_process')
     def onchange_rule_employee_id(self):
@@ -123,33 +143,34 @@ class HrEmployeeMovement(models.Model):
             if brw_each.line_ids:
                 for brw_line in brw_each.line_ids:
                     brw_line.action_draft()
-        return super(HrEmployeeMovement,self).action_draft()
+        return super(HrEmployeeMovement, self).action_draft()
 
     def action_approved(self):
         for brw_each in self:
             if not brw_each.line_ids:
                 raise ValidationError(_("Debes definir al menos una linea en el documento # %s") % (brw_each.id,))
-            if brw_each.total<=0.00:
+            if brw_each.total <= 0.00:
                 raise ValidationError(_("El total del documento # %s debe ser mayor a 0.00") % (brw_each.id,))
-            if brw_each.type=="discount":
+            if brw_each.type == "discount":
                 brw_each.validate_employee_values()
                 if not brw_each.bank_account_id:
                     brw_each.set_employee_info(brw_each, brw_each.employee_id)
                 if not brw_each.bank_account_id:
                     raise ValidationError(
                         _("Existen registro(s) sin cuentas bancarias.Para el empleado %s") % (
-                            brw_each.employee_id.name, ))
+                            brw_each.employee_id.name,))
                 for brw_line in brw_each.line_ids:
-                    brw_line.bank_account_id=brw_each.bank_account_id
+                    brw_line.bank_account_id = brw_each.bank_account_id
                     brw_line.bank_history_id = brw_each.bank_history_id
                     brw_line.bank_acc_number = brw_each.bank_acc_number
                     brw_line.bank_tipo_cuenta = brw_each.bank_tipo_cuenta
             brw_each.validate_batchs()
             for brw_line in brw_each.line_ids:
                 brw_line.action_approved()
-            super(HrEmployeeMovement,brw_each).action_approved()
+            super(HrEmployeeMovement, brw_each).action_approved()
             brw_each.create_movement()
         return True
+
 
     def action_cancelled(self):
         for brw_each in self:
@@ -160,12 +181,12 @@ class HrEmployeeMovement(models.Model):
                 if brw_each.move_id.state != 'cancel':
                     brw_each.move_id.button_draft()
                     brw_each.move_id.button_cancel()
-                if brw_each.move_id.state!='cancel':
+                if brw_each.move_id.state != 'cancel':
                     raise ValidationError(_("El documento contable %s debe estar anulado") % (brw_each.move_id.name,))
         return super(HrEmployeeMovement, self).action_cancelled()
 
     def validate_batchs(self):
-        OBJ_EMPLOYEE=self.env["hr.employee"].sudo()
+        OBJ_EMPLOYEE = self.env["hr.employee"].sudo()
         for brw_each in self:
             if brw_each.account and brw_each.payment:
                 for brw_line in brw_each.line_ids:
@@ -174,7 +195,7 @@ class HrEmployeeMovement(models.Model):
                     if not brw_line.bank_account_id:
                         raise ValidationError(
                             _("Existen registro(s) sin cuentas bancarias.El primero es %s para el movimiento %s") % (
-                             brw_line.employee_id.name, brw_line.id))
+                                brw_line.employee_id.name, brw_line.id))
 
             self._cr.execute("""
              SELECT 
@@ -184,9 +205,9 @@ class HrEmployeeMovement(models.Model):
              INNER JOIN HR_CONTRACT HC ON HC.ID=HEML.CONTRACT_ID
              WHERE HEM.ID=%s
              GROUP BY HC.COMPANY_ID
-             """,(brw_each.id,))
-            result=self._cr.fetchall()
-            if len(result)>1:
+             """, (brw_each.id,))
+            result = self._cr.fetchall()
+            if len(result) > 1:
                 raise ValidationError(_("Solo puede existir una compañia por documento"))
             if brw_each.rule_id.unique_month:
                 ###se valida unicidad por documento
@@ -200,8 +221,10 @@ GROUP BY HEML.EMPLOYEE_ID
 HAVING COUNT(1)>1 """, (brw_each.id,))
                 result = self._cr.fetchall()
                 if len(result) > 1:
-                    brw_employee=OBJ_EMPLOYEE.browse(result[0][0])
-                    raise ValidationError(_("Solo puede existir una registro por empleado %s,%s veces en este documento") % (brw_employee.name,result[0][1]))
+                    brw_employee = OBJ_EMPLOYEE.browse(result[0][0])
+                    raise ValidationError(
+                        _("Solo puede existir una registro por empleado %s,%s veces en este documento") % (
+                        brw_employee.name, result[0][1]))
                 ###se valida documentos por reglas en el mismo mes
                 self._cr.execute("""SELECT 
     HEML.EMPLOYEE_ID,COUNT(1)
@@ -211,25 +234,27 @@ INNER JOIN HR_CONTRACT HC ON HC.ID=HEML.CONTRACT_ID
 WHERE HEM.RULE_ID=%s AND HEM.MONTH_ID=%s AND HEM.YEAR=%s
 AND HEM.STATE!='cancelled'
 GROUP BY HEML.EMPLOYEE_ID 
-HAVING COUNT(1)>1""",(brw_each.rule_id.id,brw_each.month_id.id,brw_each.year))
+HAVING COUNT(1)>1""", (brw_each.rule_id.id, brw_each.month_id.id, brw_each.year))
                 result = self._cr.fetchall()
                 if len(result) > 1:
                     brw_employee = OBJ_EMPLOYEE.browse(result[0][0])
                     raise ValidationError(
                         _("Solo puede existir una registro por empleado %s para %s en el periodo en curso %s del %s.existen %s registros en este periodo.") % (
-                        brw_employee.name, brw_each.rule_id.name,brw_each.month_id.name,brw_each.year,result[0][1]))
+                            brw_employee.name, brw_each.rule_id.name, brw_each.month_id.name, brw_each.year,
+                            result[0][1]))
 
         return True
 
     def create_movement(self):
+        OBJ_MOVE = self.env["account.move"]
         for brw_each in self:
             if brw_each.account:
-                vals={
-                    "move_type":"entry",
-                    "name":"/",
+                vals = {
+                    "move_type": "entry",
+                    "name": "/",
                     'narration': brw_each.name,
                     'date': brw_each.date_process,
-                    'ref': "DOCUMENTO # %s" % (brw_each.id,),
+                    'ref': "%s ,DOCUMENTO # %s" % (brw_each.name,brw_each.id,),
                     'company_id': brw_each.company_id.id,
                 }
                 self._cr.execute("""SELECT AC.ACCOUNT_TYPE,
@@ -239,49 +264,67 @@ FROM HR_EMPLOYEE_MOVEMENT M
 INNER JOIN HR_EMPLOYEE_MOVEMENT_LINE L ON L.PROCESS_ID=M.ID
 INNER JOIN HR_SALARY_RULE R ON R.ID=L.RULE_ID
 INNER JOIN HR_SALARY_RULE_ACCOUNT AC ON AC.RULE_ID=R.ID AND AC.TYPE='process' AND
-	L.COMPANY_ID=M.COMPANY_ID
+	AC.COMPANY_ID=M.COMPANY_ID
 WHERE L.PROCESS_ID=%s AND L.TOTAL>0 AND AC.ACCOUNT_ID IS NOT NULL
 GROUP BY L.COMPANY_ID,AC.ACCOUNT_TYPE,AC.ACCOUNT_ID,
-	AC.JOURNAL_ID  """,(brw_each.id,))
-                result_movements=self._cr.fetchall()
-                result_accounts={x[0]:{"account_id":x[1],
-                                       "journal_id":x[2]} for x in result_movements}
-                line_ids=[(5,)]
+	AC.JOURNAL_ID  """, (brw_each.id,))
+                result_movements = self._cr.fetchall()
+                result_accounts = {x[0]: {"account_id": x[1],
+                                          "journal_id": x[2]} for x in result_movements}
+                line_ids = [(5,)]
 
                 account_debits = result_accounts.get("debit", False)
-                if not account_debits:
-                    raise ValidationError(_("No hay configuración contable para el débito para el rubro %s") % (brw_each.rule_id.name,))
 
-                if brw_each.rule_id.type=="discount":
+                if not account_debits:
+                    raise ValidationError(
+                        _("No hay configuración contable para el débito para el rubro %s") % (brw_each.rule_id.name,))
+
+                if brw_each.rule_id.type == "discount":
                     if not brw_each.employee_id.partner_id:
-                        raise ValidationError(_("El empleado %s debe tener asignado un contacto") % (brw_each.employee_id.name,))
+                        raise ValidationError(
+                            _("El empleado %s debe tener asignado un contacto") % (brw_each.employee_id.name,))
                     for brw_line in brw_each.line_ids:
-                        line_ids+= [(0, 0, {
+                        line_ids += [(0, 0, {
+                            "name": brw_line.name,
+                            'debit': brw_line.total,
+                            'credit': 0,
+                            'ref': vals["ref"],
+                            'account_id': account_debits["account_id"],
+                            'partner_id': brw_line.employee_id.partner_id.id,
+                            'date': brw_line.date_process,
+                            "movement_line_id": brw_line.id,
+                            "rule_id":brw_line.rule_id.id
+                        })]
+                else:#anticipos,etc,...
+                    if brw_each.rule_id.legal_iess:#se genera un valor consolidado
+                        line_ids += [(0, 0, {
+                            "name": brw_each.name,
+                            'debit': brw_each.total,
+                            'credit': 0,
+                            'ref': vals["ref"],
+                            'account_id': account_debits["account_id"],
+                            'partner_id': brw_each.company_id.partner_id.id,
+                            'date': brw_each.date_process,
+                            "rule_id":brw_each.rule_id.id
+                        })]
+                    else:##se identifica por cada linea
+                        for brw_line in brw_each.line_ids:
+                            line_ids += [(0, 0, {
                                 "name": brw_line.name,
                                 'debit': brw_line.total,
                                 'credit': 0,
                                 'ref': vals["ref"],
-                                'account_id':account_debits["account_id"],
+                                'account_id': account_debits["account_id"],#brw_line.employee_id.partner_id.property_account_payable_id and brw_line.employee_id.partner_id.property_account_payable_id.id or account_debits["account_id"],
                                 'partner_id': brw_line.employee_id.partner_id.id,
-                                'date': brw_line.date_process,
-                                "movement_line_id":brw_line.id
-                        })]
-                else:
-                    line_ids+= [(0, 0, {
-                                "name": brw_each.name,
-                                'debit': brw_each.total,
-                                'credit': 0,
-                                'ref': vals["ref"],
-                                'account_id': account_debits["account_id"],
-                                'partner_id':brw_each.company_id.partner_id.id,
-                                'date': brw_each.date_process
-                        })]
-
+                                'date': brw_each.date_process,
+                                "rule_id": brw_each.rule_id.id
+                            })]
                 account_credits = result_accounts.get("credit", False)
                 if not account_credits:
-                    raise ValidationError(_("No hay configuración contable para el crédito para el rubro %s") % (brw_each.rule_id.name,))
+                    raise ValidationError(
+                            _("No hay configuración contable para el crédito para el rubro %s") % (brw_each.rule_id.name,))
 
-                if brw_each.rule_id.category_code=="OUT":
+                if brw_each.rule_id.category_code == "OUT":
                     vals["journal_id"] = account_debits["journal_id"]
                 else:
                     vals["journal_id"] = account_credits["journal_id"]
@@ -294,11 +337,23 @@ GROUP BY L.COMPANY_ID,AC.ACCOUNT_TYPE,AC.ACCOUNT_ID,
                     'ref': vals["ref"],
                     'account_id': account_credits["account_id"],
                     'partner_id': brw_each.company_id.partner_id.id,
-                    'date': brw_each.date_process
+                    'date': brw_each.date_process,
+                    "rule_id":brw_each.rule_id.id
                 })]
-                vals["line_ids"]=line_ids
-                brw_move=self.env["account.move"].create(vals)
+                vals["line_ids"] = line_ids
+                brw_move = OBJ_MOVE.create(vals)
                 brw_move.action_post()
-                if brw_move.state!="posted":
-                    raise ValidationError(_("Asiento contable %s,id %s no fue publicado!") % (brw_move.name,brw_move.id))
-                brw_each.move_id=brw_move.id
+                if brw_move.state != "posted":
+                    raise ValidationError(
+                        _("Asiento contable %s,id %s no fue publicado!") % (brw_move.name, brw_move.id))
+                brw_each.move_id = brw_move.id
+
+    def print_report(self):
+        # Obtenemos la acción de reporte
+        action = self.env.ref('gps_hr.report_movements_report_xlsx_act')
+
+        if not action:
+            raise  ValidationError("No se pudo encontrar el reporte.")
+
+        # Retornamos la acción para imprimir el reporte
+        return action.report_action(self)

@@ -31,7 +31,14 @@ class HrEmployeeMovementWizard(models.TransientModel):
             for brw_each in self.env["hr.employee.movement"].sudo().browse(self._context["active_ids"]):
                 return brw_each.rule_id.id
         return False
-    
+
+    @api.model
+    def _get_default_legal_iess(self):
+        if "active_id" not in self._context:
+            return False
+        srch = self.env["hr.employee.movement"].sudo().browse(self._context["active_id"])
+        return srch and srch[0].rule_id.legal_iess or False
+
     @api.model
     def get_default_date_process(self):
         if self._context.get("active_ids",False):
@@ -50,7 +57,10 @@ class HrEmployeeMovementWizard(models.TransientModel):
     company_id=fields.Many2one("res.company",string="Compañia",required=False,default=get_default_company_id)
     currency_id = fields.Many2one("res.currency", "Moneda", related="company_id.currency_id", store=False,
                                   readonly=True)
-    rule_id=fields.Many2one("hr.salary.rule","Rubro",required=False,default=get_default_rule_id)   
+    rule_id=fields.Many2one("hr.salary.rule","Rubro",required=False,default=get_default_rule_id)
+
+    legal_iess = fields.Boolean(string="Para Afiliados", default=_get_default_legal_iess)
+
     origin=fields.Selection([('file','Archivo'),('compute','Cálculo Automático')],string="Origen",default='file')
     file=fields.Binary("Archivo",required=False,filters='*.xlsx')
     file_name=fields.Char("Nombre de Archivo",required=False,size=255)
@@ -247,7 +257,7 @@ class HrEmployeeMovementWizard(models.TransientModel):
                     employee_identification, employee_name, row_index)
                     continue
                 brw_employee = srch_employee[0]
-                brw_contract = brw_each.movement_id._get_contract(brw_employee,raise_on=True)
+                brw_contract = brw_each.movement_id._get_contract(brw_employee,brw_each.company_id,raise_on=True)
                 if brw_contract:
                     brw_contract=brw_contract[0]
                 values = {
@@ -280,7 +290,7 @@ class HrEmployeeMovementWizard(models.TransientModel):
         for brw_each in self:
             line_ids = [(5,)]
             for brw_employee in brw_each.employee_ids:
-                brw_contract = brw_each.movement_id._get_contract(brw_employee,raise_on=True)
+                brw_contract = brw_each.movement_id._get_contract(brw_employee,brw_each.company_id,raise_on=True)
                 if brw_contract:
                     brw_contract = brw_contract[0]
                 quota=1
@@ -309,3 +319,7 @@ class HrEmployeeMovementWizard(models.TransientModel):
             for brw_line in brw_each.movement_id.line_ids:
                 brw_line.onchange_rule_employee_id()
         return True
+
+    @api.onchange('company_id')
+    def onchange_company_id(self):
+       self.employee_ids=[(6,0,[])]

@@ -10,6 +10,31 @@
         <field name="arch" type="xml">
             <search string="Movimientos">
 
+                <group expand="0" string="Filtrar...">
+						<filter string="Preliminar" name="is_draft"
+							domain="[('state','=','draft')]" />
+                        <filter string="Aprobado" name="is_approved"
+							domain="[('state','=','approved')]" />
+                        <filter string="Anulado" name="is_cancelled"
+							domain="[('state','=','cancelled')]" />
+                        <filter string="Pagado" name="is_paid"
+							domain="[('state','=','paid')]" />
+
+					</group>
+					<group expand="0" string="Agrupar por...">
+						<filter string="Estados"
+							context="{'group_by':'state'}" name='grp_state' />
+						<filter string="Compañia"
+							context="{'group_by':'company_id'}" name='grp_company_id' />
+                        <filter string="Rubro"
+							context="{'group_by':'rule_id'}" name='grp_rule_id' />
+                        <filter string="Empleado"
+							context="{'group_by':'employee_id'}" name='grp_employee_id' />
+                        <filter string="Fecha"
+							context="{'group_by':'date_process'}" name='grp_date_process' />
+
+					</group>
+
                 <field name="id"/>
                 <field name="company_id"/>
                 <field name="rule_id"/>
@@ -72,6 +97,9 @@ decoration-it="account and payment and not bank_account_id"
            <field name="bank_account_id" invisible="1"/>
                 <field name="payment" invisible="1" />
                                 <field name="account" invisible="1" />
+                 <field name="legal_iess" invisible="1" />
+
+
             </tree>
         </field>
     </record>
@@ -85,11 +113,12 @@ decoration-it="account and payment and not bank_account_id"
         <field name="arch" type="xml">
             <tree string="Movimientos" editable="bottom"
             decoration-it="account and payment and not bank_account_id"
+                  decoration-danger="account and payment and not bank_account_id"
             >
                 <field name="id" optional="hide"/>
-                <field name="employee_id" context="{'filter_rule_id':rule_id,'filter_company_id':company_id}"
+                <field name="employee_id" context="{'filter_date_process':date_process,'filter_rule_id':rule_id,'filter_company_id':company_id,'filter_legal_iess':legal_iess}"
                        options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
-                       domain="[('company_id','=',company_id)]"
+
                 />
                 <field name="quota" invisible="0" optional="hide"/>
                 <field name="name" optional="hide"/>
@@ -134,7 +163,8 @@ invisible="1"
                 <field name="total_to_paid" optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
                 <field name="total_paid"  optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
                 <field name="total_pending"  optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
-
+<field name="legal_iess" invisible="1" />
+<field name="comments" optional="hide"/>
 
             </tree>
         </field>
@@ -242,6 +272,7 @@ attrs="{'invisible':[('bank_account_id','=',False)]}"
 
                                 <field name="total_historic" readonly="1"
                                 />
+<field name="legal_iess" invisible="1" />
 
                             </group>
                         </group>
@@ -341,6 +372,7 @@ attrs="{'invisible':[('bank_account_id','=',False)]}"
                 <field name="total_to_paid" optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
                 <field name="total_paid"  optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
                 <field name="total_pending"  optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
+<field name="legal_iess" invisible="1" />
 
                 
             </tree>

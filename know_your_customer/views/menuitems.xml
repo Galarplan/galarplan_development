@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    
+
+    <menuitem id="menu_know_your_customer" name="Conozca a su Cliente"
+        parent="credit_request.menu_credit_request" action="action_know_your_customer"
+        sequence="3" />
+
+
+</odoo>

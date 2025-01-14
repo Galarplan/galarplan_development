@@ -1,0 +1,172 @@
+<!-- <odoo>
+    <template id="custom_report_template">
+        <div class="page" style="margin: 0; padding: 10mm; width: 100%; font-size: 12px;">
+            
+            <div class="header" style="text-align: center; margin-bottom: 10px;">
+                <h3>RECIBO DE COBRO</h3>
+                <p>GALARPLAN S.A.</p>
+                <p>R.U.C.: 1291780276001</p>
+                <p>Dirección: Av. León Febres Cordero</p>
+                <p>Teléfono: 0984634509</p>
+            </div>
+
+            
+            <div class="article">
+                <main>
+                    <t t-foreach="docs" t-as="doc">
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                            <tr>
+                                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                                    <strong>Fecha:</strong> <t t-esc="doc.date or ''" />
+                                </td>
+                                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                                    <strong>Recibo No.:</strong> <t t-esc="doc.name or ''" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                                    <strong>Cliente:</strong> <t t-esc="doc.partner_id.name or ''" />
+                                </td>
+                                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                                    <strong>Cédula:</strong> <t t-esc="doc.partner_id.vat or ''" />
+                                </td>
+                            </tr>
+                        </table>
+                    </t>
+                </main>
+            </div>
+
+            
+            <div class="footer" style="text-align: center; margin-top: 10px; border-top: 1px solid black;">
+                <p>Gracias por su confianza en GALARPLAN S.A.</p>
+            </div>
+        </div>
+    </template>
+</odoo> -->
+
+<odoo>
+    <template id="custom_report_template">
+        <div class="page" style="font-family: 'DejaVu Sans', sans-serif;margin: 0; padding: 10mm; width: 100%; font-size: 12px;">
+            <t t-foreach="docs" t-as="doc">
+                <main>
+                    <!-- Encabezado -->
+                    <t t-call="report_invoice_ride.header_receipt" />
+
+                    <!-- Cuerpo -->
+                    <t t-call="report_invoice_ride.body_receipt" />
+
+                    <!-- Formulario de Pago -->
+                    <t t-call="report_invoice_ride.payment_form" />
+
+                    <!-- Pie de Página -->
+                    <t t-call="report_invoice_ride.footer_receipt" />
+                </main>
+            </t>
+        </div>
+    </template>
+
+    <!-- Encabezado -->
+    <template id="header_receipt">
+        <div class="header" style="margin-bottom: 10px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <!-- Logo -->
+                    <td style="width: 30%; text-align: center; vertical-align: middle;">
+                        <img t-if="doc.company_id.logo"
+                             t-att-src="image_data_uri(doc.company_id.logo)"
+                             style="max-height: 100px;" alt="Company Logo" />
+                    </td>
+                    <!-- Información de la empresa -->
+                    <td style="width: 70%; text-align: left; vertical-align: middle;">
+                        <h3 style="margin: 0;"><span t-field="doc.company_id.name" /></h3>
+                        <p style="margin: 0;">R.U.C.: <span t-field="doc.company_id.vat" /></p>
+                        <p style="margin: 0;">Dirección: <span t-field="doc.company_id.street" /></p>
+                        <p style="margin: 0;">Teléfono: <span t-field="doc.company_id.phone" /></p>
+                    </td>
+                </tr>
+            </table>
+            <hr style="margin-top: 10px; margin-bottom: 10px; border: 1px solid black;" />
+            <h4 style="text-align: center; margin: 0;">RECIBO DE COBRO DE PLAN VEHICULAR</h4>
+            <p style="text-align: center; margin: 0;"><span t-field="doc.name" /></p>
+        </div>
+    </template>
+
+    <!-- Cuerpo -->
+    <template id="body_receipt">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+            <tr>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <strong>Fecha:</strong> <span t-field="doc.date" />
+                </td>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <strong>Teléfono:</strong> <span t-field="doc.partner_id.mobile" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <strong>Cliente:</strong> <span t-field="doc.partner_id.name" />
+                </td>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <strong>Cédula:</strong> <span t-field="doc.partner_id.vat" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 100%; padding: 5px; border: 1px solid black;" colspan="2">
+                    <strong>Dirección:</strong> <span t-field="doc.partner_id.street" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <strong>Asesor:</strong>
+                </td>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <strong>Monto del plan:</strong>
+                </td>
+            </tr>
+        </table>
+    </template>
+
+    <!-- Formulario de Pago -->
+    <template id="payment_form">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+            <tr>
+                <td style="width: 50%; padding: 5px; border: 1px solid black; text-align: center;">
+                    <strong>Forma de Pago</strong>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <p>Efectivo</p>
+                    <p>Tarjeta de Crédito</p>
+                    <p>Transferencia</p>
+                </td>
+                <td style="width: 50%; padding: 5px; border: 1px solid black;">
+                    <p>Inscripción al Plan</p>
+                    <p>Cuotas del Plan</p>
+                    <p>Licitación</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 100%; padding: 5px; border: 1px solid black;" colspan="2">
+                    <strong>Valor Total:</strong> $<span t-field="doc.amount" />
+                </td>
+            </tr>
+        </table>
+    </template>
+
+    <!-- Pie de Página -->
+    <template id="footer_receipt">
+        <div style="margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="width: 50%; text-align: left; padding: 5px;">
+                        <p>Elaborado por:</p>
+                    </td>
+                    <td style="width: 50%; text-align: right; padding: 5px;">
+                        <p>Recibí Conforme</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+</odoo>

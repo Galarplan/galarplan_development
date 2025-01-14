@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Menú de Configuración -->
+    <menuitem id="menu_vehicle_configuration" name="Configuración Vehículos"
+        parent="stock.menu_stock_config_settings" sequence="6" />
+
+    <!-- Menú de Marcas -->
+    <menuitem id="menu_vehicle_brands" name="Marcas" parent="menu_vehicle_configuration"
+        action="action_vehicle_brands" sequence="10" />
+
+
+    <menuitem id="menu_vehicle_models" name="Modelos" parent="menu_vehicle_configuration"
+        action="action_vehicle_models" sequence="20" />
+
+    <menuitem id="menu_vehicle_types" name="Tipos" parent="menu_vehicle_configuration"
+        action="action_vehicle_type" sequence="30" />
+
+</odoo>

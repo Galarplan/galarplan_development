@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+
+
+     <menuitem name="Egresos" id="hr_employee_movement_view_out_parent_menu"
+               parent="payroll.payroll_menu_root"
+               sequence="68" />
+
+ <menuitem name="Lotes de Egresos" id="hr_employee_movement_view_out_menu"
+              action="hr_employee_movement_view_out_action" parent="hr_employee_movement_view_out_parent_menu"
+              sequence="1" />
+              
+
+    <menuitem name="Egresos" id="hr_employee_movement_line_out_view_menu"
+              action="hr_employee_movement_line_out_view_action" parent="hr_employee_movement_view_out_parent_menu"
+              sequence="2" />
+
+
+   <menuitem name="Préstamos y Anticipos" id="hr_employee_movement_discount_menu"
+              action="hr_employee_movement_view_discount_action" parent="hr_employee_movement_view_out_parent_menu"
+              sequence="3" />
+              
+              <menuitem name="Cuotas de Préstamos y Anticipos" id="hr_employee_movement_line_discount_menu"
+              action="hr_employee_movement_line_discount_view_action" parent="hr_employee_movement_view_out_parent_menu"
+              sequence="4" />
+
+              
+
+     <menuitem name="Ingresos" id="hr_employee_movement_view_in_parent_menu"
+              parent="payroll.payroll_menu_root"
+              sequence="69" />
+
+              
+                <menuitem name="Lotes de Ingresos" id="hr_employee_movement_view_in_menu"
+              action="hr_employee_movement_view_in_action" parent="hr_employee_movement_view_in_parent_menu"
+              sequence="1" />
+
+    <menuitem name="Ingresos" id="hr_employee_movement_line_in_menu"
+              action="hr_employee_movement_line_in_view_action" parent="hr_employee_movement_view_in_parent_menu"
+              sequence="2" />
+
+
+     <menuitem name="Pagos" id="hr_bank_parent_menu"
+              parent="payroll.payroll_menu_root"
+              sequence="73" />
+
+
+     <menuitem name="Pagos de Nómina" id="hr_employee_payment_view_menu"
+              action="hr_employee_payment_view_action" parent="hr_bank_parent_menu"
+              sequence="999" />
+
+ <menuitem name="Roles" id="payroll_hr_payslip_menu_root"
+              parent="payroll.payroll_menu_root"
+              sequence="1" />
+
+     <menuitem
+        action="payroll.hr_payslip_run_action"
+        id="payroll.hr_payslip_run_menu"
+        parent="payroll_hr_payslip_menu_root"
+    />
+
+
+    <menuitem
+        action="payroll.hr_payslip_run_action"
+        id="payroll.hr_payslip_run_menu" sequence="2"
+        parent="payroll_hr_payslip_menu_root"
+    />
+
+<menuitem
+        id="payroll.hr_payslip_menu"
+        action="payroll.hr_payslip_action"
+        parent="payroll_hr_payslip_menu_root" sequence="3"
+        groups="payroll.group_payroll_user"
+    />
+
+<!--    <menuitem id="menu_hr_mail_message_payslip" name="Envio de Roles" parent="hr_payroll.menu_hr_payroll_payslips"-->
+<!--action="action_hr_mail_message_payslip" sequence="999999"-->
+<!--/>-->
+
+
+
+</odoo>

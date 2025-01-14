@@ -1,0 +1,92 @@
+<odoo>
+
+    <!-- <record id="view_uafe_report_invoice_tree" model="ir.ui.view">
+        <field name="name">uafe.report.invoice.tree</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Número" />
+                <field name="amount_total" string="Total" />
+                <field name="payment_state" string="Estado de pago" />
+                <field name="state" string="Estado" />
+            </tree>
+        </field>
+    </record> -->
+    <!-- Vista del Wizard -->
+
+    <!-- <record id="view_uafe_report_wizard_form" model="ir.ui.view">
+        <field name="name">uafe.report.wizard.form</field>
+        <field name="model">uafe.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reporte UAFE">
+                <group>
+                    <field name="month" />
+                    <field name="date_start" />
+                    <field name="date_end" />
+                    <field name="company_id" />
+                    <field name="registro_number_customer" />
+                    <field name="registro_number_operation" />
+                </group>
+                <group>
+                    <field name="invoice_ids" readonly="1" context="{'default_type': 'out_invoice'}">
+                        <tree view_id="view_uafe_report_invoice_tree" />
+                    </field>
+                </group>
+                <footer>
+                    <button name="generate_clients_excel" string="Generar Clientes" type="object"
+                        class="btn-primary" />
+                    <button name="generate_operations_excel" string="Generar Operaciones"
+                        type="object" class="btn-secondary" />
+                    <button name="cancel_action" string="Cancelar" type="object" class="btn-danger" />
+                </footer>
+            </form>
+        </field>
+    </record> -->
+
+    <record id="view_uafe_report_wizard_form" model="ir.ui.view">
+        <field name="name">uafe.report.wizard.form</field>
+        <field name="model">uafe.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reporte UAFE">
+                <group>
+                    <field name="month" />
+                    <field name="date_start" />
+                    <field name="date_end" />
+                    <field name="company_id" />
+                    <field name="registro_number_customer" />
+                    <field name="registro_number_operation" />
+                </group>
+                <group>
+                    <field name="invoice_ids">
+                        <tree editable="bottom">
+                            <field name="invoice_id" string="Factura" />
+                            <field name="partner_name" string="Cliente" />
+                            <field name="invoice_date" string="Fecha" />
+                            <field name="amount_total" string="Total" />
+                        </tree>
+                    </field>
+                </group>
+                <footer>
+                    <button name="load_invoices" string="Cargar Facturas" type="object"
+                        class="btn-primary" />
+                    <button name="generate_clients_excel" string="Generar Archivo Clientes" type="object"
+                        class="btn-secondary" />
+                    <button name="generate_operations_excel" string="Generar Archivo Operaciones" type="object"
+                        class="btn-secondary" />
+                    <button string="Cancelar" class="btn-link" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Acción del Wizard -->
+    <record id="action_uafe_report_wizard" model="ir.actions.act_window">
+        <field name="name">Reporte UAFE</field>
+        <field name="res_model">uafe.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+
+</odoo>

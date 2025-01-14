@@ -1,0 +1,152 @@
+<odoo>
+  <data>
+    <!-- Tree View -->
+    <record id="view_know_your_customer_tree" model="ir.ui.view">
+      <field name="name">know.your.customer.tree</field>
+      <field name="model">know.your.customer</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name" />
+          <field name="identification_number" />
+          <field name="birth_date" />
+          <field name="economic_activity" />
+          <field name="monthly_income" />
+          <field name="politically_exposed" />
+        </tree>
+      </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_know_your_customer_form" model="ir.ui.view">
+      <field name="name">know.your.customer.form</field>
+      <field name="model">know.your.customer</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+            <!-- Header Section -->
+            <group string="Información del Cliente">
+              <field name="name" />
+              <field name="identification_type" />
+              <field name="identification_number" />
+              <field name="nationality" />
+              <field name="birth_date" />
+              <field name="country" />
+              <field name="provincia" />
+              <field name="city" />
+              <field name="main_street" />
+              <field name="cellphone" />
+            </group>
+
+            <!-- Tabs -->
+            <notebook>
+              <!-- Información del Conyuge/Representante Legal -->
+              <page string="Conyuge / Representante Legal">
+                <group>
+                  <field name="conyuge_name" />
+                  <field name="conyuge_identity_document" />
+                  <field name="conyuge_document_type" />
+                  <field name="conyuge_economic_activity" />
+                  <field name="conyuge_monthly_income" />
+                </group>
+              </page>
+
+              <!-- Actividad Económica / Ocupación -->
+              <page string="Actividad Económica">
+                <group>
+                  <field name="origin_incomes" />
+                  <field name="economic_activity" />
+                  <field name="monthly_income" />
+                  <field name="assets_sum" />
+                  <field name="monthly_expenses" />
+                  <field name="other_incomes" />
+                  <field name="other_funds" />
+                </group>
+              </page>
+
+              <!-- Información de Socios / Accionistas -->
+              <page string="Socios / Accionistas">
+                <field name="line_ids">
+                  <tree>
+                    <field name="complete_name" />
+                    <field name="identification" />
+                    <field name="participation_percent" />
+                    <field name="economic_activity" />
+                  </tree>
+                </field>
+              </page>
+
+              <!-- Vinculación Cliente-Beneficiario -->
+              <page string="Cliente y Beneficiario">
+                <group string="Beneficiario">
+                  <field name="benefict_name" />
+                  <field name="benefict_birth_date" />
+                  <field name="benefict_cellpone" />
+                  <field name="benefict_identity" />
+                  <field name="benefict_nationality" />
+                  <field name="benefict_street" />
+                  <field name="benefict_mail" />
+                  <field name="benefict_relation" />
+                  <field name="benefict_relation_other" />
+                </group>
+                <group string="Pagador">
+                  <field name="payment_name" />
+                  <field name="payment_birth_date" />
+                  <field name="payment_cellpone" />
+                  <field name="payment_identity" />
+                  <field name="payment_nationality" />
+                  <field name="payment_street" />
+                  <field name="payment_mail" />
+                  <field name="payment_relation" />
+                  <field name="payment_telephone" />
+                  <field name="payment_relation_other" />
+                </group>
+              </page>
+
+              <!-- Declaraciones y Vinculaciones -->
+              <page string="Declaraciones y Vinculaciones">
+                <group>
+                  <field name="company_family" />
+                  <field name="politically_exposed" />
+                  <field name="family_politically_exposed" />
+                  <field name="parent_person_company" />
+                  <field name="company_job_family" />
+                  <field name="own_company_family" />
+                  <field name="job" />
+                </group>
+              </page>
+
+              <!-- Declaración Final y Aprobación -->
+              <page string="Declaración y Aprobación">
+                <group>
+                  <field name="responsible_name" />
+                  <field name="responsible_id" />
+                  <field name="responsible_job" />
+                  <field name="reponsible_city" />
+                  <field name="reponsible_date" />
+                </group>
+                <group>
+                  <field name="declaration" />
+                  <field name="documents" />
+                  <field name="approval_date" />
+                  <field name="approved_by" />
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_know_your_customer" model="ir.actions.act_window">
+      <field name="name">Conoce a tu Cliente</field>
+      <field name="res_model">know.your.customer</field>
+      <field name="view_mode">tree,form</field>
+      <field name="help" type="html">
+        <p class="o_view_nocontent_create">
+          Crea tu primer registro "Conozca a su Cliente"
+        </p>
+      </field>
+    </record>
+  </data>
+</odoo>

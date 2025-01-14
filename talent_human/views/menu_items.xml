@@ -31,11 +31,11 @@
     <menuitem name="Descuentos de Empleados" id="menu_discount_employees"
               parent="hr.menu_hr_root" sequence="5" />
 
-    <menuitem name="Descuentos" id="menu_discount_action" parent="menu_discount_employees"
+<!--    <menuitem name="Descuentos" id="menu_discount_action" parent="menu_discount_employees"
               action="action_hr_discount" sequence="1" groups="hr.group_hr_manager" />
 
     <menuitem name="Anticipos de Salarios" id="menu_advances_action" parent="menu_discount_employees"
-              action="action_hr_discount_run" sequence="3" />
+              action="action_hr_discount_run" sequence="3" />-->
 
     <!--<menuitem name="Decimos" id="menu_decimos_action" parent="menu_discount_employees"
               action="action_hr_decimo_run" sequence="5" groups="hr.group_hr_manager"/>

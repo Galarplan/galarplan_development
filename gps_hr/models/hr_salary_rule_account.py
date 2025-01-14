@@ -25,6 +25,8 @@ class HrSalaryRuleAccount(models.Model):
 
     required_journal=fields.Boolean(string="Requiere Diario",compute="_get_compute_required_journal",store=False,readonly=True)
 
+    analytic_ids = fields.One2many("hr.salary.rule.account.analytic","rule_account_id", "Cuentas Analiticas")
+
     @api.onchange('type','account_type','rule_id')
     @api.depends('type', 'account_type', 'rule_id')
     def _get_compute_required_journal(self):

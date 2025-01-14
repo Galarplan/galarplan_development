@@ -1,0 +1,17 @@
+<odoo>
+    <record id="view_res_partner_form_custom" model="ir.ui.view">
+        <field name="name">res.partner.form.custom</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Localizamos el primer grupo que contiene la dirección -->
+            <xpath expr="//field[@name='street']/ancestor::group" position="after">
+                <!-- Nuestro nuevo grupo para campos personalizados -->
+                <group>
+                    <field name="economic_activity" string="Actividad Economica" options="{'no_create': True}"/>
+                    <field name="monthly_income"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

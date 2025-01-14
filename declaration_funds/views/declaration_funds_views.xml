@@ -1,0 +1,67 @@
+<odoo>
+  <data>
+    <record id="view_declaration_funds_tree" model="ir.ui.view">
+      <field name="name">declaration.funds.tree</field>
+      <field name="model">declaration.funds</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="tipo" />
+          <field name="client_name" />
+          <field name="client_identification" />
+          <field name="transaction_value" />
+          <field name="date" />
+        </tree>
+      </field>
+    </record>
+
+    <record id="view_declaration_funds_form" model="ir.ui.view">
+      <field name="name">declaration.funds.form</field>
+      <field name="model">declaration.funds</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+            <group>
+              <field name="tipo" />
+            </group>
+            <group>
+              <field name="date" />
+              <field name="client_name" />
+              <field name="client_identification" />
+            </group>
+            <group>
+              <field name="address" />
+              <field name="city" />
+              <field name="phone" />
+              <field name="email" />
+            </group>
+            <group>
+              <field name="principal_activity" />
+              <field name="transaction_value" />
+              <field name="transaction_type" />
+            </group>
+            <group>
+              <field name="cash" />
+              <field name="check" />
+              <field name="credit_card" />
+              <field name="bank_transfer" />
+            </group>
+            <group>
+              <field name="funds_origin" />
+            </group>
+            <group attrs="{'invisible': [('tipo', '=', 'natural')]}">
+              <field name="legal_representative" />
+              <field name="legal_representative_id" />
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="action_declaration_funds" model="ir.actions.act_window">
+      <field name="name">Declaración de Licitud de Fondos</field>
+      <field name="res_model">declaration.funds</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+  </data>
+</odoo>

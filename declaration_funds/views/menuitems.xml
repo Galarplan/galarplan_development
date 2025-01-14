@@ -1,0 +1,8 @@
+<odoo>
+  <data>
+    <menuitem id="menu_declaration_funds" name="Declaracion de fondos"
+      parent="credit_request.menu_credit_request" action="action_declaration_funds"
+      sequence="4" />
+
+  </data>
+</odoo>

@@ -89,7 +89,7 @@ class HrEmployee(models.Model):
     _order = "last_name asc, mother_last_name asc, first_name asc, second_name asc"
     
     partner_id = fields.Many2one('res.partner', 'Partner', help="Empresa Relacionada")
-    identification_id = fields.Char(string='R.U.C / CI', size=32, store=True)
+    identification_id = fields.Char(string='R.U.C / CI', size=32, store=True,tracking=True)
     family_burden_ids = fields.One2many('th.family.burden', 'employee_id', 'Cargas Familiares')
     family_substitute_ids = fields.One2many('th.family.substitute', 'employee_id', 'Family Substitute')
     employee_history_id = fields.One2many('th.employee.history.note', 'employee_id', 'Employee History Notes')
@@ -101,18 +101,18 @@ class HrEmployee(models.Model):
     substitute = fields.Boolean('Fml. con Discapacidad', help="Marque esta casilla si el empleado tiene familiares con discapacidad y que adquiere derechos por ellos")
     disability = fields.Many2one('th.disability.type', 'Tipo de Discapacidad')
     percent_disability = fields.Float('% Discapacidad', size=128)
-    first_name = fields.Char('Primer Nombre', size=255)
-    second_name = fields.Char('Segundo Nombre', size=255) 
-    last_name = fields.Char('Apellido Paterno', size=255)
-    mother_last_name = fields.Char('Apellido Materno', size=255)
-    home_phone = fields.Char('Telefono Domicilio', size=10)
-    home_mobile = fields.Char('Telefono Celular', size=10)
-    personal_email = fields.Char('E-mail Personal', size=240)
+    first_name = fields.Char('Primer Nombre', size=255,tracking=True)
+    second_name = fields.Char('Segundo Nombre', size=255,tracking=True)
+    last_name = fields.Char('Apellido Paterno', size=255,tracking=True)
+    mother_last_name = fields.Char('Apellido Materno', size=255,tracking=True)
+    home_phone = fields.Char('Telefono Domicilio', size=10,tracking=True)
+    home_mobile = fields.Char('Telefono Celular', size=10,tracking=True)
+    personal_email = fields.Char('E-mail Personal', size=240,tracking=True)
     emergency_home_phone = fields.Char('Telefono de Emergencia', size=10)
     emergency_home_mobile = fields.Char('Celular de Emergencia', size=10)
     age = fields.Integer(string='Age', required=True)
     analytic_account_id = fields.Many2one('account.analytic.account', string='Analytic Account')
-    marital = fields.Selection([('single', 'Single'), ('married', 'Married'), ('widower', 'Widower'), ('divorced', 'Divorced'),('union','Union Libre')], 'Marital Status', required=True)
+    marital = fields.Selection([('single', 'Single'), ('married', 'Married'), ('widower', 'Widower'), ('divorced', 'Divorced'),('union','Union Libre')], 'Marital Status', required=True,tracking=True)
     department_id = fields.Many2one('hr.department', string='Department', required=True)
     operadora_emp = fields.Selection([
                     ('Claro', 'Claro'),
@@ -291,8 +291,9 @@ class HrEmployee(models.Model):
                     'sueldo': sueldo,
                     'active': True,
                     'tz': self.env.user.tz,
-                }
 
+                }
+                update_vals=self.update_data_contracts_employees(update_vals)
                 if not is_test:
                     employee.write(update_vals)
                     processed_ids.append(employee.id)
@@ -306,7 +307,12 @@ class HrEmployee(models.Model):
             'messages': messages,
             'nextrow': False
         }
-    
+
+    @api.model
+    def update_data_contracts_employees(self,update_vals):
+
+        return update_vals
+
     def write(self, vals):
         for record in self:
             
@@ -315,18 +321,18 @@ class HrEmployee(models.Model):
             
             old_values = record.read([])[0]
             
-            if 'name' in vals:
-                nombre_completo = vals['name']
-                    
-            else:
-                nombre_completo = f'{vals.get("firstname", "")} {vals.get("lastname", "")} {vals.get("lastname2", "")}'
-
-            
-            separacion = nombre_completo.split(' ')       
-            vals['first_name'] = separacion[0]
-            vals['second_name'] = separacion[1] if len(separacion) > 1 else ''
-            vals['last_name'] = separacion[2] if len(separacion) > 2 else ''
-            vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
+            # if 'name' in vals:
+            #     nombre_completo = vals['name']
+            #
+            # else:
+            #     nombre_completo = f'{vals.get("firstname", "")} {vals.get("lastname", "")} {vals.get("lastname2", "")}'
+            #
+            #
+            # separacion = nombre_completo.split(' ')
+            # vals['first_name'] = separacion[0]
+            # vals['second_name'] = separacion[1] if len(separacion) > 1 else ''
+            # vals['last_name'] = separacion[2] if len(separacion) > 2 else ''
+            # vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
                 
             
             
@@ -340,42 +346,42 @@ class HrEmployee(models.Model):
     @api.model
     def create(self, vals):
         # Verificar si es una importación
-        if self.env.context.get('import_file'):
-            if 'name_contact' in vals and 'name' not in vals:
-                vals['name'] = vals['name_contact']
-            else:
-                nombre_completo = vals['name']
-                separacion = nombre_completo.split(' ')
-                vals['first_name'] = separacion[0]
-                vals['second_name'] = separacion[1] if len(separacion) > 1 else ''
-                vals['last_name'] = separacion[2] if len(separacion) > 2 else ''
-                vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
-
-            # Crear recurso si no existe durante importación
-            if 'resource_id' not in vals or not vals['resource_id']:
-                resource_vals = {
-                    'name': vals.get('name', 'Unknown Resource'),
-                    'company_id': vals.get('company_id', self.env.company.id),
-                    'resource_type': 'user',
-                    'active': vals.get('active', True),
-                    'calendar_id': vals.get('calendar_id', self.env.company.resource_calendar_id.id),
-                    'time_efficiency': vals.get('time_efficiency', 100),
-                    'user_id': vals.get('user_id', False),
-                    'tz': self.env.user.tz,
-                }
-                resource = self.env['resource.resource'].sudo().create(resource_vals)
-                vals['resource_id'] = resource.id
-        else:
-            if 'name' in vals:
-                nombre_completo = vals['name']
-            else:
-                nombre_completo = f"{vals.get('first_name', '')} {vals.get('second_name', '')} {vals.get('last_name', '')} {vals.get('mother_last_name', '')}"
-
-            separacion = nombre_completo.split(' ')
-            vals['first_name'] = separacion[0]
-            vals['second_name'] = separacion[1] if len(separacion) > 1 else ''
-            vals['last_name'] = separacion[2] if len(separacion) > 2 else ''
-            vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
+        # if self.env.context.get('import_file'):
+        #     if 'name_contact' in vals and 'name' not in vals:
+        #         vals['name'] = vals['name_contact']
+        #     else:
+        #         nombre_completo = vals['name']
+        #         # separacion = nombre_completo.split(' ')
+        #         # vals['first_name'] = separacion[0]
+        #         # vals['second_name'] = separacion[1] if len(separacion) > 1 else ''
+        #         # vals['last_name'] = separacion[2] if len(separacion) > 2 else ''
+        #         # vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
+        #
+        #     # Crear recurso si no existe durante importación
+        #     if 'resource_id' not in vals or not vals['resource_id']:
+        #         resource_vals = {
+        #             'name': vals.get('name', 'Unknown Resource'),
+        #             'company_id': vals.get('company_id', self.env.company.id),
+        #             'resource_type': 'user',
+        #             'active': vals.get('active', True),
+        #             'calendar_id': vals.get('calendar_id', self.env.company.resource_calendar_id.id),
+        #             'time_efficiency': vals.get('time_efficiency', 100),
+        #             'user_id': vals.get('user_id', False),
+        #             'tz': self.env.user.tz,
+        #         }
+        #         resource = self.env['resource.resource'].sudo().create(resource_vals)
+        #         vals['resource_id'] = resource.id
+        # else:
+        #     if 'name' in vals:
+        #         nombre_completo = vals['name']
+        #     else:
+        #         nombre_completo = f"{vals.get('first_name', '')} {vals.get('second_name', '')} {vals.get('last_name', '')} {vals.get('mother_last_name', '')}"
+        #
+        #     separacion = nombre_completo.split(' ')
+        #     # vals['first_name'] = separacion[0]
+        #     # vals['second_name'] = separacion[1] if len(separacion) > 1 else ''
+        #     # vals['last_name'] = separacion[2] if len(separacion) > 2 else ''
+        #     # vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
 
         # Verificar que el sueldo no sea 0.0
         if vals.get('sueldo', 0.0) == 0.0:
@@ -385,9 +391,9 @@ class HrEmployee(models.Model):
         employee = super(HrEmployee, self.with_context(skip_validation=True)).create(vals)
 
         # Crear un contrato asociado si el rol no es 'ROL SERVICIOS PRESTADOS'
-        rol = self.env['tipo.roles'].browse(vals['tipo_rol'])
-        if rol.name != 'ROL SERVICIOS PRESTADOS':
-            contract_vals = {
+        # rol = self.env['tipo.roles'].browse(vals['tipo_rol'])
+        # if rol.name != 'ROL SERVICIOS PRESTADOS':
+        contract_vals = {
                 'name': _('Contrato del empleado %s') % employee.name,
                 'employee_id': employee.id,
                 'company_id': employee.company_id.id,
@@ -399,12 +405,15 @@ class HrEmployee(models.Model):
                 'working_hours': employee.resource_calendar_id.id,
                 'provincia_inicio': employee.provincia_inicio.id,
                 'ciudad_inicio': employee.ciudad_inicio,
+                "contract_type_id":employee.tipo_contrato and employee.tipo_contrato.id or False
                 # Agregar otros valores necesarios para el contrato
             }
-            self.env['hr.contract'].create(contract_vals)
+        self.env['hr.contract'].create(contract_vals)
 
-        return employee    
+        return employee
+
     _sql_constraints = [
         ('registro_coach_uniq', 'unique(coach_id)', 'El reemplazo debe ser unico!'),
         ('registro_reempact_uniq', 'unique(nombre_reemplazo_act_id)', 'El reemplazo debe ser unico!'),
     ]
+

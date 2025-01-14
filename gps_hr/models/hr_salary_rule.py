@@ -39,6 +39,8 @@ class HrSalaryRule(models.Model):
 
     unique_month=fields.Boolean("Único por Periodo",default=False)
 
+    legal_iess = fields.Boolean(string="Para afiliados",default=True)
+
 
     @api.onchange('payment')
     def onchange_payment(self):
@@ -65,7 +67,7 @@ class HrSalaryRule(models.Model):
 
     _sql_constraints = [] 
     
-    _order="name asc"
+    _order="category_id asc,sequence asc"
        
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):

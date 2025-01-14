@@ -13,9 +13,11 @@ class HrPayslipMove(models.Model):
     payslip_id = fields.Many2one("hr.payslip", "Nomina", ondelete="cascade")
     rule_id = fields.Many2one("hr.salary.rule", "Rubro", required=True)
     account_id = fields.Many2one("account.account", "Cuenta", required=True)
+    analytic_account_id=fields.Many2one("account.analytic.account", "Cuenta Analitica", required=False)
     employee_id=fields.Many2one("hr.employee", "Empleado", required=True)
-    debit = fields.Float("Débito", required=False, digits=(16, 2))
-    credit = fields.Float("Crédito", required=False, digits=(16, 2))
+    debit = fields.Monetary("Débito",readonly=False, required=False, digits=(16, 2))
+    credit = fields.Monetary("Crédito", readonly=False, required=False, digits=(16, 2))
+    abs_total = fields.Monetary("ABS Total",  readonly=False, required=False, digits=(16, 2))
 
-    _order = "account_id asc,debit desc,credit asc"
+    _order = "debit desc,credit asc,account_id asc"
     _rec_name = "account_id"

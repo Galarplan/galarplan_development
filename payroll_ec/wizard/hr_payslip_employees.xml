@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+
+
+<record id="payroll.view_hr_payslip_by_employees" model="ir.ui.view">
+            <field name="name">payroll_payslip_employees</field>
+            <field name="model">hr.payslip.employees</field>
+            <field name="arch" type="xml">
+               <form string="Payslips by Employees">
+
+                <group>
+                    <span colspan="4" nolabel="1">
+                        This wizard will generate payslips for all selected employee(s)
+                        based on the dates and credit note
+                        specified
+                        on Payslips Run.
+                    </span>
+                </group>
+                <group colspan="4">
+                    <separator string="Employees" colspan="4"/>
+                    <newline/>
+                    <field name="employee_ids" nolabel="1" colspan="4"/>
+                </group>
+                    <footer>
+                    <button icon="fa-cogs" string="Generar" name="compute_sheet" type="object" class="oe_highlight"/>
+                </footer>
+            </form>
+            </field>
+        </record>
+
+
+        <record model="ir.ui.view"
+                id="view_hr_payslip_by_employees_inherit">
+            <field name="name">view.hr.payslip.by.employees.inherit</field>
+             <field name="model">hr.payslip.employees</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="payroll.view_hr_payslip_by_employees"/>
+            <field name="arch" type="xml">
+
+  <field name="employee_ids" position="after">
+
+    <field name="type_struct_id" invisible="1"/>
+      <field name="legal_iess" invisible="1"/>
+      <field name="date_end" invisible="1"/>
+
+</field>
+
+
+                <field name="employee_ids" position="attributes">
+
+                    <attribute name="context">{'filter_date_process':date_end, 'filter_legal_iess':legal_iess, 'filter_type_struct_id':type_struct_id}</attribute>
+</field>
+
+
+            </field>
+        </record>
+
+
+    </data>
+
+</odoo>

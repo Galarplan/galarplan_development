@@ -50,7 +50,7 @@ class hr_payslip_run(models.Model):
   total = fields.Float(string='Total of Payslip', digits = (16,2), multi='total')
   total_bank = fields.Float(string='Total of Payslip of Bank', digits=(16,2), multi='total')
   name = fields.Char('Name', size=64)
-  journal_id = fields.Many2one('account.journal', 'Diario de Nomina',default=lambda self: self._get_journal())
+  journal_id = fields.Many2one('account.journal', 'Diario de Nomina')#,default=lambda self: self._get_journal()
   
   pagos_ids = fields.Many2many('account.payment', string="PagosRol", copy=False, readonly=True)
   has_pagos = fields.Boolean(help="Technical field used for usability purposes")

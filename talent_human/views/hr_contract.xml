@@ -29,7 +29,7 @@
 						<field name="value"/>
 					</group>
 
-					<group name="configuration_pay " string="Pagos de Beneficios Sociales">
+					<group name="configuration_pay" string="Pagos de Beneficios Sociales">
 						<field name="pay_reserve_funds" string="Pagar Fondos de reserva?"/>
 						<field name="pay_thirteenth_salary" string="Pagar Décimo Tercer sueldo?"/>
 						<field name="pay_fourteenth_salary" string="Pagar Décimo Cuarto sueldo?"/>
@@ -37,7 +37,8 @@
 					</group>
 
 					<group name="lugar_inicio_contrato" string="Lugar Inicio Contrato">
-						<field name="provincia_inicio"/>
+						<field name="provincia_inicio"
+						/>
 					</group>
 					
 					<group name="lugar_fin_contrato" string="Lugar Fin Contrato">
@@ -55,7 +56,7 @@
 				</xpath>
 
 				<xpath expr="//page[@name='information']" position="after">
-					<page string="Income and Expenses">
+					<page string="Income and Expenses" name="page_income_expenses">
 						<group colspan='2'>
 							<separator string="Incomes Employee" colspan="2"/>
 							<field name="contract_income_ids" nolabel="1" colspan="2">
@@ -113,11 +114,19 @@
 
 
 				</xpath>
+
+
+
+
+
+
+
 			</field>
 		</record>
 
       
-        
+
+
 	</data>
 </odoo>
 

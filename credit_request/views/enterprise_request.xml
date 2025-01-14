@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <!-- Tree View for Credit Request (Jurídica) -->
+    <record id="view_enterprise_credit_request_tree" model="ir.ui.view">
+        <field name="name">enterprise.request.tree</field>
+        <field name="model">enterprise.request</field>
+        <field name="arch" type="xml">
+            <tree string="Enterprise Credit Request">
+                <field name="name"/>
+                <field name="enterprise_name"/>
+                <field name="document_type"/>
+                <field name="identity_document"/>
+                <field name="state"/>
+                <field name="request_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View for Credit Request (Jurídica) -->
+    <record id="view_enterprise_credit_request_form" model="ir.ui.view">
+        <field name="name">enterprise.request.form</field>
+        <field name="model">enterprise.request</field>
+        <field name="arch" type="xml">
+            <form string="Enterprise Credit Request">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="enterprise_name"/>
+                        <field name="document_type"/>
+                        <field name="identity_document"/>
+                        <field name="creation_date_enterprise"/>
+                        <field name="state"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Credit Request (Jurídica) -->
+    <record id="action_enterprise_credit_request" model="ir.actions.act_window">
+        <field name="name">Credit Request (Jurídica)</field>
+        <field name="res_model">enterprise.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_enterprise_credit_request_tree"/>
+        <field name="domain">[('credit_request_type', '=', 'juridica')]</field>
+        <field name="context">{'default_credit_request_type': 'juridica'}</field>
+    </record> 
+
+</odoo>

@@ -1,0 +1,8 @@
+<odoo>
+  <menuitem id="menu_account_vehicle_invoice"
+    name="Facturas de Vehículo"
+    parent="account.menu_finance_receivables"
+    action="action_account_vehicle_invoice"
+    sequence="1" />
+
+</odoo>

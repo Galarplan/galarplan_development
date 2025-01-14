@@ -80,6 +80,7 @@ class hr_discount_run(models.Model):
                 # Insertar un solo registro
                 if company.asientos_tot_rrhh:
                     move_pool = self.env['account.move']
+
                     name = self.env['ir.sequence'].next_by_id(diario.sequence_id.id)
                     ref = self.reference
                     move_id = move_pool.create({

@@ -28,9 +28,26 @@ class HrPayslipEmployees(models.TransientModel):
         srch=self.env["hr.payslip.run"].sudo().browse(self._context["active_id"])
         return srch and srch[0].type_struct_id.id or False
 
+    @api.model
+    def _get_default_legal_iess(self):
+        if "active_id" not in self._context:
+            return False
+        srch = self.env["hr.payslip.run"].sudo().browse(self._context["active_id"])
+        return srch and srch[0].type_struct_id.legal_iess or False
+
+    @api.model
+    def _get_default_date_end(self):
+        if "active_id" not in self._context:
+            return fields.Date.context_today(self)
+        srch = self.env["hr.payslip.run"].sudo().browse(self._context["active_id"])
+        return srch and srch[0].date_end or False
+
     type_struct_id = fields.Many2one("hr.payroll.structure.type", "Tipo", required=True,
                                      default=_get_default_type_struct_id)
 
+    legal_iess = fields.Boolean(string="Para Afiliados", default=_get_default_legal_iess)
+
+    date_end = fields.Date(string="Fecha Corte", default=_get_default_date_end)
 
     @api.model
     def _get_employees(self):

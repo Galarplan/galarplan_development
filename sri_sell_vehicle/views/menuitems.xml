@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem 
+        id="menu_res_country_substate"
+        name="Cantones"
+        parent="contacts.menu_localisation"
+        action="action_res_country_substate"
+        sequence="04"/>
+
+    <menuitem id="menu_sri_vehicle" name="Registro vehiculo SRI"
+        parent="credit_request.menu_credit_request" action="action_wizard_generate_xml_excel"
+        sequence="3" />
+
+</odoo>

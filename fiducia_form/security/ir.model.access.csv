@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fiducia_forms_admin,fiducia.forms,model_fiducia_forms,base.group_user,1,1,1,1
+access_fiducia_referencia_admin,fiducia.referencia.bancaria,model_fiducia_referencia_bancaria,base.group_user,1,1,1,1

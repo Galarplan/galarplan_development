@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <report
+        id="action_report_account_statement"
+        model="contract.contract"
+        string="Estado de Cuenta"
+        report_type="qweb-pdf"
+        name="contract_extension.report_account_statement"
+        file="contract_extension.report_account_statement"
+        print_report_name="'Estado de Cuenta - %s' % (object.partner_name or 'N/A')"
+    />
+
+
+</odoo>

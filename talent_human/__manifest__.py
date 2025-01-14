@@ -32,7 +32,12 @@
         'views/th_discount.xml',
         'views/th_discount_run.xml',
         'views_sql/view_employee_contract_info.xml',
+        ####
+        'views/hr_gastos_deducibles.xml',
+        
+        ####
         'views/menu_items.xml',
+        
     ],
     # only loaded in demonstration mode
     # 'demo': [

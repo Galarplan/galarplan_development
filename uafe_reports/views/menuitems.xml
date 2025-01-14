@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_uafe" name="Archivos UAFE"
+        parent="credit_request.menu_credit_request" action="action_uafe_report_wizard"
+        sequence="4" />
+
+    <menuitem 
+        id="menu_economy_activity"
+        name="Actividades Economicas"
+        parent="contacts.menu_localisation"
+        action="action_economy_activity"
+        sequence="05"/>
+
+
+</odoo>

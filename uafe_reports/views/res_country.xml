@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Árbol de Res Country State extendida -->
+    <record id="view_res_country_tree_code_nacionality" model="ir.ui.view">
+        <field name="name">res.country.tree</field>
+        <field name="model">res.country</field>
+        <field name="inherit_id" ref="base.view_country_tree" />
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="nationality_code" />
+            </field>
+        </field>
+    </record>
+    <record id="view_country_form_inherit_nationality_code" model="ir.ui.view">
+        <field name="name">res.country.form.inherit.nationality.code</field>
+        <field name="model">res.country</field>
+        <field name="inherit_id" ref="base.view_country_form" />
+        <field name="arch" type="xml">
+            <!-- Insertar el campo después de 'l10n_ec_code_tax_haven' -->
+            <xpath expr="//field[@name='code']" position="after">
+                <field name="nationality_code" string="Código Nacionalidad" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

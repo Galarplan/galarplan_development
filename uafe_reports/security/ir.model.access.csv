@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uafe_report_wizard,uafe.report.wizard,model_uafe_report_wizard,base.group_user,1,1,1,1
+access_economy_activity,economy.activity,model_economy_activity,base.group_user,1,1,1,1
+access_uafe_report_wizard_line,uafe.report.wizard.line,model_uafe_report_wizard_line,,1,1,1,1

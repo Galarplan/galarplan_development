@@ -26,12 +26,22 @@ class HrEmployeeDocument(models.AbstractModel):
 
     name = fields.Char("Descripción", size=255, required=True)
 
-    company_id = fields.Many2one("res.company", string="Compañia", required=True, default=_get_default_company_id)
+    company_id = fields.Many2one(
+        "res.company",
+        string="Compañia",
+        required=True,
+        copy=False,
+        default=lambda self: self.env.company,
+    )
     currency_id = fields.Many2one("res.currency", "Moneda",compute="compute_currency_id",store=True)
 
     category_code = fields.Char(string="Código de Categoría", required=True, default=get_default_category_code)
-    category_id = fields.Many2one("hr.salary.rule.category", string="Categoría", default=get_default_category_id,compute="compute_category_id",store=True)
+    category_id = fields.Many2one("hr.salary.rule.category", string="Categoría", default=get_default_category_id )
     rule_id = fields.Many2one("hr.salary.rule", string="Rubro", required=True)
+
+    legal_iess = fields.Boolean(string="Para Afiliados", default=False, readonly=True, store=False,
+                                related="rule_id.legal_iess")
+
 
     date_process = fields.Date("Fecha del Proceso", default=fields.Date.today(), required=True)
 
@@ -72,10 +82,13 @@ class HrEmployeeDocument(models.AbstractModel):
                                ('compute', 'Cálculo Automático'),
                                ('manual', 'Ingreso Manual')], string="Origen", default="manual")
 
+
     move_id=fields.Many2one("account.move",string="# Asiento")
 
     _rec_name = "name"
     _order = "id desc"
+
+    _check_company_auto = True
 
     @api.depends('company_id')
     def compute_currency_id(self):
@@ -124,7 +137,8 @@ class HrEmployeeDocument(models.AbstractModel):
             obj.bank_acc_number=None
             obj.bank_tipo_cuenta=None
         if brw_employee:
-            srch_contract=self._get_contract(brw_employee)
+            srch_contract=self._get_contract(brw_employee,obj.company_id)
+            print(srch_contract)
             if srch_contract:
                 obj.contract_id=srch_contract[0].id
                 obj.job_id=srch_contract[0].job_id.id
@@ -140,9 +154,9 @@ class HrEmployeeDocument(models.AbstractModel):
             clear_values(obj)
 
     @api.model
-    def _get_contract(self,brw_employee,raise_on=False):
+    def _get_contract(self,brw_employee,brw_company,raise_on=False):
         srch_contract=self.env["hr.contract"].sudo().search([('employee_id', '=', brw_employee.id),
-                                                             ('company_id', '=', brw_employee.company_id.id),
+                                                             ('company_id', '=', brw_company.id),
                                                ('state', '=', 'open')
                                                ])
         if raise_on:

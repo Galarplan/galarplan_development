@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_contract_form_payments" model="ir.ui.view">
+        <field name="name">contract.contract.form.view.inherit.payments</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button
+                    name="action_print_account_statement"
+                    type="object"
+                    string="Imprimir Estado de Cuenta"
+                    class="oe_highlight"
+                    icon="fa-file-pdf-o"
+                />
+            </xpath>
+            <xpath expr="//button[@name='action_show_invoices']" position="after">
+                <button
+                    name="action_show_payments"
+                    type="object"
+                    icon="fa-credit-card"
+                    class="oe_stat_button"
+                >
+                    <field
+                        string="Pagos"
+                        name="payment_count"
+                        widget="statinfo"
+                    />
+                </button>
+            </xpath>
+            <xpath expr="//group[@name='recurring_invoices']" position="before">
+                <group>
+                    <field name="number_of_installments" />
+                    <field name="plan_type" />
+                    <field name="plan_code" />
+                    <field name="amount_plan" />
+
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Grupo: Gerentes de Notas de Pedido -->
+        <record id="group_note_order_manager" model="res.groups">
+            <field name="name">Gerente de Notas de Pedido</field>
+            <field name="category_id" ref="base.module_category_sales"/>
+        </record>
+
+        <!-- Grupo: Usuarios de Notas de Pedido -->
+        <record id="group_note_order_user" model="res.groups">
+            <field name="name">Usuario de Notas de Pedido</field>
+            <field name="category_id" ref="base.module_category_sales"/>
+        </record>
+    </data>
+</odoo>

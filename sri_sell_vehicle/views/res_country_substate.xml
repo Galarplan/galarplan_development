@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Árbol -->
+    <record id="view_res_country_substate_tree" model="ir.ui.view">
+        <field name="name">res.country.substate.tree</field>
+        <field name="model">res.country.substate</field>
+        <field name="arch" type="xml">
+            <tree string="Cantones" editable="bottom">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="country_state" options="{'no_create': True, 'no_open': True}"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Acción -->
+    <record id="action_res_country_substate" model="ir.actions.act_window">
+        <field name="name">Cantones</field>
+        <field name="res_model">res.country.substate</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_res_country_substate_tree"/>
+    </record>
+</odoo>

@@ -9,26 +9,49 @@
                 <label for="is_a_vehicle" />
             </xpath>
             <xpath expr="//notebook" position="inside">
-                <page string="Vehicle Details" attrs="{'invisible': [('is_a_vehicle', '=', False)]}">
-                    <group>
-                        <field name="chassis_number" />
-                        <field name="vehicle_status" />
-                        <field name="vehicle_color" />
+                <page string="Detalles del Vehículo" attrs="{'invisible': [('is_a_vehicle', '=', False)]}">
+                    <group string="Vehículo">
+                        <field name="vehicle_brand_id" string="Marca" />
+                        <field name="vehicle_model_id" string="Modelo" domain="[('brand_id', '=', vehicle_brand_id)]" />
+                        <field name="vehicle_type" string="Tipo de Vehiculo" />
+                        <field name="chassis_number" string="Número de Chasis" />
+                        <field name="km_value" string='Km del vehiculo'/>
+                        <field name="vehicle_status" string="Estado del Vehículo" />
+                        <field name="vehicle_color" string="Color del Vehículo" />
+                        <field name="registration_date" string="Fecha de Registro" />
+                    </group>
+                    <group string="Modelo">
+                        <field name="number_of_seats" string="Número de Asientos" />
+                        <field name="number_of_doors" string="Número de Puertas" />
+                        <field name="number_of_tires" string="Número de Llantas" />
+                        <field name="number_of_axles" string="Número de Ejes" />
+                        <field name="model_year" string="Año del Modelo" />
+                    </group>
+                    <group string="Motor">
+                        <field name="engine_number" string="Número de Motor" />
+                        <field name="ramw_number" string="Número RAMW" />
+                        <field name="transmission" string="Transmisión" />
+                        <field name="fuel_type" string="Tipo de Combustible" />
+                        <field name="cylinder_capacity" string="Capacidad de Cilindrada" />
+                        <field name="co2_emissions" string="Emisiones de CO2" />
+                        <field name="horsepower" string="Caballos de Fuerza" />
+                        <field name="power_kw" string="Potencia (kW)" />
                     </group>
                 </page>
             </xpath>
         </field>
     </record>
+
     <record id="product_template_search_view_inherit_chassis" model="ir.ui.view">
         <field name="name">product.template.search.view.chassis</field>
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_search_view" />
         <field name="arch" type="xml">
             <xpath expr="//group" position="inside">
-                <field name="chassis_number" string="Chassis Number" />
+                <field name="chassis_number" string="Número de Chasis" />
+                <field name="vehicle_status" string="Estado del Vehículo" />
+                <field name="vehicle_color" string="Color del Vehículo" />
             </xpath>
         </field>
     </record>
-
-
 </odoo>

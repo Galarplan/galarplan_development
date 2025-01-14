@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- <template id="report_account_statement">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <h3>Estado de Cuenta</h3>
+                <table class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Fecha Vencimiento</th>
+                            <th>Fecha Pago</th>
+                            <th>Importe</th>
+                            <th>Valor Pagado</th>
+                            <th>Pendiente</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-debug="data" />
+                        debug lines
+                        <t t-debug="data[0]['invoice_lines']" />
+                        <t t-if="data['invoice_lines']">
+                            <t t-foreach="data['invoice_lines']" t-as="line">
+                                <tr>
+                                    <td>
+                                        <t t-esc="line['number']" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['due_date']" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['payment_date']" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['amount']" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['paid_amount']" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['remaining']" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['status']" />
+                                    </td>
+                                </tr>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">No hay datos
+                                    disponibles.</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template> -->
+
+    <!-- <template id="report_account_statement">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <h3>Estado de Cuenta - Depuración</h3>
+
+               
+                <h4>Datos completos:</h4>
+                <t t-debug="data" />
+
+               
+                <h4>Contrato:</h4>
+                <t t-esc="data[0]['contract_id']" />
+
+                <h4>Facturas relacionadas:</h4>
+                <t t-foreach="data[0]['invoice_lines']" t-as="line">
+                    <div> Línea completa: <t t-esc="line" />
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template> -->
+
+
+    <template id="report_account_statement">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <h2 style="text-align: center; margin-bottom: 30px;">Estado de Cuenta</h2>
+
+                <t t-foreach="data" t-as="contract">
+                    <!-- Encabezado del Contrato -->
+                    <div
+                        style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+                        <h3 style="margin-bottom: 10px;">Información del Contrato</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                            <tr>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">
+                                    Cédula:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['cedula']" />
+                                </td>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">
+                                    Socio:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['partner_name']" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Código
+                                    del Plan:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['plan_code']" />
+                                </td>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Tipo
+                                    de Plan:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['plan_type']" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Importe
+                                    del Plan:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['amount']" />
+                                </td>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">
+                                    Moneda:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['currency']" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Fecha
+                                    de Inicio:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['start_date']" />
+                                </td>
+                                <th
+                                    style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Fecha
+                                    de Vencimiento:</th>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+                                    <t t-esc="contract['end_date']" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Tabla de Detalle de Facturas -->
+                    <h4 style="margin-bottom: 10px; margin-top: 30px;">Líneas del Plan de Ahorro</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">#</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Fecha Vencimiento</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Fecha Pago</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Importe</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Valor Pagado</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Pendiente</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="contract['invoice_lines']" t-as="line">
+                                <tr>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                        <t t-esc="line['number']" />
+                                    </td>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                        <t t-esc="line['due_date']" />
+                                    </td>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                        <t t-esc="line['payment_date']" />
+                                    </td>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                                        <t t-esc="line['amount']" />
+                                    </td>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                                        <t t-esc="line['paid_amount']" />
+                                    </td>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                                        <t t-esc="line['remaining']" />
+                                    </td>
+                                    <td
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                        <t t-esc="line['status']" />
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-if="not contract['invoice_lines']">
+                                <tr>
+                                    <td colspan="7"
+                                        style="padding: 8px; border: 1px solid #ddd; text-align: center;">No
+                                        hay datos disponibles.</td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- Separador Entre Contratos -->
+                    <t t-if="contract != data[-1]">
+                        <div style="margin: 30px 0; border-bottom: 2px dashed #ddd;"></div>
+                    </t>
+                </t>
+            </div>
+        </t>
+    </template>
+
+
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_planes_ahorro_plan,account.saving.plan,model_account_saving_plan,base.group_user,1,1,1,1
+access_planes_ahorro,account.saving,model_account_saving,base.group_user,1,1,1,1
+access_planes_ahorro_line,account.saving.line,model_account_saving_lines,base.group_user,1,1,1,1

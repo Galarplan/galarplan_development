@@ -63,6 +63,16 @@ total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_id
 result = round(((brw_payslip.wage / 30.00) * total_days), DEC)</field>
 		</record>
 
+	<record model='dynamic.function' id='fx_compute_basic_wages'>
+			<field name='name'>compute_salario_basico</field>
+			<field name='arguments'>brw_payslip</field>
+			<field name='active' eval="True" />
+			<field name='programming_code'>DEC = 2
+total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids)
+result = round(((brw_payslip.legal_basic_wages / 30.00) * total_days), DEC)</field>
+		</record>
+
+
 	<record model='dynamic.function' id='fx_compute_other_incomes_iess'>
 			<field name='name'>compute_otros_ingresos_iess</field>
 			<field name='arguments'>brw_payslip</field>
@@ -93,6 +103,16 @@ DEC=2
 if brw_payslip.contract_id.pay_thirteenth_salary==payment:
     total_income_iess=compute_salario(brw_payslip)+compute_otros_ingresos_iess(brw_payslip)
     amount=round(total_income_iess/12.00,DEC)
+result=amount</field>
+		</record>
+
+	<record model='dynamic.function' id='fx_compute_iess_con_basico'>
+			<field name='name'>compute_iess_basico</field>
+			<field name='arguments'>brw_payslip,factor</field>
+			<field name='active' eval="True" />
+			<field name='programming_code'>DEC=2
+total_income_iess=compute_salario_basico(brw_payslip)+compute_otros_ingresos_iess(brw_payslip)
+amount=round(total_income_iess*factor/100.00,DEC)
 result=amount</field>
 		</record>
 
@@ -133,7 +153,7 @@ if brw_payslip.contract_id.pay_reserve_funds==payment:#valor actual en contrato 
     days=brw_payslip.employee_id.previous_day_contract#dias previos al sistema
     days+=brw_payslip.contract_id.get_days_contracts_end(brw_payslip.contract_id.employee_id.id)#contractos_finalizados
     days+=brw_payslip.contract_id.get_current_contract_days(date_to=DATE_TO)#dias desde el inicio del contrato al mes actual mismo dia
-    if days>=365:
+    if days>=365 or brw_payslip.contract_id.contract_type_id.name=='OBRA CIERTA':
         factor=1.00
         if days>=365 and days&lt;=395:#esta dentro del rango del mes recien cumplido al tope
             MONTH_DAYS=TOP_DAYS-compute_days(brw_payslip.date_from,DATE_TO,TOP_DAYS)[0]#deberia dar el residual del resto del mes
@@ -142,6 +162,27 @@ if brw_payslip.contract_id.pay_reserve_funds==payment:#valor actual en contrato 
 result=amount</field>
 		</record>
 
+	<record model='dynamic.function' id='fx_total_facturado'>
+			<field name='name'>compute_total_facturado</field>
+			<field name='arguments'>brw_payslip</field>
+			<field name='active' eval="True" />
+			<field name='programming_code'>DEC=2
+brw_rule_extr=brw_payslip.env.ref('gps_hr.rule_OTROS_INGR')
+result,amount,amount_extr=brw_payslip.compute_by_selected_rule(brw_rule_extr)
+amount=not brw_payslip.to_liquidate and compute_salario(brw_payslip) or sum(invoice.amount_untaxed for invoice in brw_payslip.invoice_ids)-amount_extr
+result=amount</field>
+		</record>
+
+
+	<record model='dynamic.function' id='fx_total_ingresos_facturados'>
+			<field name='name'>compute_total_ingresos_facturados</field>
+			<field name='arguments'>brw_payslip</field>
+			<field name='active' eval="True" />
+			<field name='programming_code'>DEC=2
+brw_rule_extr=brw_payslip.env.ref('gps_hr.rule_OTROS_INGR')
+result,amount,amount_extr=brw_payslip.compute_by_selected_rule(brw_rule_extr)
+result=round(compute_salario(brw_payslip)+amount_extr,DEC)</field>
+		</record>
 
 
 </data>

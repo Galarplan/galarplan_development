@@ -1,0 +1,54 @@
+<odoo>
+  <data>
+
+
+    <record id="view_move_form_vehicle" model="ir.ui.view">
+      <field name="name">account.move.form.vehicle</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_move_form" />
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='partner_id']" position="after">
+          <group>
+            <field name="is_vehicle"/>
+            <field name="vehicle_status" attrs="{'invisible': [('is_vehicle', '=', False)]}"/>
+          </group>
+        </xpath>
+      </field>
+    </record>
+
+    <record id="view_account_move_tree_inherit_vehicle_status" model="ir.ui.view">
+      <field name="name">account.move.tree.vehicle.status</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_out_invoice_tree" />
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='state']" position="after">
+          <!-- Agregar el campo vehicle_status -->
+          <field name="vehicle_status" optional='hide' />
+        </xpath>
+      </field>
+    </record>
+
+
+    <record id="action_account_vehicle_invoice" model="ir.actions.act_window">
+      <field name="name">Facturas de Vehículo</field>
+      <field name="res_model">account.move</field>
+      <field name="view_mode">tree,form</field>
+      <field name="view_id" ref="account.view_out_invoice_tree" />
+      <field name="domain">[('move_type', '=', 'out_invoice'), ('is_vehicle', '=', True)]</field>
+      <field name="context">{'default_is_vehicle': True,'default_move_type': 'out_invoice'}</field>
+    </record>
+
+    <record id="view_account_move_search_vehicle_status_inherit" model="ir.ui.view">
+      <field name="name">account.move.search.inherit.vehicle</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_account_invoice_filter" />
+      <field name="arch" type="xml">
+        <filter name="group_by_sequence_prefix" position="after">
+          <filter string="Estado del vehiculo" name="group_by_vehicle_status" context="{'group_by': 'vehicle_status'}" />
+        </filter>
+      </field>
+    </record>
+
+
+  </data>
+</odoo>

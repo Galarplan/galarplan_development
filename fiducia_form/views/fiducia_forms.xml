@@ -1,0 +1,152 @@
+<odoo>
+
+
+  <record id="view_fiducia_tree" model="ir.ui.view">
+    <field name="name">fiducia.forms.tree</field>
+    <field name="model">fiducia.forms</field>
+    <field name="arch" type="xml">
+      <tree string="Formulario de Fiducia">
+        <field name="primer_apellido" />
+        <field name="segundo_apellido" />
+        <field name="nombres" />
+        <field name="cedula" />
+        <field name="total_activos" />
+        <field name="total_ingresos_mensuales" />
+      </tree>
+    </field>
+  </record>
+
+
+  <record id="view_fiducia_form" model="ir.ui.view">
+    <field name="name">fiducia.forms.form</field>
+    <field name="model">fiducia.forms</field>
+    <field name="arch" type="xml">
+      <form string="Formulario de Fiducia">
+        <sheet>
+          <!-- Cabecera: Datos Personales -->
+          <group string="Datos Personales">
+            <group>
+              <field name="primer_apellido" />
+              <field name="segundo_apellido" />
+              <field name="nombres" />
+            </group>
+            <group>
+              <field name="cedula" />
+              <field name="nacionalidad" />
+              <field name="fecha_nacimiento" />
+              <field name="estado_civil" />
+            </group>
+            <group>
+              <field name="pais" />
+              <field name="provincia" />
+              <field name="canton" />
+              <field name="direccion" />
+            </group>
+            <group>
+              <field name="celular" />
+              <field name="correo_electronico" />
+            </group>
+          </group>
+
+          <!-- Páginas -->
+          <notebook>
+            <!-- Página: Lugar de Trabajo -->
+            <page string="Lugar de Trabajo">
+              <group>
+                <field name="tipo_relacion_laboral" />
+                <field name="actividad_economica" />
+              </group>
+            </page>
+
+            <!-- Página: Residencia Fiscal -->
+            <page string="Residencia Fiscal">
+              <group>
+                <field name="es_estadounidense" />
+                <field name="residente_otro_pais" />
+                <field name="pais_residencia" />
+              </group>
+            </page>
+
+            <!-- Página: Información Patrimonial -->
+            <page string="Información Patrimonial">
+              <group>
+                <field name="total_activos" />
+                <field name="total_pasivos" />
+                <field name="total_patrimonio" />
+              </group>
+            </page>
+
+            <!-- Página: Información Financiera -->
+            <page string="Información Financiera">
+              <group>
+                <field name="ingresos_principales" />
+                <field name="otros_ingresos" />
+                <field name="total_ingresos_mensuales" />
+                <field name="total_egresos_mensuales" />
+              </group>
+            </page>
+
+            <!-- Página: Origen de Bienes -->
+            <page string="Origen de Bienes">
+              <group>
+                <field name="origen_bienes" />
+              </group>
+            </page>
+
+            <!-- Página: Referencias Bancarias -->
+            <page string="Referencias Bancarias">
+              <field name="referencia_bancaria_ids">
+                <tree>
+                  <field name="institucion" />
+                  <field name="tipo_cuenta" />
+                  <field name="numero_cuenta" />
+                </tree>
+                <form>
+                  <group>
+                    <field name="institucion" />
+                    <field name="tipo_cuenta" />
+                    <field name="numero_cuenta" />
+                  </group>
+                </form>
+              </field>
+            </page>
+
+            <!-- Página: Persona Expuesta Políticamente -->
+            <page string="Persona Expuesta Políticamente">
+              <group>
+                <field name="es_pep" />
+                <field name="nombre_pep" />
+                <field name="cargo_pep" />
+                <field name="relacion_pep" />
+                <field name="institucion_pep" />
+                <field name="fecha_inicio_pep" />
+                <field name="fecha_fin_pep" />
+              </group>
+            </page>
+
+            <!-- Página: Declaración de Vinculación -->
+            <page string="Declaración de Vinculación">
+              <group>
+                <field name="vinculacion_fiducia" />
+                <field name="detalle_vinculacion" />
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_fiducia_forms" model="ir.actions.act_window">
+    <field name="name">Formulario de Fiducia</field>
+    <field name="res_model">fiducia.forms</field>
+    <field name="view_mode">tree,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">
+        Crea y administra formularios de fiducia aquí.
+      </p>
+    </field>
+  </record>
+
+</odoo>

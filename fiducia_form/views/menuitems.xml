@@ -1,0 +1,7 @@
+<odoo>
+
+  <menuitem id="menu_fiducia" name="Formulario Fiducia"
+    parent="credit_request.menu_credit_request" action="action_fiducia_forms"
+    sequence="5" />
+
+</odoo>

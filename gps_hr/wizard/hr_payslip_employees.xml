@@ -20,7 +20,7 @@
                         <field name="department_id" nolabel="1"/>
                     </div>
                     <separator string="Empleados"/>
-                    <field name="employee_ids" nolabel="1">
+                    <field name="employee_ids" nolabel="1" context="{}">
                         <tree>
                             <field name="name"/>
                             <field name="work_email"/>
@@ -47,12 +47,15 @@
   <field name="department_id" position="after">
 
     <field name="type_struct_id" invisible="1"/>
+      <field name="legal_iess" invisible="1"/>
+      <field name="date_end" invisible="1"/>
+
 </field>
 
 
                 <field name="employee_ids" position="attributes">
 
-                    <attribute name="context">{'filter_type_struct_id':type_struct_id}</attribute>
+                    <attribute name="context">{'filter_date_process':date_end, 'filter_legal_iess':legal_iess, 'filter_type_struct_id':type_struct_id}</attribute>
 </field>
 
 

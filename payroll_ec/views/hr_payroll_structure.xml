@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<odoo>
+	<data>
+
+
+
+		         <record model="ir.ui.view"
+                id="hr_payroll_structure_form_view">
+            <field name="name">hr.payroll.structure.form.view</field>
+            <field name="model">hr.payroll.structure</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="payroll.hr_payroll_structure_view_form"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+					   <field name="type_id" />
+        <field name="account" />
+</field>
+
+
+
+            </field>
+           </record>
+
+
+
+		
+	</data>
+
+</odoo>

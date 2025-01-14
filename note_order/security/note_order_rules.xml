@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Regla: Los usuarios solo ven sus propias notas -->
+        <record id="rule_note_order_user" model="ir.rule">
+            <field name="name">Ver solo sus Notas de Pedido</field>
+            <field name="model_id" ref="model_note_order"/>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        </record>
+    </data>
+</odoo>

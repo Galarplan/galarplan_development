@@ -3,8 +3,10 @@ from odoo.exceptions import ValidationError, UserError
 
 class ThFamily(models.AbstractModel):
     
-  _name = 'th.family' 
-  
+  _name = 'th.family'
+
+
+
   employee_id = fields.Many2one('hr.employee', 'Employee', ondelete="cascade")
   name = fields.Char('Name', size=256, required=True,)
   birth_date = fields.Date('Birth Date')

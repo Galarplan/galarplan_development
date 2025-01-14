@@ -328,30 +328,33 @@
           <field name="model">hr.employee</field>
           <field name="inherit_id" ref="hr.view_employee_form"/>
 					<field name="arch" type="xml">
-						<xpath expr="//header/button[@name='578']" position="after">
+						<xpath expr="//header/button[@name='%(hr.plan_wizard_action)d']" position="after">
                             <button name="action_contact_create" string="Crear Contacto" type="object" class="btn-primary" groups="base.group_system"/>
                             <button name="action_user_create" string="Crear Usuario" type="object" class="btn-primary" groups="base.group_system"/>
                         </xpath>
                         <xpath expr="//field[@name='mobile_phone']" position="before">
-							<field name="first_name" string='First Name'/>
-							<field name="last_name" string='Last Name'/>
+							<field name="first_name" required="1" string='First Name'/>
+							<field name="last_name" required="1" string='Last Name'/>
 						</xpath>
 						<xpath expr="//field[@name='department_id']" position="before">
-							<field name="second_name" string='Second Name'/>
-							<field name="mother_last_name" string='Mother Last Name'/>
+							<field name="second_name" required="1" string='Second Name'/>
+							<field name="mother_last_name" required="1" string='Mother Last Name'/>
 						</xpath>
 						<xpath expr="//field[@name='work_email']" position="after">
 							<field name="inability" string='inability'/>
 							<field name="percent_disability" string='Porcentaje Discapacidad'/>
-							<field name="disability" string='Disability'/>
+							<field name="disability" string='Disability'
+							options="{'no_create':True,'no_edit':True,'no_open':True}"
+							/>
 							<field name="substitute" string='Substitute'/>
 						</xpath>
 						<xpath expr="//field[@name='coach_id']" position="after">
-							<field name="codigo_sectorial" string='Codigo Sectorial'/>
+							<field name="codigo_sectorial" string='Código Sectorial'/>
                             <field name="analytic_account_id" string='Centro de Costo'/>
 						</xpath>
-						<xpath expr="//page[@name='public']" position="after">
-							<page string="Informacion de Contactos">
+						<xpath expr="//page[@name='hr_settings']" position="before">
+							<page string="Contactos" name="page_contactos">
+								<separator string="Contactos" />
 								<field name="contact_ids" nolabel="1" colspan="4" required='1'>
 									<tree string="Contactos" editable="bottom">
 										<field name="name_contact" required='1'/>
@@ -374,9 +377,10 @@
 										</group>
 									</form>
 								</field>
+
 							</page>
 
-							<page string="Public Information">
+							<page string="Public Information" name="page_public_information">
 								<group>
 										<group string="Información del Empleado">
 												<field name="address_id" context="{'show_address': 1}" options='{"always_reload": True, "highlight_first_line": True}'/>
@@ -389,15 +393,18 @@
 							</page>
 
 							
-							<page string="Nivel de Educacion">
+							<page string="Educación">
 								<field name="education_ids" nolabel="1" colspan="4">
 										<tree string="Nivel de Educacion" editable="bottom">
-												<field name="title"/>
-												<field name="institution"/>
-												<field name="start_date"/>
-												<field name="end_date"/>
-												<field name="level"/>
-												<field name="status"/>
+												<field name="title" required="1"/>
+												<field name="institution" required="1"/>
+												<field name="start_date" required="1"/>
+												<field name="status" required="1"/>
+												<field name="end_date"
+												attrs="{'invisible':[('status','!=','graduated')],'required':[('status','=','graduated')]}"
+												/>
+												<field name="level"  required="1"/>
+
 										</tree>
 										<form string="Education Level">
 												<label for="title"/>
@@ -418,11 +425,12 @@
 								</field>
 							</page>
 
-							<page string="Cargas Familiares">
+							<page string="Cargas Familiares" name="page_family_burden">
 								<field name="family_burden_ids" nolabel="1" colspan="4">
 										<tree string="family burdens" editable="bottom">
-												<field name="name" string='Apellidos y Nombres'/>
-												<field name="relationship"/>
+												<field name="name" required="1" string='Apellidos y Nombres'/>
+												<field name="birth_date" required="1"/>
+												<field name="relationship" required="1"/>
 												<field name="age" string='Edad'/>
 												<field name="bonus" invisible='1'/>
 										</tree>
@@ -438,7 +446,7 @@
 														<field name="para_deduccion_gastos"/>
 														<field name="type_disability" style="width: 93%" attrs="{'invisible':[('discapacidad','!=',True)],'required':[('discapacidad','=',True)]}" placeholder="Discapacidad de la Carga"/>
 														<field name="percent_disability" style="width: 93%" attrs="{'invisible':[('discapacidad','!=',True)],'required':[('discapacidad','=',True)]}" placeholder="Discapacidad de la Carga"/>
-														<group string="Informacion de Cumpleanios" colspan="4" col="4">
+														<group string="Informacion de Cumpleaños" colspan="4" col="4">
 																<field name="birth_date" string='Fecha nacimiento'/>
 																<field name="age" string='Edad'/>
 														</group>
@@ -478,7 +486,7 @@
 								</field>
 							</page>
 
-							<page string="Historial del Empleado">
+							<page string="Historial del Empleado"  name="page_historial">
 								<separator string="Historial del Empleado" colspan="4"/>
 								<field name="employee_history_id" colspan="4" nolabel="1">
 										<tree string="Historial de Notas del Empleado" colors="red:state=='open';blue:state=='pending';gray:state=='cancel'">
@@ -517,8 +525,8 @@
 												</group>
 										</form>
 								</field>
-								<separator string="Informacion de Acumulado Decimos/Vacaciones" colspan="4"/>
-								<field name="decimo_history_id" colspan="4" nolabel="1">
+								<separator string="Informacion de Acumulado Decimos/Vacaciones" colspan="4" invisible="1"/>
+								<field name="decimo_history_id" colspan="4" nolabel="1" invisible="1">
 										<tree string="Historial de Decimo de Empleado">
 												<field name="tipo"/>
 												<field name="name" string='Asunto'/>
@@ -542,10 +550,10 @@
 
 						</xpath>
 						<xpath expr="//page[@name='hr_settings']//group[@name='identification_group']" position="after">
-							<group string="Refund">
+							<group string="Refund" name="grp_refund">
 								<field name="valor_reembolso"/>
 							</group>
-							<group string="Petty Cash">
+							<group string="Petty Cash" name="grp_cash">
 								<field name="valor_caja_chica"/>
 							</group>
 							
@@ -559,7 +567,7 @@
 								<field name="account_id"/>
 							</group> -->
 
-							<group string='Leaves'>
+							<group string='Leaves' name="grp_leaves">
 								<field name="remaining_leaves"/>
 							</group>
 
@@ -580,15 +588,12 @@
 								<field name="canton_inicio" />
 								<field name="ciudad_inicio" class='oe_highlight'/>
 								<field name="unidad_administrativa" class='oe_highlight'/>
-                                <field name="bank_id" class='oe_highlight'/>
-                                <field name="bank_type" class='oe_highlight' />
-                                <field name="account_number" class='oe_highlight' />
-                                <field name="checked" />
+                                 <field name="checked" />
 								<!-- <field name="job_id_act" string='Cargo/Labor' /> -->
 								<!-- <button name="ejecutar_proceso_acumula_fondo" string="Beneficios Sociales" type="object" attrs="{'invisible':[('acumula_fondo_reserva','=',True)]}"/> -->
 							</group>
 
-							<group string="Replacement Data">
+							<group string="Replacement Data" name="grp_replacement">
 								<field name="unemployee" />
 								<field name="coach_id" string='Nombre' />
 								<field name="reemplazo_activo"/>

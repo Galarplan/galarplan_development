@@ -1,0 +1,16 @@
+<odoo>
+    <!-- Credit Request Menu -->
+    <menuitem id="menu_credit_request" name="Solicitudes"
+              parent="account_accountant.menu_accounting" sequence="5"/>
+
+    <!-- Credit Request (Natural) -->
+    <menuitem id="menu_credit_request_natural" name="Solicitud de credito P.Natural"
+              parent="menu_credit_request" sequence="1"
+              action="action_credit_request_natural"/>
+
+    <!-- Credit Request (Jurídica) -->
+    <menuitem id="menu_credit_request_juridica" name="Solicitud de credito P.Jurídica"
+              parent="menu_credit_request" sequence="2"
+              action="action_enterprise_credit_request"/>
+
+</odoo>

@@ -71,10 +71,10 @@ class hr_payslip_leaves_days(models.Model):
 class hr_payslip_input(models.Model):
     _inherit = 'hr.payslip.input'
 
-    income_type_id = fields.Many2one('th.transaction.type', 'Income Type')
+    #income_type_id = fields.Many2one('th.transaction.type', 'Income Type')
     code = fields.Char('code', size=64,  help="The code that can be used in the salary rules")
     sum_calculate_iess = fields.Boolean('Suma en el cálculo del IESS', default = True)
-    prestamo_id = fields.Many2one("hr.prestamos","Ingreso y Egresos")
+    #prestamo_id = fields.Many2one("hr.prestamos","Ingreso y Egresos")
 
     
 

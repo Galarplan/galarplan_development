@@ -374,6 +374,25 @@ result=amount>0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>
 			<field name="add_iess" eval="False" />
 			<field name="legal_iess" eval="True" />
+
+		<field name="legal_iess" eval="True" />
+		<field name="unique_month" eval="True" />
+			<field name="for_liquidate_provision" eval="True" />
+		<field name="provision_rule_ids" eval="[(6,0,[ref('payroll_ec.rule_DEC_CUARTO_PROV')])]" />
+		<field name="enable_for_documents" eval="True" />
+<field name="payment" eval="True" />
+	<field name="account" eval="True" />
+		<field name='domain_select'>result=brw_rule.get_default_yearly_values(brw_company,brw_rule,brw_document,model_name,date_process,brw_employee=brw_employee,brw_contract=brw_contract)</field>
+					<field name='process_select'>provision_line_ids=self.env["hr.employee.historic.lines"].sudo().search([('year','in',(brw_document.year,brw_document.year-1)),('state','=','posted'),('company_id','=',brw_document.company_id.id),('employee_id','=',brw_document.employee_id.id),('rule_id','in',brw_rule.provision_rule_ids.ids)])
+total=0.00
+if provision_line_ids:
+	total=sum(provision_line_ids.mapped('amount'))
+	provision_line_ids.write({"movement_line_id":brw_document.id})
+else:
+	if brw_document.provision_line_ids:
+		brw_document.provision_line_ids.write({"movement_line_id":False,'total':0.00})
+result={"total":total}</field>
+
 		</record>
 
 	<record model='hr.salary.rule' id='rule_DEC_CUARTO_PROV'>
@@ -407,6 +426,22 @@ result=amount>0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>
 			<field name="add_iess" eval="False" />
 			<field name="legal_iess" eval="True" />
+		<field name="unique_month" eval="True" />
+			<field name="for_liquidate_provision" eval="True" />
+		<field name="provision_rule_ids" eval="[(6,0,[ref('payroll_ec.rule_DEC_TERCERO_PROV')])]" />
+		<field name="enable_for_documents" eval="True" />
+<field name="payment" eval="True" />
+	<field name="account" eval="True" />
+		<field name='domain_select'>result=brw_rule.get_default_yearly_values(brw_company,brw_rule,brw_document,model_name,date_process,brw_employee=brw_employee,brw_contract=brw_contract)</field>
+			<field name='process_select'>provision_line_ids=self.env["hr.employee.historic.lines"].sudo().search([('year','in',(brw_document.year,brw_document.year-1)),('state','=','posted'),('company_id','=',brw_document.company_id.id),('employee_id','=',brw_document.employee_id.id),('rule_id','in',brw_rule.provision_rule_ids.ids)])
+total=0.00
+if provision_line_ids:
+	total=sum(provision_line_ids.mapped('amount'))
+	provision_line_ids.write({"movement_line_id":brw_document.id})
+else:
+	if brw_document.provision_line_ids:
+		brw_document.provision_line_ids.write({"movement_line_id":False,'total':0.00})
+result={"total":total}</field>
 		</record>
 
 	<record model='hr.salary.rule' id='rule_DEC_TERCERO_PROV'>

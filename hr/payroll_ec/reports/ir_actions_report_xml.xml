@@ -19,13 +19,41 @@
     </record>
 
 
-    <record id="payroll.action_report_payslip" model="ir.actions.report">
-            <field name="name">Nómina</field>
+    <record id="action_report_payslip" model="ir.actions.report">
+            <field name="name">Rol Individual</field>
             <field name="model">hr.payslip</field>
             <field name="report_type">qweb-pdf</field>
-            <field name="report_name">payroll_ec.report_payslip_new</field>
-            <field name="print_report_name">'Liquidación - %s' % (object.employee_id.name)</field>
+            <field name="report_name">payroll_ec.report_payslip_lang_new</field>
+            <field name="print_report_name">'Rol - %s' % (object.name,)</field>
         </record>
+
+    <!-- -->
+
+    <record id="report_employee_cumpleanios_report_xlsx_act" model="ir.actions.report">
+        <field name="name">Reporte de Cumpleaños Empleados </field>
+        <field name="model">hr.employee.report.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">payroll_ec.hr_employee_report_wizard_cumpleanios_xlsx</field>
+        <field name="print_report_name">'Reporte de Cumpleaños Empleados'</field>
+    </record>
+
+    <record id="report_employee_cargas_familiares_report_xlsx_act" model="ir.actions.report">
+        <field name="name">Reporte de Cargas Familiares Empleados </field>
+        <field name="model">hr.employee.report.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">payroll_ec.hr_empl_report_wizard_cargas_fam_xlsx</field>
+        <field name="print_report_name">'Reporte de Cargas Familiares Empleados'</field>
+    </record>
+
+    <!-- -->
+
+    <record id="report_payslip_movements_report_xlsx_act" model="ir.actions.report">
+        <field name="name">Reporte de Movimientos de Empleados</field>
+        <field name="model">hr.employee.payslip.reports.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">payroll_ec.hr_empl_payslip_reports_mov_wizard_xlsx</field>
+        <field name="print_report_name">'Reporte de Movimientos de Empleados'</field>
+    </record>
 
 
 </odoo>

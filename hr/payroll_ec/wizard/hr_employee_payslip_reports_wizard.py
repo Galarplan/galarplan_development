@@ -11,6 +11,11 @@ fileO = FileManager()
 dateO = DateManager()
 calendarO = CalendarManager()
 
+REPORTS={
+    'payslip':'payroll_ec.report_payslip_runs_report_xlsx_act',
+    'movements': 'payroll_ec.report_payslip_movements_report_xlsx_act',
+
+}
 
 class hr_employee_payslip_reports_wizard(models.TransientModel):
     _name = "hr.employee.payslip.reports.wizard"
@@ -28,7 +33,8 @@ class hr_employee_payslip_reports_wizard(models.TransientModel):
 
     company_id = fields.Many2one("res.company", "Compañia")
 
-    type_report = fields.Selection([('ATS', '(ATS) ANEXO TRANSACCIONAL SIMPLIFICADO')], default='ATS', copy=False)
+    type = fields.Selection([('payslip', 'Reportes de Nomina'),
+                             ('movements', 'Reportes de Rubros')], default='payslip', copy=False)
 
     year = fields.Integer("Año", default=get_default_year)
     month_id = fields.Many2one("calendar.month", "Mes", required=True, default=get_default_month_id)
@@ -63,25 +69,34 @@ class hr_employee_payslip_reports_wizard(models.TransientModel):
     type_struct_id = fields.Many2one("hr.payroll.structure.type", "Tipo", required=False,
                                      default=_get_default_type_struct_id)
 
+    employee_ids=fields.Many2many("hr.employee","payslips_wizard_employee_rel","wizard_id","employee_id","Empleados")
+    rule_ids = fields.Many2many("hr.salary.rule", "payslips_wizard_rules_rel", "wizard_id", "salary_rule_id",
+                                    "Rubros")
+
+
     @api.onchange('year', 'month_id')
     def onchange_year_month(self):
         YEAR = self.year
-        MONTH = self.month_id.value
+        if self.month_id:
+            MONTH = self.month_id.value
 
-        LAST_DAY = calendarO.days(YEAR, MONTH)
-        self.date_start = dateO.create(YEAR, MONTH, 1).date()
-        self.date_end = dateO.create(YEAR, MONTH, LAST_DAY).date()
+            LAST_DAY = calendarO.days(YEAR, MONTH)
+            self.date_start = dateO.create(YEAR, MONTH, 1).date()
+            self.date_end = dateO.create(YEAR, MONTH, LAST_DAY).date()
+        else:
+            self.date_start=None
+            self.date_end = None
 
     def process_report(self):
-        REPORT = self._context.get('default_report', '')
         self = self.with_context({"no_raise": True})
         self = self.with_user(SUPERUSER_ID)
+        REPORT=''
         for brw_each in self:
             try:
-                OBJ_REPORT_PAYSLIP=self.env["hr.payslip.run"].sudo()
-                context={}
-                if REPORT=="payroll_ec.report_payslip_runs_report_xlsx_act":
 
+                REPORT=REPORTS[brw_each.type]
+                if REPORT=="payroll_ec.report_payslip_runs_report_xlsx_act":
+                    OBJ_REPORT_PAYSLIP = self.env["hr.payslip.run"].sudo()
                     domain=[('month_id','=',brw_each.month_id.id),
                                                                 ('year','=',brw_each.year),
                                                                 ('state','!=','cancelled')
@@ -99,8 +114,17 @@ class hr_employee_payslip_reports_wizard(models.TransientModel):
                                    active_model=OBJ_REPORT_PAYSLIP._name,
                                    landscape=True
                                    )
-                    OBJ_REPORT_PAYSLIP = OBJ_REPORT_PAYSLIP.with_context(context)
-                report_value = OBJ_REPORT_PAYSLIP.env.ref(REPORT).with_user(SUPERUSER_ID).report_action(OBJ_REPORT_PAYSLIP)
+                else:
+
+
+                    context = dict(active_ids=[brw_each.id],
+                                   active_id=brw_each.id,
+                                   active_model=self._name,
+                                   landscape=True,
+                                   )
+                OBJ_REPORTS = self.env[self._name].sudo()
+                OBJ_REPORTS = OBJ_REPORTS.with_context(context)
+                report_value = OBJ_REPORTS.env.ref(REPORT).with_user(SUPERUSER_ID).report_action(OBJ_REPORTS)
                 report_value["target"] = "new"
                 return report_value
             except Exception as e:

@@ -5,6 +5,7 @@ from . import hr_payroll_structure
 from . import hr_salary_rule_category
 from . import hr_salary_rule
 from . import hr_salary_rule_account
+from . import hr_salary_rule_account_analytic
 from . import hr_employee_document
 from . import hr_employee_movement
 from . import hr_employee_movement_line
@@ -29,3 +30,10 @@ from . import hr_mail_message
 from . import hr_leave_type
 
 from . import hr_payslip_worked_days
+
+from . import hr_employee_liquidation
+from . import hr_employee_historic_lines
+
+from . import hr_leave
+from  . import hr_vacation_period
+from  . import hr_vacation_period_line

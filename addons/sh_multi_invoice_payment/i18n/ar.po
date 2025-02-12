@@ -1,0 +1,171 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* sh_multi_invoice_payment
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-11-09 10:25+0000\n"
+"PO-Revision-Date: 2020-11-09 10:25+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__residual
+msgid "Amount Due"
+msgstr "المبلغ المستحق"
+
+#. module: sh_multi_invoice_payment
+#: model_terms:ir.ui.view,arch_db:sh_multi_invoice_payment.sh_mip_multi_invoice_payment_wizard_form
+msgid "Cancel"
+msgstr "إلغاء"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__create_uid
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__create_uid
+msgid "Created by"
+msgstr "انشأ من قبل"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__create_date
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__create_date
+msgid "Created on"
+msgstr "تم إنشاؤها على"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__currency_id
+msgid "Currency"
+msgstr "عملة"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__display_name
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__display_name
+msgid "Display Name"
+msgstr "اسم العرض"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__id
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__id
+msgid "ID"
+msgstr "هوية شخصية"
+
+#. module: sh_multi_invoice_payment
+#: code:addons/sh_multi_invoice_payment/wizard/multi_invoice_payment.py:0
+#, python-format
+msgid ""
+"In order to pay multiple invoices at once, they must use the same currency."
+msgstr ""
+"لدفع فواتير متعددة في وقت واحد ، يجب أن يستخدموا نفس العملة."
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__invoice_id
+msgid "Invoice"
+msgstr "فاتورة"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line____last_update
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard____last_update
+msgid "Last Modified on"
+msgstr "تاريخ آخر تعديل"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__write_uid
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__write_uid
+msgid "Last Updated by"
+msgstr "آخر تحديث بواسطة"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__write_date
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__write_date
+msgid "Last Updated on"
+msgstr "آخر تحديث في"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__communication
+msgid "Memo"
+msgstr "مذكرة"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.actions.act_window,name:sh_multi_invoice_payment.sh_mip_multi_invoice_payment_action
+msgid "Multiple Register Payment"
+msgstr "الدفع متعدد التسجيل"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__partner_id
+msgid "Partner"
+msgstr "شريك"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__payment_amount
+msgid "Payment Amount"
+msgstr "مبلغ الدفع"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__payment_date
+msgid "Payment Date"
+msgstr "يوم الدفع او الاستحقاق"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__journal_id
+msgid "Payment Journal"
+msgstr "مجلة الدفع"
+
+#. module: sh_multi_invoice_payment
+#: code:addons/sh_multi_invoice_payment/wizard/multi_invoice_payment.py:0
+#, python-format
+msgid "Payments"
+msgstr "المدفوعات"
+
+#. module: sh_multi_invoice_payment
+#: code:addons/sh_multi_invoice_payment/wizard/multi_invoice_payment.py:0
+#, python-format
+msgid ""
+"Programming error: wizard action executed without active_ids in context."
+msgstr ""
+"خطأ في البرمجة: تم تنفيذ إجراء المعالج بدون active_ids في السياق."
+
+#. module: sh_multi_invoice_payment
+#: model_terms:ir.ui.view,arch_db:sh_multi_invoice_payment.sh_mip_multi_invoice_payment_wizard_form
+msgid "Register Payment"
+msgstr "تسجيل الدفع"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_wizard__register_payment_line
+msgid "Register Payment Line"
+msgstr "سجل خط الدفع"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model,name:sh_multi_invoice_payment.model_sh_mip_register_payment_wizard
+msgid "Register Payment Wizard For Multi Invoice Payment"
+msgstr "تسجيل معالج الدفع لدفع الفواتير المتعددة"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model,name:sh_multi_invoice_payment.model_sh_mip_register_payment_line
+msgid "Register Payment line For Multi Invoice Payment"
+msgstr "تسجيل سطر الدفع لسداد فواتير متعددة"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__amount_total
+msgid "Total"
+msgstr "مجموع"
+
+#. module: sh_multi_invoice_payment
+#: model_terms:ir.ui.view,arch_db:sh_multi_invoice_payment.sh_mip_multi_invoice_payment_wizard_form
+msgid "Validate"
+msgstr "تحقق"
+
+#. module: sh_multi_invoice_payment
+#: model:ir.model.fields,field_description:sh_multi_invoice_payment.field_sh_mip_register_payment_line__wizard_id
+msgid "Wizard"
+msgstr "ساحر"
+
+#. module: sh_multi_invoice_payment
+#: code:addons/sh_multi_invoice_payment/wizard/multi_invoice_payment.py:0
+#, python-format
+msgid "You can only register payments for draft or open invoices"
+msgstr "يمكنك فقط تسجيل مدفوعات الكمبيالات أو الفواتير المفتوحة"

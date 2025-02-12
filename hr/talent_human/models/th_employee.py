@@ -1,11 +1,5 @@
 from odoo import models, fields, api, _, SUPERUSER_ID
 from odoo.exceptions import UserError, ValidationError
-import logging
-
-
-_logger = logging.getLogger(__name__)
-
-
 
 
 
@@ -218,102 +212,102 @@ class HrEmployee(models.Model):
         return True
 
     
-    @api.model
-    def load(self, fields, data):
-        processed_ids = []
-        messages = []
-        is_test = self.env.context.get('test_import', False)
+    # @api.model
+    # def load(self, fields, data):
+    #     processed_ids = []
+    #     messages = []
+    #     is_test = self.env.context.get('test_import', False)
 
-        # Obtener índices de los campos necesarios
-        field_indices = {
-            field: fields.index(field) if field in fields else None
-            for field in ['identification_id', 'name', 'company_id', 'department_id', 'job_id', 'provincia_inicio', 'ciudad_inicio', 'sueldo']
-        }
+    #     # Obtener índices de los campos necesarios
+    #     field_indices = {
+    #         field: fields.index(field) if field in fields else None
+    #         for field in ['identification_id', 'name', 'company_id', 'department_id', 'job_id', 'provincia_inicio', 'ciudad_inicio', 'sueldo']
+    #     }
 
-        for record in data:
-            employee = None
-            if field_indices['identification_id'] is not None:
-                employee = self.env['hr.employee'].search([
-                    ('identification_id', '=', record[field_indices['identification_id']]),
-                    ('company_id', '=', self.env.company.id)
-                ], limit=1)
+    #     for record in data:
+    #         employee = None
+    #         if field_indices['identification_id'] is not None:
+    #             employee = self.env['hr.employee'].search([
+    #                 ('identification_id', '=', record[field_indices['identification_id']]),
+    #                 ('company_id', '=', self.env.company.id)
+    #             ], limit=1)
             
-            if not employee:
-                complete_name = record[field_indices['name']]
-                separacion = complete_name.split(' ')
-                id_department = self.env['hr.department'].search([('complete_name', '=', record[field_indices['department_id']])], limit=1).id if field_indices['department_id'] is not None else None
-                id_job = self.env['hr.job'].search([('name', '=', record[field_indices['job_id']])], limit=1).id if field_indices['job_id'] is not None else None
-                company_id = self.env['res.company'].search([('name', '=', record[field_indices['company_id']])], limit=1).id if field_indices['company_id'] is not None else self.env.company.id
-                provincia_inicio_id = self.env['res.country.state'].search([('name', '=', record[field_indices['provincia_inicio']])], limit=1).id if field_indices['provincia_inicio'] is not None else None
-                ciudad_inicio = record[field_indices['ciudad_inicio']] if field_indices['ciudad_inicio'] is not None else ''
-                sueldo = record[field_indices['sueldo']] if field_indices['sueldo'] is not None else 0.0
+    #         if not employee:
+    #             complete_name = record[field_indices['name']]
+    #             separacion = complete_name.split(' ')
+    #             id_department = self.env['hr.department'].search([('complete_name', '=', record[field_indices['department_id']])], limit=1).id if field_indices['department_id'] is not None else None
+    #             id_job = self.env['hr.job'].search([('name', '=', record[field_indices['job_id']])], limit=1).id if field_indices['job_id'] is not None else None
+    #             company_id = self.env['res.company'].search([('name', '=', record[field_indices['company_id']])], limit=1).id if field_indices['company_id'] is not None else self.env.company.id
+    #             provincia_inicio_id = self.env['res.country.state'].search([('name', '=', record[field_indices['provincia_inicio']])], limit=1).id if field_indices['provincia_inicio'] is not None else None
+    #             ciudad_inicio = record[field_indices['ciudad_inicio']] if field_indices['ciudad_inicio'] is not None else ''
+    #             sueldo = record[field_indices['sueldo']] if field_indices['sueldo'] is not None else 0.0
 
-                if not id_job:
-                    messages.append(_('Job position not found for employee %s') % complete_name)
-                    continue
+    #             if not id_job:
+    #                 messages.append(_('Job position not found for employee %s') % complete_name)
+    #                 continue
 
 
-                employee_vals = {
-                    'identification_id': record[field_indices['identification_id']] if field_indices['identification_id'] is not None else '',
-                    'first_name': separacion[0],
-                    'second_name': separacion[1] if len(separacion) > 1 else '',
-                    'last_name': separacion[2] if len(separacion) > 2 else '',
-                    'mother_last_name': separacion[3] if len(separacion) > 3 else '',
-                    'name': record[field_indices['name']],
-                    'company_id': company_id,
-                    'job_id': id_job,
-                    'department_id': id_department,
-                    'resource_calendar_id': self.env.company.resource_calendar_id.id,
-                    'provincia_inicio': provincia_inicio_id,
-                    'ciudad_inicio': ciudad_inicio,
-                    'sueldo': sueldo,
-                    'active': True,
-                    'tz': self.env.user.tz,
-                }
+    #             employee_vals = {
+    #                 'identification_id': record[field_indices['identification_id']] if field_indices['identification_id'] is not None else '',
+    #                 'first_name': separacion[0],
+    #                 'second_name': separacion[1] if len(separacion) > 1 else '',
+    #                 'last_name': separacion[2] if len(separacion) > 2 else '',
+    #                 'mother_last_name': separacion[3] if len(separacion) > 3 else '',
+    #                 'name': record[field_indices['name']],
+    #                 'company_id': company_id,
+    #                 'job_id': id_job,
+    #                 'department_id': id_department,
+    #                 'resource_calendar_id': self.env.company.resource_calendar_id.id,
+    #                 'provincia_inicio': provincia_inicio_id,
+    #                 'ciudad_inicio': ciudad_inicio,
+    #                 'sueldo': sueldo,
+    #                 'active': True,
+    #                 'tz': self.env.user.tz,
+    #             }
 
-                if not is_test:
-                    employee = self.create(employee_vals)
-                    processed_ids.append(employee.id)
-                    messages.append(_('Employee %s created') % employee.name)
-                else:
-                    messages.append(_('Employee %s would be created (test mode)') % complete_name)
-            else:
+    #             if not is_test:
+    #                 employee = self.create(employee_vals)
+    #                 processed_ids.append(employee.id)
+    #                 messages.append(_('Employee %s created') % employee.name)
+    #             else:
+    #                 messages.append(_('Employee %s would be created (test mode)') % complete_name)
+    #         else:
                 
-                id_job = self.env['hr.job'].search([('name', '=', record[field_indices['job_id']])], limit=1).id if field_indices['job_id'] is not None else None
+    #             id_job = self.env['hr.job'].search([('name', '=', record[field_indices['job_id']])], limit=1).id if field_indices['job_id'] is not None else None
 
-                if not id_job:
-                    messages.append(_('Job position not found for employee %s') % employee.name)
-                    continue
+    #             if not id_job:
+    #                 messages.append(_('Job position not found for employee %s') % employee.name)
+    #                 continue
                 
                 
-                update_vals = {
-                    'identification_id': record[field_indices['identification_id']] if field_indices['identification_id'] is not None else '',
-                    'name': record[field_indices['name']],
-                    'company_id': company_id,
-                    'job_id': id_job,
-                    'department_id': id_department,
-                    'resource_calendar_id': self.env.company.resource_calendar_id.id,
-                    'provincia_inicio': provincia_inicio_id,
-                    'ciudad_inicio': ciudad_inicio,
-                    'sueldo': sueldo,
-                    'active': True,
-                    'tz': self.env.user.tz,
+    #             update_vals = {
+    #                 'identification_id': record[field_indices['identification_id']] if field_indices['identification_id'] is not None else '',
+    #                 'name': record[field_indices['name']],
+    #                 'company_id': company_id,
+    #                 'job_id': id_job,
+    #                 'department_id': id_department,
+    #                 'resource_calendar_id': self.env.company.resource_calendar_id.id,
+    #                 'provincia_inicio': provincia_inicio_id,
+    #                 'ciudad_inicio': ciudad_inicio,
+    #                 'sueldo': sueldo,
+    #                 'active': True,
+    #                 'tz': self.env.user.tz,
 
-                }
-                update_vals=self.update_data_contracts_employees(update_vals)
-                if not is_test:
-                    employee.write(update_vals)
-                    processed_ids.append(employee.id)
-                    messages.append(_('Employee %s updated') % employee.name)
-                else:
-                    messages.append(_('Employee %s would be updated (test mode)') % employee.name)
+    #             }
+    #             update_vals=self.update_data_contracts_employees(update_vals)
+    #             if not is_test:
+    #                 employee.write(update_vals)
+    #                 processed_ids.append(employee.id)
+    #                 messages.append(_('Employee %s updated') % employee.name)
+    #             else:
+    #                 messages.append(_('Employee %s would be updated (test mode)') % employee.name)
 
-        # Devolver el formato esperado con 'nextrow'
-        return {
-            'ids': processed_ids,
-            'messages': messages,
-            'nextrow': False
-        }
+    #     # Devolver el formato esperado con 'nextrow'
+    #     return {
+    #         'ids': processed_ids,
+    #         'messages': messages,
+    #         'nextrow': False
+    #     }
 
     @api.model
     def update_data_contracts_employees(self,update_vals):
@@ -323,15 +317,10 @@ class HrEmployee(models.Model):
     def write(self, vals):
         for record in self:
             
-            # if self.env.context.get('skip_validation'):
-            #     return super(HrEmployee, self).write(vals)
+            if self.env.context.get('skip_validation'):
+                return super(HrEmployee, self).write(vals)
             
-            # try:
-            #     old_values = record.read(fields=[])[0]
-            #     _logger.info("Valores antiguos del registro %s: %s", record.id, old_values)
-            # except Exception as e:
-            #     raise UserError(_("Error al leer los valores antiguos del empleado %s: %s") % (record.name, str(e)))
-
+            old_values = record.read([])[0]
             
             # if 'name' in vals:
             #     nombre_completo = vals['name']
@@ -347,58 +336,13 @@ class HrEmployee(models.Model):
             # vals['mother_last_name'] = separacion[3] if len(separacion) > 3 else ''
                 
             
-            for record in self:
-                _logger.info("Analizando campos del empleado: %s", record.name)
-                for field_name in record._fields:
-                    try:
-                        value = getattr(record, field_name)
-                        _logger.info("Campo: %s, Valor: %s", field_name, value)
-                    except Exception as e:
-                        _logger.error("Error en el campo %s: %s", field_name, e)
-                res = super(HrEmployee, self).write(vals)
-
-
-                if not record.contract_ids:
-                    _logger.info("Creando contrato para el empleado: %s", record.name)
-                    
-                    # Datos predeterminados para el contrato
-                    # contract_vals = {
-                    #     'name': f'Contrato de {record.name}',  # Nombre del contrato
-                    #     'employee_id': record.id,             # Relación con el empleado
-                    #     'date_start': fields.Date.today(),    # Fecha actual como inicio del contrato
-                    #     'state': 'open',                      # Estado inicial del contrato
-                    #     'job_id': record.job_id.id if record.job_id else False,  # Cargo del empleado
-                    #     'department_id': record.department_id.id if record.department_id else False,  # Departamento
-                    #     'wage': 0.0,  # Salario base por defecto, ajusta según sea necesario
-                    # }
-                    contract_vals = {
-                        'name': _('Contrato del empleado %s') % record.name,
-                        'employee_id': record.id,
-                        'company_id': record.company_id.id,
-                        'date_start': record.fecha_ingreso,
-                        'state': 'draft',
-                        'department_id': record.department_id.id,
-                        'job_id': record.job_id.id,
-                        'wage': record.sueldo,
-                        'working_hours': record.resource_calendar_id.id,
-                        'provincia_inicio': record.provincia_inicio.id,
-                        # 'ciudad_inicio': employee   .ciudad_inicio,
-                        "contract_type_id":record.tipo_contrato and record.tipo_contrato.id or False,
-                        "schedule_pay":None
-                        # Agregar otros valores necesarios para el contrato
-                    }
-                    
-                    # Crear el contrato
-                    self.env['hr.contract'].create(contract_vals)
-                    _logger.info("Contrato creado para el empleado %s con valores: %s", record.name, contract_vals)
-
-            return res
+            
 
             # if self.env.user.has_group('hr.group_hr_manager'):
             #     if self.checked == False and 'checked' not in vals:
             #         raise UserError('Debes Marcar al empleado como verificado para poder guardar los cambios')
             
-            #return super(HrEmployee, self).write(vals)
+            return super(HrEmployee, self).write(vals)
 
     @api.model
     def create(self, vals):

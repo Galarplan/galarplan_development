@@ -35,6 +35,8 @@
         "wizard/hr_employee_movement_wizard.xml",
         "wizard/hr_payslip_employees.xml",
         "wizard/hr_employee_payslip_reports_wizard.xml",
+        "wizard/hr_employee_report_wizard.xml",
+        "wizard/hr_vacation_period_wizard.xml",
 
         "reports/hr_payslip.xml",
         "reports/ir_actions_report_xml.xml",
@@ -67,6 +69,17 @@
         "views/hr_employee_payment.xml",
 
         "views/hr_payroll_structure_type.xml",
+
+        "views/hr_employee_historic_lines.xml",
+
+        "views/hr_employee_liquidation.xml",
+
+        #'views/hr_deductible_expenses_contract_period_template.xml',
+
+        "views/hr_employee_liquidation.xml",
+
+        "views/hr_vacation_period.xml",
+        "views/hr_leave.xml",
 
         "views/ir_ui_menu.xml",
     ],

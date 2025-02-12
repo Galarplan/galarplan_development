@@ -15,6 +15,35 @@
         <field name="code">model.send_all_pendings(5,'id desc',[])</field>
   <field name="user_id" ref="base.user_root" />
     </record>
+
+     <record model="ir.cron" id="generate_and_update_vacations">
+        <field name="name">Actualizar Periodos de Vacaciones</field>
+        <field name="interval_number">8</field>
+        <field name="sequence">900</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="active" eval="True"/>
+        <field name="model_id" ref="model_hr_vacation_period"/>
+        <field name="state">code</field>
+        <field name="code">model.synchronize_periods(0,)</field>
+  <field name="user_id" ref="base.user_root" />
+    </record>
+
+     <record model="ir.cron" id="vacations_end">
+        <field name="name">Cerrar Periodos de Vacaciones</field>
+        <field name="interval_number">8</field>
+        <field name="sequence">900</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="active" eval="True"/>
+        <field name="model_id" ref="model_hr_vacation_period"/>
+        <field name="state">code</field>
+        <field name="code">model.synchronize_ended_periods()</field>
+  <field name="user_id" ref="base.user_root" />
+    </record>
+
     
 
  </data>

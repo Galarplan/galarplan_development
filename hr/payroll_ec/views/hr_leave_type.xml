@@ -16,6 +16,7 @@
 
     <field name="salary_rule_id"  options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
     <field name="subsidies_period" />
+    <field name="vacations" />
 </field>
 
             </field>

@@ -41,6 +41,10 @@ class HrSalaryRule(models.Model):
 
     legal_iess = fields.Boolean(string="Para afiliados",default=True)
 
+    for_liquidate_provision = fields.Boolean(string="Para liquidar Prov.", default=False)
+    provision_rule_ids = fields.Many2many("hr.salary.rule", "provision_hr_salary_rule_rel", "rule_id", "provision_id",
+                                          string="Reglas de Provision")
+    enable_for_documents = fields.Boolean("Habilitar para generar Documentos", default=False)
 
     @api.onchange('payment')
     def onchange_payment(self):
@@ -117,6 +121,19 @@ class HrSalaryRule(models.Model):
                 name = "%s DE %s" % (name, brw_employee.name or '..',)
             result = {"name": name, }
         return result
+
+    @api.model
+    def get_default_yearly_values(self, brw_company, brw_rule, brw_document, model_name, date_process,
+                                  brw_employee=None,
+                                  brw_contract=None):
+        result = {}
+        name = ("%s DEL %s" % (brw_rule.name, str(brw_document.year))).upper()
+        if model_name in ('hr.employee.movement.line', 'hr.employee.movement'):
+            if model_name == 'hr.employee.movement.line' and (brw_employee is not None and brw_employee):
+                name = "%s DE %s" % (name, brw_employee.name or '..',)
+            result = {"name": name, }
+        return result
+
 
     def _new_satisfy_condition(self, localdict):
         OBJ_FX = self.env["dynamic.function"].sudo()

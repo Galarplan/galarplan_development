@@ -41,13 +41,46 @@
               sequence="2" />
 
 
-     <menuitem name="Pagos" id="hr_bank_parent_menu"
+
+    <menuitem name="Procesos" id="hr_other_process_menu"
               parent="payroll.payroll_menu_root"
-              sequence="73" />
+              sequence="70" />
+
+  <menuitem name="Pagos de Provisiones" id="hr_employee_movement_view_provision_menu"
+              action="hr_employee_movement_view_provision_action" parent="hr_other_process_menu"
+              sequence="1" />
+
+ <menuitem name="Finiquito de Empleados" id="hr_employee_movement_view_liquidation_menu"
+              action="hr_employee_liquidation_view_action" parent="hr_other_process_menu"
+              sequence="2" />
+
+     <menuitem name="Liquidación de Vacaciones" id="hr_employee_movement_view_vacation_menu"
+              action="hr_employee_vacation_view_action" parent="hr_other_process_menu"
+              sequence="3" />
 
 
-     <menuitem name="Pagos de Nómina" id="hr_employee_payment_view_menu"
-              action="hr_employee_payment_view_action" parent="hr_bank_parent_menu"
+
+        <menuitem name="Generar Periodo de Vacaciones" id="hr_vacation_period_wizard_view_menu"
+              action="hr_vacation_period_wizard_view_action" parent="hr_other_process_menu"
+              sequence="4" />
+
+    <menuitem name="Periodo de Vacaciones" id="hr_vacation_period_view_menu"
+              action="hr_vacation_period_view_action" parent="hr_other_process_menu"
+              sequence="4" />
+
+
+         <menuitem id="menu_hr_employee_historic_lines_view" name="Históricos de Rubros de Nómina"
+                   parent="hr_other_process_menu"
+action="hr_employee_historic_lines_view_action" sequence="999999"
+/>
+
+     <menuitem name="Pagos" id="hr_process_bank_menu"
+              parent="hr_other_process_menu"
+              sequence="999" />
+
+
+     <menuitem name="Pagos de Nómina" id="hr_employee_payment_view_act_menu"
+              action="hr_employee_payment_view_action" parent="hr_process_bank_menu"
               sequence="999" />
 
  <menuitem name="Roles" id="payroll_hr_payslip_menu_root"
@@ -59,6 +92,7 @@
         id="payroll.hr_payslip_run_menu"
         parent="payroll_hr_payslip_menu_root"
     />
+
 
 
     <menuitem
@@ -74,9 +108,46 @@
         groups="payroll.group_payroll_user"
     />
 
-<!--    <menuitem id="menu_hr_mail_message_payslip" name="Envio de Roles" parent="hr_payroll.menu_hr_payroll_payslips"-->
-<!--action="action_hr_mail_message_payslip" sequence="999999"-->
-<!--/>-->
+    <menuitem id="menu_hr_mail_message_payslip" name="Envio de Roles"
+action="action_hr_mail_message_payslip" parent="payroll_hr_payslip_menu_root" sequence="99999"
+        groups="payroll.group_payroll_user"
+/>
+
+<menuitem
+            id="hr_employee_report_wizard_cumpleanios_menu"
+            action="hr_employee_report_wizard_cumpleanios_action"
+            parent="hr.hr_menu_hr_reports"
+            sequence="10"
+            groups="base.group_no_one" />
+
+     <menuitem name="Pagos de Nómina" id="hr_employee_payment_view_act_menu"
+              action="hr_employee_payment_view_action" parent="hr_process_bank_menu"
+              sequence="999" />
+
+
+
+    <menuitem name="Informes" id="hr_payslip_reports_menu"
+              parent="payroll.payroll_menu_root"
+              sequence="71" />
+
+      <menuitem name="Reporte de Movimientos" id="hr_employee_payslip_reports_movements_wizard_menu"
+              action="hr_employee_payslip_reports_movements_wizard_action" parent="hr_payslip_reports_menu"
+              sequence="998" />
+
+     <menuitem name="Reporte de Roles" id="hr_employee_payslip_reports_wizard_menu"
+              action="hr_employee_payslip_reports_wizard_action" parent="hr_payslip_reports_menu"
+              sequence="999" />
+
+        <menuitem name="Informes" id="hr_employee_reports_menu"
+              parent="hr.menu_hr_root"
+              sequence="71" />
+
+    <menuitem
+            id="hr_employee_report_wizard_cumpleanios_menu"
+            action="hr_employee_report_wizard_cumpleanios_action"
+            parent="hr_employee_reports_menu"
+            sequence="10"
+            groups="base.group_no_one" />
 
 
 

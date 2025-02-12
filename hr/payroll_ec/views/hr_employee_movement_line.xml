@@ -277,6 +277,36 @@ attrs="{'invisible':[('bank_account_id','=',False)]}"
                             </group>
                         </group>
                     </page>
+
+                                  <page string="Provisiones" name="page_provisions" attrs="{'invisible':[('provision_line_ids','=',[])]}">
+<field name="provision_line_ids" readonly="1">
+<tree string="Provision">
+
+      <field name="id" string="# ID" optional="hide" />
+                <field name="company_id" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                <field name="rule_id"  options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                 <field name="payslip_id"  options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                <field name="payslip_line_id" optional="hide" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                <field name="grouped" />
+                <field name="year" />
+                <field name="month_id" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                  <field name="date_from"   optional="hide"/>
+                  <field name="date_to"  optional="hide"/>
+                <field name="amount"  sum="total"/>
+                 <field name="amount_to_paid" sum="total" optional="hide"/>
+                 <field name="amount_paid"  sum="total"  optional="hide"/>
+                 <field name="amount_residual" sum="total"  optional="hide" />
+                  <field name="state"  optional="show" widget="badge"
+                        decoration-info="state=='draft'"
+                       decoration-success="state=='posted'"
+                />
+</tree>
+</field>
+
+              </page>
+
               <page string="Saldos" name="page_inputs" attrs="{'invisible':[('payslip_input_ids','=',[])]}">
 <field name="payslip_input_ids" readonly="1">
     <tree string="Rol">
@@ -315,6 +345,73 @@ attrs="{'invisible':[('bank_account_id','=',False)]}"
             </form>
         </field>
     </record>
+
+       <record id="hr_employee_movement_line_view_tree_edit_provision"
+            model="ir.ui.view">
+        <field name="name">hr.employee.movement.line.tree.edit.provision</field>
+        <field name="model">hr.employee.movement.line</field>
+        <field name="type">tree</field>
+        <field eval="8888" name="priority"/>
+        <field name="arch" type="xml">
+            <tree string="Movimientos" create="false"
+            decoration-it="account and payment and not bank_account_id"
+                  decoration-danger="account and payment and not bank_account_id"
+            >
+                <field name="id" optional="hide"/>
+                <field name="employee_id" context="{'filter_date_process':date_process,'filter_rule_id':rule_id,'filter_company_id':company_id,'filter_legal_iess':legal_iess}"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
+
+                />
+                <field name="quota" invisible="0" optional="hide"/>
+                <field name="name" optional="hide"/>
+                <field name="total" sum="total" force_save="1"
+                       attrs="{'readonly':[('locked_edit','=',True)]}"
+                />
+                <field name="date_process" invisible="0" optional="hide"/>
+                <field name="contract_id"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
+                       optional="hide"
+                       domain="[('employee_id','=',employee_id),('company_id','=',company_id)]"
+                />
+
+
+                <field name="state" invisible="1"/>
+                <field name="company_id" invisible="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                <field name="currency_id" invisible="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                <field name="rule_id" invisible="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                <field name="category_id" invisible="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                <field name="category_code" invisible="1"/>
+                <field name="type" invisible="1"/>
+                <field name="month_id" invisible="1" force_save="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                <field name="year" invisible="1" force_save="1"/>
+                <field name="locked_edit" invisible="1"/>
+
+                 <field name="job_id" invisible="1" force_save="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                 <field name="department_id" invisible="1" force_save="1"
+                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+<field name="total_historic" sum="total" force_save="1"
+invisible="1"
+                />
+<field name="bank_account_id" invisible="1"/>
+                <field name="payment" invisible="1" />
+                                <field name="account" invisible="1" />
+
+                <field name="total_to_paid" optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
+                <field name="total_paid"  optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
+                <field name="total_pending"  optional="hide" sum="total" attrs="{'invisible':[('state','not in',('approved','paid'))]}"/>
+<field name="legal_iess" invisible="1" />
+<field name="comments" optional="hide"/>
+
+            </tree>
+        </field>
+    </record>
+
 
 
     <record id="hr_employee_movement_line_view_tree_discount_edit"

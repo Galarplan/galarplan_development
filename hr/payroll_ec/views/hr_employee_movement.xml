@@ -649,4 +649,162 @@ attrs="{'invisible':[('bank_account_id','=',False)]}"
         </field>
     </record>
 
+
+    <record id="hr_employee_movement_view_form_provision"
+            model="ir.ui.view">
+        <field name="name">hr.employee.movement.form.provision</field>
+        <field name="model">hr.employee.movement</field>
+        <field name="type">tree</field>
+        <field eval="8" name="priority"/>
+        <field name="arch" type="xml">
+            <form string="Movimientos">
+                <header>
+                    <button name="print_report" string="Imprimir" icon="fa-print"
+                            type="object" attrs="{'invisible':[('state','=','cancelled')]}" />
+                    <button
+                            name="%(hr_employee_movement_wizard_view_compute_action)d"
+                            string="Generar" type="action"
+                            attrs="{'invisible':['|',('rule_id','=',False),('state','!=','draft')]}"
+                            icon="fa-list-ol"/>
+                    <button
+                            name="action_approved"
+                            string="Aprobar" type="object"
+                            attrs="{'invisible':['|','|',('rule_id','=',False),('state','!=','draft'),('line_ids','=',[])]}"
+                            icon="fa-check"/>
+                    <button
+                            name="action_draft"
+                            string="Cambiar a Borrador" type="object"
+                            attrs="{'invisible':['|',('state','in',('paid','cancelled','draft')),('total_paid','&gt;',0)]}"
+                            icon="fa-rotate-left"/>
+                    <button
+                            name="action_cancelled"
+                            string="Anular" type="object"
+                            attrs="{'invisible':[('state','!=','draft')]}"
+                            icon="fa-times"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <group>
+                    <group>
+                        <field name="id" string="# ID" attrs="{'invisible
+':[('id','&lt;=',0)]}"/>
+                        <field name="company_id" attrs="{'readonly':[('state','!=','draft')]}"
+                               options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+   <field name="filter_iess" attrs="{'readonly':[('state','!=','draft')]}" invisible="1"/>
+                        <field name="rule_id" attrs="{'readonly':[('state','!=','draft')]}"
+                               options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
+                               domain="[('legal_iess','=',filter_iess),('category_id','=',category_id),('for_liquidate_provision','=',True),('enable_for_documents','=',True)]"
+                        />
+                        <field name="name" attrs="{'readonly':[('state','!=','draft')]}"/>
+                        <div colspan="2"
+                             attrs="{'invisible':['|','|',('state','!=','draft'),('payment','!=',True),('account','!=',True)]}"
+                             style="color:red">ESTE REGISTRO VALIDARA LA EXISTENCIA DE CUENTAS BANCARIAS POR CADA
+                            EMPLEADO
+                        </div>
+                    </group>
+                    <group>
+                        <field name="date_process" attrs="{'readonly':[('state','!=','draft')]}"/>
+                        <field name="total"/>
+                        <field name="total_to_paid"/>
+                        <field name="total_paid"/>
+                        <field name="total_pending"/>
+                        <field name="legal_iess" invisible="1"/>
+                    </group>
+                </group>
+                <newline/>
+                <notebook>
+                    <page string="Detalle" name="page_detalle">
+                        <group>
+                            <button string="Borrar 0" colspan="1"
+                                    name="delete_zeros" type="object"
+                                    icon="fa-clear"
+                                    attrs="{'invisible':[('state','!=','draft')]}"
+                                    />
+                        </group>
+                        <newline/>
+                        <field name="line_ids" attrs="{'readonly':[('state','!=','draft')]}"
+                               context="{'tree_view_ref':'payroll_ec.hr_employee_movement_line_view_tree_edit_provision','form_view_ref':'payroll_ec.hr_employee_movement_line_view_form',
+                               'default_company_id':company_id,
+                               'default_currency_id':currency_id,
+                               'default_rule_id':rule_id,
+                               'default_category_id':category_id,
+                               'default_category_code':category_code,
+                               'default_type':type,'default_date_process':date_process,'default_month_id':month_id,'default_year':year,
+                               'default_locked_edit':locked_edit,
+                               'default_legal_iess':legal_iess }"
+                        />
+                    </page>
+                    <page string="Otra Información" name="page_conf">
+                        <group>
+                            <group>
+                                <field name="currency_id"
+                                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                                <field name="month_id" force_save="1"
+                                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                                <field name="year" readonly="1"/>
+
+
+                                <field name="move_id" readonly="1"
+                                       force_save="1"
+                                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True}"
+                                       attrs="{'invisible':[('move_id','=',False)]}"
+                                />
+
+
+                            </group>
+                            <group>
+                                <field name="category_id" readonly="1" force_save="1"
+                                       options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+                                <field name="category_code" invisible="1"/>
+                                <field name="type" readonly="1" force_save="1"/>
+                                <field name="origin" readonly="1" force_save="1"/>
+                                <field name="locked_import" invisible="1"/>
+                                <field name="locked_compute" invisible="1"/>
+                                <field name="locked_edit" invisible="1"/>
+                                <field name="account" invisible="1"/>
+                                <field name="payment" invisible="1"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+                <newline/>
+                <field name="comments" placeholder="OBSERVACIONES..." attrs="{'readonly':[('state','!=','draft')]}"/>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="hr_employee_movement_view_provision_action"
+            model="ir.actions.act_window">
+        <field name="name">Pagos de Provisiones</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.employee.movement</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('category_code','=','IN'),('type','=','batch'),('rule_id.enable_for_documents','=',True),('rule_id.for_liquidate_provision','=',True)]</field>
+        <field name="context">{'hide_employee_search':False,'default_type':'batch','default_category_code':'IN'}</field>
+        <field name="view_id"
+               ref="hr_employee_movement_view_tree"/>
+        <field name="search_view_id"
+               ref="hr_employee_movement_view_search"/>
+    </record>
+
+    <record model="ir.actions.act_window.view"
+            id="hr_employee_movement_view_tree_provision_action">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id"
+               ref="hr_employee_movement_view_tree"/>
+        <field name="act_window_id"
+               ref="hr_employee_movement_view_provision_action"/>
+    </record>
+
+    <record model="ir.actions.act_window.view"
+            id="hr_employee_movement_view_form_provision_action">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id"
+               ref="hr_employee_movement_view_form_provision"/>
+        <field name="act_window_id"
+               ref="hr_employee_movement_view_provision_action"/>
+    </record>
+
 </odoo>

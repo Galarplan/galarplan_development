@@ -86,7 +86,7 @@ class report_payslip_runs_xlsx(models.AbstractModel):
                 (
                     %s
                 ) X 
-                ORDER BY X.SEQUENCE ASC""" % (COLUMN_BASE_QUERY,)
+                ORDER BY X.SEQUENCE ASC,X.RULE_ORDER ASC """ % (COLUMN_BASE_QUERY,)
             self._cr.execute(COLUMN_QUERY)
             result_columns = self._cr.fetchall()
             if result_columns:
@@ -168,7 +168,7 @@ class report_payslip_runs_xlsx(models.AbstractModel):
             )
 
             SELECT 1 SEQUENCE_FORMAT,RC.NAME AS COMPANY_NAME,HE.IDENTIFICATION_ID,
-            HE.NAME, hd.name AS DEPARTAMENTO,(Hj.NAME::JSON->>'es_EC')::varchar AS CARGO,HC.DATE_START AS FECHA_CONTRATO,(hct.name::JSON->>'es_EC')::varchar AS TIPO_CONTRATO,
+            HE.NAME, hd.name AS DEPARTAMENTO,(Hj.NAME::JSON->'es_EC')::varchar AS CARGO,HC.DATE_START AS FECHA_CONTRATO,hct.name AS TIPO_CONTRATO,
             HP.WAGE AS WAGE,
             HP.total_worked_days AS WORKED_DAYS,
             T.* 
@@ -204,7 +204,7 @@ class report_payslip_runs_xlsx(models.AbstractModel):
                 RANGE_COLUMNS = range(1, len(headers) )
                 PATTERN_FILL=PatternFill(start_color='D9D9D9', end_color='D9D9D9',
                                             fill_type='solid')
-                FONT_HEADER=Font(name='Arial', size=12, bold=True, color='000000')
+                FONT_HEADER=Font(  bold=True, color='000000')
                 ALIGNMENT = Alignment(horizontal='center', vertical='center')
                 ALIGNMENT_RIGHT = Alignment(horizontal='right', vertical='center')
                 ALIGNMENT_LEFT = Alignment(horizontal='left', vertical='center')
@@ -212,7 +212,7 @@ class report_payslip_runs_xlsx(models.AbstractModel):
                 DECIMAL_STYLE = NamedStyle(name="decimal_style", number_format="0.00")
 
                 BLACK_LIST=[]
-                FONT_BOLD=Font(name='Arial', size=12, bold=True)
+                FONT_BOLD=Font( bold=True)
                 FONT_BOLD_LIST=["total_ingresos","total_egresos","total_provision","total"]
                 ultima_columna=1
                 for j in RANGE_COLUMNS:

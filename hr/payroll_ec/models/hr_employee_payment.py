@@ -347,11 +347,12 @@ where psr.id in %s and psr.state='close'""",(tuple(movement_ids),tuple(payslip_i
                         brw_reconcile=brw_line+brw_invoice_lines
                         if len(brw_reconcile)<=1:
                             raise ValidationError(_("No hay nada que reconciliar para %s documento %s") % (partner.name,brw_resument_line.move_id.name))
+                        print(account,partner)
                         brw_reconcile.reconcile()
+            print(brw_each.movement_ids)
             for brw_document in brw_each.movement_ids:
                 brw_document.action_paid()
             for brw_document in brw_each.payslip_ids:
-                brw_document.action_close()
-                brw_document.write({"state":"paid"})
+                brw_document.action_paid()
             brw_each.write({"move_id":brw_move.id,"state":"approved"})
         return True

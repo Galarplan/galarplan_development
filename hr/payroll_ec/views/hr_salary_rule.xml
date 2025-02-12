@@ -107,12 +107,12 @@
                     </page>
 
 
-                     <page string="Contabilidad" name="pg_account">
+                <page string="Contabilidad" name="pg_account">
 
 								<field name="rule_account_ids" nolabel="1" colspan="4"
 
                                 >
-									<tree string="Cuentas" editable="bottom">
+									<tree string="Cuentas">
 										<field name="type" />
 										<field name="account_type" />
 										<field name="company_id"
@@ -126,12 +126,59 @@
                                         attrs="{'readonly':[('required_journal','!=',True)],'invisible':[('required_journal','!=',True)],'required':[('required_journal','=',True)]}"
                                         />
 
+
+
                                         <field name="required_journal" optional="hide" />
 										</tree>
+
+
+                                    <form string="Cuentas" >
+                                         <group>
+                                        <group>
+                                            <field name="type" colspan="2"/>
+										<field name="account_type" colspan="2"/>
+										<field name="company_id" colspan="2"
+											options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}" />
+
+                                        </group>
+                                        <group>
+                                            <field name="account_id" colspan="2"
+											options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
+											domain="[('company_id','=',company_id)]" />
+                                              <field name="journal_id" colspan="2" options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
+											domain="[('company_id','=',company_id)]"
+                                        attrs="{'readonly':[('required_journal','!=',True)],'invisible':[('required_journal','!=',True)],'required':[('required_journal','=',True)]}"
+                                        />
+
+
+
+                                        <field name="required_journal" colspan="2" invisible="1" />
+                                        </group>
+                                         </group>
+
+<newline/>
+                  <field name="analytic_ids" >
+                      <tree editable="bottom">
+                           <field name="department_id" options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"
+                      domain="['|',('company_id','=',parent.company_id),('company_id','=',False)]"
+                      />
+                          <field name="account_id"
+                             domain="[('company_id','=',parent.company_id)]"
+                             options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+
+                      <field name="analytic_account_id"
+                             domain="['|',('company_id','=',parent.company_id),('company_id','=',False)]"
+                             options="{'no_quick_create': True,'no_create': True,'no_create_edit': True,'no_open':True}"/>
+
+                      </tree>
+                        </field>
+
+										</form>
 
 								</field>
 
 						</page>
+
 
                 </page>
 

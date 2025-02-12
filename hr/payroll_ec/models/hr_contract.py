@@ -11,6 +11,18 @@ FIRST_FITTEN_PAYMENT_MODE = [('percent', 'Porcentaje'), ('amount', 'Monto')]
 class HrContract(models.Model):
     _inherit="hr.contract"
 
+    def _get_other_datas(self):
+        dtToday = fields.Date.context_today(self)
+        for brw_each in self:
+            dtStartContract = brw_each.date_start
+            worked_days = ( dtToday - dtStartContract).days
+            brw_each.worked_days = worked_days
+
+
+    worked_days = fields.Integer(compute='_get_other_datas', string='Dias Trabajados', required=False, store=False,
+                                 readonly=True)
+
+
     struct_id=fields.Many2one("hr.payroll.structure","Estructura Salarial",compute="_get_compute_struct_id",store=False,readonly=True)
     structure_type_id = fields.Many2one("hr.payroll.structure.type", "Tipo de Estructura Salarial", compute="_get_compute_struct_id",
                                 store=False, readonly=True)

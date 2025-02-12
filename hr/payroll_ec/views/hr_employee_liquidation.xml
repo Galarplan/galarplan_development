@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="hr_employee_liquidation_view_search"
+            model="ir.ui.view">
+        <field name="name">hr.employee.liquidation.search</field>
+        <field name="model">hr.employee.liquidation</field>
+        <field name="type">tree</field>
+        <field eval="8" name="priority"/>
+        <field name="arch" type="xml">
+            <search string="Liquidación de Empleados">
+
+                 <group expand="0" string="Filtrar...">
+
+					</group>
+					<group expand="0" string="Agrupar por...">
+
+					</group>
+
+                <field name="id"/>
+                <field name="company_id"/>
+                   <field name="employee_id"/> 
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_employee_liquidation_view_tree"
+            model="ir.ui.view">
+        <field name="name">hr.employee.liquidation.tree</field>
+        <field name="model">hr.employee.liquidation</field>
+        <field name="type">tree</field>
+        <field eval="8" name="priority"/>
+        <field name="arch" type="xml">
+            <tree string="Liquidación de Empleados">
+                <field name="id" string="# ID" optional="hide" readonly="1"/>
+                <field name="company_id" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                 <field name="employee_id" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                 <field name="total" attrs="{'readonly':[('state','!=','draft')]}" sum="total"/>
+                 <field name="total_to_paid" attrs="{'readonly':[('state','!=','draft')]}" sum="total" optional="hide"/>
+                 <field name="total_paid" attrs="{'readonly':[('state','!=','draft')]}" sum="total"  optional="hide"/>
+                 <field name="total_pending" attrs="{'readonly':[('state','!=','draft')]}" sum="total"  optional="hide" />
+                  <field name="state" attrs="{'readonly':[('state','!=','draft')]}" optional="show" widget="badge"
+                        decoration-info="state=='draft'"
+                       decoration-success="state=='posted'"
+                />
+            </tree>
+        </field>
+    </record>
+
+    <record id="hr_employee_liquidation_view_form"
+            model="ir.ui.view">
+        <field name="name">hr.employee.liquidation.form</field>
+            <field name="model">hr.employee.liquidation</field>
+        <field name="type">tree</field>
+        <field eval="8" name="priority"/>
+        <field name="arch" type="xml">
+            <form string="Liquidación de Empleados">
+                <header>
+
+                    <field name="state"  widget="statusbar"
+                />
+                </header>
+                <group>
+                     <group>
+                     <field name="id" string="# ID" readonly="1"/>
+                         <field name="name" invisible="1" />
+                <field name="company_id" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                      <field name="employee_id" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+<field name="contract_id" attrs="{'readonly':[('state','!=','draft')]}"
+       domain="[('company_id','=',company_id),('employee_id','=',employee_id),('state','=','open')]"
+       options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                         <field name="department_id" readonly="1" force_save="1"
+                           options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                       <field name="job_id" readonly="1" force_save="1"
+                           options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                      <field name="comments"   attrs="{'readonly':[('state','!=','draft')]}"
+                           options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+
+
+
+
+                        </group>
+                     <group>
+                         <field name="type" widget="radio" readonly="1" force_save="1" invisible="1"/>
+
+
+                         <field name="period_vacation_id" attrs="{'required':[('type','=','vacation')],'invisible':[('type','!=','vacation')],'readonly':[('state','!=','draft')]}"
+                           options="{'no_create':True,'no_edit':True}"
+                         domain="[('company_id','=',company_id),('contract_id','=',contract_id),('employee_id','=',employee_id)]"
+
+                         />
+               <field name="total" sum="total"/>
+                 <field name="total_to_paid"  sum="total" optional="hide"/>
+                 <field name="total_paid" sum="total"  optional="hide"/>
+                 <field name="total_pending"  sum="total"  optional="hide" />
+                    </group>
+
+                </group>
+<newline/>
+                <notebook>
+                    <page string="Provisiones" name="page_provision">
+                         <field name="provision_ids" readonly="1" force_save="1">
+                    <tree>
+  <field name="id" string="# ID" optional="hide" readonly="1"/>
+                <field name="company_id" options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                <field name="rule_id"  options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                 <field name="employee_id"  options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                 <field name="payslip_id"  options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                <field name="payslip_line_id"  options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+
+                <field name="grouped" />
+                <field name="year"  />
+                <field name="month_id"   options="{'no_create':True,'no_edit':True,'no_open':True}"/>
+                  <field name="date_from"  />
+                  <field name="date_to" />
+                <field name="amount"   sum="total"/>
+                 <field name="amount_to_paid"  sum="total" />
+                 <field name="amount_paid"  sum="total"  />
+                 <field name="amount_residual" sum="total"  />
+                  <field name="state"  /></tree>
+                </field>
+                    </page>
+              <page string="Detalle de Dias Tomados" name="page_vacations" attrs="{'invisible':[('type','!=','vacation')]}">
+  <group colspan="4" cols="2">
+      <group string="Tentativos">
+                            <field name="attempt_days" readonly="1" colspan="2" string="Dia(s)" force_save="1"/>
+                            <field name="attempt_pending_days" readonly="1" string="Pendiente(s)" colspan="2" force_save="1"/>
+                        </group>
+                        <group string="Utilizados">
+                       <field name="days" readonly="1" colspan="2" string="Dia(s)" force_save="1"/>
+                            <field name="pending_days" readonly="1" string="Pendiente(s)" colspan="2" force_save="1"/>
+/>
+                        </group>
+</group>
+<newline/>
+                  <field name="vacation_request_ids" readonly="1" force_save="1" />
+              </page>
+                </notebook>
+
+
+            </form>
+        </field>
+    </record>
+
+
+
+    <record id="hr_employee_liquidation_view_action"
+            model="ir.actions.act_window">
+        <field name="name">Finiquito</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.employee.liquidation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{'default_type':'liquidation'}</field>
+        <field name="view_id"
+               ref="hr_employee_liquidation_view_tree"/>
+        <field name="search_view_id"
+               ref="hr_employee_liquidation_view_search"/>
+    </record>
+
+    <record model="ir.actions.act_window.view"
+            id="hr_employee_liquidation_view_tree_action">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id"
+               ref="hr_employee_liquidation_view_tree"/>
+        <field name="act_window_id"
+               ref="hr_employee_liquidation_view_action"/>
+    </record>
+
+    <record model="ir.actions.act_window.view"
+            id="hr_employee_liquidation_view_form_action">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">form</field>
+        <field name="view_id"
+               ref="hr_employee_liquidation_view_form"/>
+        <field name="act_window_id"
+               ref="hr_employee_liquidation_view_action"/>
+    </record>
+
+     <record id="hr_employee_vacation_view_action"
+            model="ir.actions.act_window">
+        <field name="name">Liquidación de Vacaciones</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.employee.liquidation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{'default_type':'vacation'}</field>
+        <field name="view_id"
+               ref="hr_employee_liquidation_view_tree"/>
+        <field name="search_view_id"
+               ref="hr_employee_liquidation_view_search"/>
+    </record>
+
+    <record model="ir.actions.act_window.view"
+            id="hr_employee_vacation_view_tree_action">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id"
+               ref="hr_employee_liquidation_view_tree"/>
+        <field name="act_window_id"
+               ref="hr_employee_vacation_view_action"/>
+    </record>
+
+    <record model="ir.actions.act_window.view"
+            id="hr_employee_vacation_view_form_action">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">form</field>
+        <field name="view_id"
+               ref="hr_employee_liquidation_view_form"/>
+        <field name="act_window_id"
+               ref="hr_employee_vacation_view_action"/>
+    </record>
+
+
+</odoo>

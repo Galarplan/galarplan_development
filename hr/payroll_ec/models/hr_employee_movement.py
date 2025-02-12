@@ -17,6 +17,16 @@ class HrEmployeeMovement(models.Model):
         srch_code = self.env["hr.salary.rule.category"].sudo().search([('code', '=', code)])
         return srch_code and srch_code[0].id or False
 
+    def delete_zeros(self):
+        for brw_each in self:
+            if brw_each.state != 'draft':
+                raise ValidationError(_("No puedes borrar registro con lineas en 0 si estado no es preliminar"))
+            lines = brw_each.line_ids.filtered(lambda x: not x.total or x.total <= 0.00)
+            if lines:
+                lines.unlink()
+        return True
+
+
     company_id = fields.Many2one(
         "res.company",
         string="Compañia",

@@ -63,6 +63,22 @@
 		</record>
 		
 
+		<record
+			id="hr_employee_payslip_reports_movements_wizard_action"
+			model="ir.actions.act_window">
+			<field name="name">Reportes por Rubros</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.employee.payslip.reports.wizard</field>
+			<field name="view_mode">form</field>
+			<field name="view_id"
+				ref="hr_employee_payslip_reports_wizard_form" />
+			<field name="context">{'default_type':'movements','default_state':'annulled','update_table':False,'pass_validate':True,'only_update':False}
+			</field>
+			<field name="target">new</field>
+
+		</record>
+
+
 		
 		
 	</data>

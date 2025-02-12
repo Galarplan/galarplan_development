@@ -62,6 +62,8 @@ class HrPayslip(models.Model):
                                         store=True, readonly=False)
     journal_id=fields.Many2one("account.journal",string="Diario",required=False)
 
+    state=fields.Selection(selection_add=[('paid','Pagado')])
+
     @api.onchange('legal_iess','invoice_ids','invoice_ids.state')
     @api.depends('legal_iess','invoice_ids','invoice_ids.state')
     def _get_compute_to_liquidate(self):
@@ -554,6 +556,18 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
             move_lines._compute_total()
         return values
 
+    def remove_lines_historic(self):
+        for brw_each in self:
+            if brw_each.line_ids:
+                brw_each.line_ids.action_historic_draft()
+                brw_each.line_ids.unlink_history()
+        return True
+
+    def action_payslip_draft(self):
+        value=super(HrPayslip,self).action_payslip_draft()
+        self.remove_lines_historic()
+        return value
+
     def action_verify(self):
         for brw_each in self:
             brw_each.validate_payslip()
@@ -561,6 +575,7 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
             brw_each.compute_sheet()
             brw_each.action_validate_slips()
             brw_each.write({"state": "verify"})
+            brw_each.remove_lines_historic()
         return True
 
     def action_done(self):
@@ -568,7 +583,16 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
             brw_each.validate_payslip()
             brw_each.action_validate_slips()
             brw_each.write({"state": "done"})
+            if brw_each.line_ids:
+                brw_each.line_ids.create_historic_line()
+                brw_each.line_ids.action_historic_posted()
         return True
+
+    def action_payslip_paid(self):
+        if any(slip.state != 'done' for slip in self):
+            raise UserError(_('Cannot mark payslip as paid if not confirmed.'))
+        self.write({'state': 'paid'})
+
 
     def action_validate_slips(self):
         for brw_each in self:

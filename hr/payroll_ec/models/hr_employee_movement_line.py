@@ -47,6 +47,8 @@ class HrEmployeeMovementLine(models.Model):
 
     payslip_input_ids=fields.One2many("hr.payslip.input","movement_id","Aplicaciones en Nomina")
 
+    provision_line_ids = fields.One2many("hr.employee.historic.lines", "movement_line_id", "Provisiones")
+
     _order="process_id desc,id asc"
 
     _check_company_auto = True
@@ -80,7 +82,7 @@ class HrEmployeeMovementLine(models.Model):
         date_process = brw_document.date_process
         OBJ_FX = self.env["dynamic.function"].sudo()
         if brw_rule:
-            if brw_rule.type != 'payslip':
+            if brw_rule.type != 'payslip' or (brw_rule.type=='payslip' and brw_rule.for_liquidate_provision and brw_rule.enable_for_documents):
                 variables = {"model_name": self._name,
                                  "brw_rule": brw_rule,
                                  "brw_company": brw_company,

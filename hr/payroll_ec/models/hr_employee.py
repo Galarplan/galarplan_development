@@ -182,10 +182,10 @@ class HrEmployee(models.Model):
                 raise ValidationError(_("Debes definir el # de identificación"))
             partner_vals = {
                 'name': employee.name,
-                # 'email': employee.private_email,
-                # 'phone': employee.phone,
-                # 'street': employee.private_street,
-                # 'street2': employee.private_street2,
+                'email': employee.private_email,
+                'phone': employee.phone,
+                'street': employee.private_street,
+                'street2': employee.private_street2,
                 'vat': employee.identification_id,
                 "company_id":False,
                 'l10n_latam_identification_type_id': self.env.ref("l10n_ec.ec_dni").id,

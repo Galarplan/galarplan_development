@@ -176,7 +176,7 @@ class HrPayslipRun(models.Model):
 
     def action_draft(self):
         for brw_each in self:
-            vals={"state":"draft","move_line_ids": [(5,)]}
+            vals = {"state": "draft", "move_line_ids": [(5,)]}
             if brw_each.move_id:
                 if brw_each.move_id.state != 'cancel':
                     brw_each.move_id.button_draft()
@@ -185,6 +185,13 @@ class HrPayslipRun(models.Model):
                     raise ValidationError(_("El documento contable %s debe estar anulado") % (brw_each.move_id.name,))
                 vals["move_id"]=False
             brw_each.write(vals)
+            for brw_payslip in brw_each.slip_ids:
+                brw_payslip.remove_lines_historic()
+                brw_payslip.action_payslip_draft()
+        #values=super(HrPayslipRun, self).action_draft()
+        for brw_each in self:
+            for brw_payslip in brw_each.slip_ids:
+                brw_payslip.remove_lines_historic()
         return True
 
     def restore_movements(self):
@@ -242,84 +249,6 @@ class HrPayslipRun(models.Model):
             "name": "Detalle de Asientos",
         }
 
-    def calculate_moves(self):
-        def add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=["credit", "debit"]):
-            if vals["rule_id"] in company_rules_conf:
-                conf_accounts = company_rules_conf[vals["rule_id"]]
-                for each_conf in conf_accounts:
-                    if each_conf["account_type"] in account_types:
-                        rule_vals = vals.copy()
-                        rule_vals["account_id"] = each_conf["account_id"]
-                        rule_vals[each_conf["account_type"]] = rule_vals["abs_total"]
-                        move_line_ids.append((0, 0, rule_vals))
-            return move_line_ids
-
-        for brw_each in self:
-            move_line_ids = [(5,)]
-            self._cr.execute("""WITH DISTINCTACCOUNTS AS (
-    SELECT DISTINCT
-        HSRA.ACCOUNT_ID,
-        HSRA.ACCOUNT_TYPE,
-        HPL.SALARY_RULE_ID
-    FROM
-        HR_PAYSLIP_RUN HPR
-        INNER JOIN HR_PAYSLIP HP ON HP.PAYSLIP_RUN_ID = HPR.ID
-        INNER JOIN HR_PAYSLIP_LINE HPL ON HPL.SLIP_ID = HP.ID 
-        INNER JOIN HR_SALARY_RULE_ACCOUNT HSRA ON HSRA.RULE_ID = HPL.SALARY_RULE_ID
-            AND HSRA.COMPANY_ID = HP.COMPANY_ID
-            AND HSRA.TYPE = 'payslip' 
-    WHERE
-        HPR.ID = %s
-)
-SELECT 
-    DA.SALARY_RULE_ID AS RULE_ID,
-    JSON_AGG(
-        JSON_BUILD_OBJECT(
-            'account_id', DA.ACCOUNT_ID,
-            'account_type', DA.ACCOUNT_TYPE
-        )
-    ) AS ACCOUNTS
-FROM
-    DISTINCTACCOUNTS DA 
-GROUP BY 
-  DA.SALARY_RULE_ID """, (brw_each.id,))
-            result_company_rules_conf = self._cr.fetchall()
-            company_rules_conf = dict(result_company_rules_conf)
-            SALARY_RULE_ID = self.env.ref("payroll_ec.rule_SALARIO")
-            for brw_payslip in brw_each.slip_ids:
-                srch_lines = self.env["hr.payslip.line"].sudo().search([
-                    ('slip_id', '=', brw_payslip.id),
-                    ('abs_total', '!=', 0.00),
-                ])
-                if srch_lines:
-                    for brw_line in srch_lines:
-                        account_types = ["debit", "credit"]
-                        if brw_line.salary_rule_id == SALARY_RULE_ID:
-                            account_types = ["debit", ]
-                        vals = {
-                            "payslip_run_id": brw_each.id,
-                            "payslip_id": brw_line.slip_id.id,
-                            "employee_id": brw_line.employee_id.id,
-                            "rule_id": brw_line.salary_rule_id.id,
-                            "credit": 0.00,
-                            "debit": 0.00,
-                            "abs_total": brw_line.abs_total,
-                        }
-                        add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=account_types)
-
-                if brw_payslip.total_payslip != 0.00:
-                    vals = {
-                        "payslip_run_id": brw_each.id,
-                        "payslip_id": brw_payslip.id,
-                        "employee_id": brw_payslip.employee_id.id,
-                        "rule_id": SALARY_RULE_ID.id,
-                        "credit": 0.00,
-                        "debit": 0.00,
-                        "abs_total": brw_payslip.total_payslip,
-                    }
-                    add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=["credit"])
-            brw_each.write({"move_line_ids": move_line_ids})
-
     def action_close(self):
         DEC = 2
         for brw_each in self:
@@ -346,24 +275,120 @@ GROUP BY
                     raise ValidationError(
                         _("El debe y el haber siempre deben ser equivalentes para asegurar la correcta gestión de nuestras cuentas."))
                 brw_each.create_payslip_move()
-            brw_each.write({"state":"close"})
-        # Llamar al metodo padre y devolver los valores
+            brw_each.write({"state": "close"})
         return True
+
+    def calculate_moves(self):
+        def add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=["credit", "debit"],
+                                 department_id=False):
+            if vals["rule_id"] in company_rules_conf:
+                conf_accounts = company_rules_conf[vals["rule_id"]]
+                for each_conf in conf_accounts:
+                    if each_conf["account_type"] in account_types:
+                        rule_vals = vals.copy()
+                        rule_vals["account_id"] = each_conf["account_id"]
+                        rule_vals[each_conf["account_type"]] = rule_vals["abs_total"]
+                        if department_id:
+                            department_srch = self.env["hr.salary.rule.account.analytic"].sudo().search(
+                                [('rule_account_id.rule_id', '=', vals["rule_id"]),
+                                 ('rule_account_id.company_id', '=', each_conf["company_id"]),
+                                 ('rule_account_id.type', '=', "payslip"),
+                                 ('rule_account_id.account_id', '=', each_conf["account_id"]),
+                                 ('department_id', '=', department_id),
+                                 ]
+                            )
+                            if department_srch:
+                                if len(department_srch) > 1:
+                                    raise ValidationError(
+                                        _("Existe mas de un departamento para la configuracion de cuentas analiticas"))
+                                if department_srch[0].analytic_account_id:
+                                    rule_vals["analytic_account_id"] = department_srch[0].analytic_account_id.id
+                                if department_srch[0].account_id:
+                                    rule_vals["account_id"] = department_srch[0].account_id.id
+                        move_line_ids.append((0, 0, rule_vals))
+            return move_line_ids
+
+        for brw_each in self:
+            move_line_ids = [(5,)]
+            self._cr.execute("""WITH DISTINCTACCOUNTS AS (
+        SELECT DISTINCT HSRA.COMPANY_ID,HSRA.ACCOUNT_ID,
+            HSRA.ACCOUNT_TYPE,
+            HPL.SALARY_RULE_ID
+        FROM
+            HR_PAYSLIP_RUN HPR
+            INNER JOIN HR_PAYSLIP HP ON HP.PAYSLIP_RUN_ID = HPR.ID
+            INNER JOIN HR_PAYSLIP_LINE HPL ON HPL.SLIP_ID = HP.ID 
+            INNER JOIN HR_SALARY_RULE_ACCOUNT HSRA ON HSRA.RULE_ID = HPL.SALARY_RULE_ID
+                AND HSRA.COMPANY_ID = HP.COMPANY_ID
+                AND HSRA.TYPE = 'payslip' 
+        WHERE
+            HPR.ID = %s
+    )
+    SELECT 
+        DA.SALARY_RULE_ID AS RULE_ID,
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'account_id', DA.ACCOUNT_ID,
+                'account_type', DA.ACCOUNT_TYPE,
+                'company_id',DA.COMPANY_ID
+            )
+        ) AS ACCOUNTS
+    FROM
+        DISTINCTACCOUNTS DA 
+    GROUP BY  DA.SALARY_RULE_ID """, (brw_each.id,))
+            result_company_rules_conf = self._cr.fetchall()
+            company_rules_conf = dict(result_company_rules_conf)
+            SALARY_RULE_ID = self.env.ref("payroll_ec.rule_SALARIO")
+            for brw_payslip in brw_each.slip_ids:
+                srch_lines = self.env["hr.payslip.line"].sudo().search([
+                    ('slip_id', '=', brw_payslip.id),
+                    ('abs_total', '!=', 0.00),
+                ])
+                if srch_lines:
+                    for brw_line in srch_lines:
+                        account_types = ["debit", "credit"]
+                        if brw_line.salary_rule_id == SALARY_RULE_ID:
+                            account_types = ["debit", ]
+                        vals = {
+                            "payslip_run_id": brw_each.id,
+                            "payslip_id": brw_line.slip_id.id,
+                            "employee_id": brw_line.employee_id.id,
+                            "rule_id": brw_line.salary_rule_id.id,
+                            "credit": 0.00,
+                            "debit": 0.00,
+                            "abs_total": brw_line.abs_total,
+                        }
+                        add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=account_types,
+                                             department_id=brw_line.slip_id.department_id and brw_line.slip_id.department_id.id or False)
+
+                if brw_payslip.total_payslip != 0.00:
+                    vals = {
+                        "payslip_run_id": brw_each.id,
+                        "payslip_id": brw_payslip.id,
+                        "employee_id": brw_payslip.employee_id.id,
+                        "rule_id": SALARY_RULE_ID.id,
+                        "credit": 0.00,
+                        "debit": 0.00,
+                        "abs_total": brw_payslip.total_payslip,
+                    }
+                    add_new_line_account(move_line_ids, vals, company_rules_conf, account_types=["credit"],
+                                         department_id=brw_payslip.department_id and brw_payslip.department_id.id or False)
+            brw_each.write({"move_line_ids": move_line_ids})
 
     def create_payslip_move(self):
         OBJ_MOVE = self.env["account.move"]
         OBJ_MOVE_LINE = self.env["account.move.line"]
         OBJ_RULE = self.env["hr.salary.rule"].sudo()
         for brw_each in self:
-            self._cr.execute("""SELECT AM.RULE_ID,
-	AM.ACCOUNT_ID,
-	SUM(AM.DEBIT) AS DEBIT,
-	SUM(AM.CREDIT) AS CREDIT
-FROM
-	HR_PAYSLIP_MOVE AM
-WHERE
-	AM.PAYSLIP_RUN_ID = %s
-GROUP BY AM.RULE_ID, AM.ACCOUNT_ID""", (brw_each.id,))
+            self._cr.execute("""SELECT AM.RULE_ID,AM.analytic_account_id,
+    	AM.ACCOUNT_ID,
+    	SUM(AM.DEBIT) AS DEBIT,
+    	SUM(AM.CREDIT) AS CREDIT
+    FROM
+    	HR_PAYSLIP_MOVE AM
+    WHERE
+    	AM.PAYSLIP_RUN_ID = %s
+    GROUP BY AM.RULE_ID, AM.ACCOUNT_ID,AM.analytic_account_id """, (brw_each.id,))
             result = self._cr.fetchall()
             if result:
                 vals = {
@@ -379,9 +404,9 @@ GROUP BY AM.RULE_ID, AM.ACCOUNT_ID""", (brw_each.id,))
                         _("Debes definir un diario de nómina para la compañia %s") % (brw_each.company_id.name,))
                 vals["journal_id"] = brw_each.company_id.payslip_journal_id.id
                 line_ids = [(5,)]
-                for rule_id, account_id, debit, credit in result:
+                for rule_id, analytic_account_id, account_id, debit, credit in result:
                     brw_rule = OBJ_RULE.browse(rule_id)
-                    line_ids += [(0, 0, {
+                    each_line_vals = {
                         "name": brw_rule.name,
                         'debit': debit,
                         'credit': credit,
@@ -389,8 +414,11 @@ GROUP BY AM.RULE_ID, AM.ACCOUNT_ID""", (brw_each.id,))
                         'account_id': account_id,
                         'partner_id': brw_each.company_id.partner_id.id,
                         'date': brw_each.date_process,
-                        "rule_id":brw_rule.id
-                    })]
+                        "rule_id": brw_rule.id
+                    }
+                    if analytic_account_id:
+                        each_line_vals["analytic_distribution"] = {str(analytic_account_id): 100}
+                    line_ids += [(0, 0, each_line_vals)]
                 vals["line_ids"] = line_ids
                 brw_move = OBJ_MOVE.create(vals)
                 brw_move.action_post()
@@ -398,37 +426,37 @@ GROUP BY AM.RULE_ID, AM.ACCOUNT_ID""", (brw_each.id,))
                     raise ValidationError(
                         _("Asiento contable %s,id %s no fue publicado!") % (brw_move.name, brw_move.id))
                 brw_each.move_id = brw_move.id
-                srch_inputs=self.env["hr.payslip.input"].sudo().search([
-                    ('payslip_id.payslip_run_id','=',brw_each.id),
-                    ('move_line_id','!=',False)
+                srch_inputs = self.env["hr.payslip.input"].sudo().search([
+                    ('payslip_id.payslip_run_id', '=', brw_each.id),
+                    ('move_line_id', '!=', False)
                 ])
                 #
-                values_reconciles={}
+                values_reconciles = {}
                 if srch_inputs:
                     for brw_input in srch_inputs:
-                        if not values_reconciles.get(brw_input.rule_id,False):
-                            values_reconciles[brw_input.rule_id]={
-                                "account_id":self.env["account.account"],
-                                "move_lines":self.env["account.move.line"],
-                                "type":brw_input.rule_id.category_id.code=='IN' and 'credit' or 'debit',
+                        if not values_reconciles.get(brw_input.rule_id, False):
+                            values_reconciles[brw_input.rule_id] = {
+                                "account_id": self.env["account.account"],
+                                "move_lines": self.env["account.move.line"],
+                                "type": brw_input.rule_id.category_id.code == 'IN' and 'credit' or 'debit',
                                 "reverse_type": brw_input.rule_id.category_id.code == 'IN' and 'debit' or 'credit'
                             }
-                        account_values_reconciles=values_reconciles[brw_input.rule_id]
-                        move_lines=account_values_reconciles["move_lines"]
-                        move_lines+=brw_input.move_line_id
+                        account_values_reconciles = values_reconciles[brw_input.rule_id]
+                        move_lines = account_values_reconciles["move_lines"]
+                        move_lines += brw_input.move_line_id
                         account_values_reconciles["account_id"] = brw_input.move_line_id.account_id
-                        account_values_reconciles["move_lines"]=move_lines
-                        values_reconciles[brw_input.rule_id]=account_values_reconciles
+                        account_values_reconciles["move_lines"] = move_lines
+                        values_reconciles[brw_input.rule_id] = account_values_reconciles
                 for each_reconcile_ky in values_reconciles:
-                    each_reconcile_accounts=values_reconciles[each_reconcile_ky]
-                    move_lines=each_reconcile_accounts["move_lines"]#asientos por reconciliar
-                    account=each_reconcile_accounts["account_id"]
-                    move_lines_srch=OBJ_MOVE_LINE.search([
-                        ('move_id','=',brw_move.id),
-                        ('account_id','=',account.id),
-                        ('move_id.state','=','posted')
+                    each_reconcile_accounts = values_reconciles[each_reconcile_ky]
+                    move_lines = each_reconcile_accounts["move_lines"]  # asientos por reconciliar
+                    account = each_reconcile_accounts["account_id"]
+                    move_lines_srch = OBJ_MOVE_LINE.search([
+                        ('move_id', '=', brw_move.id),
+                        ('account_id', '=', account.id),
+                        ('move_id.state', '=', 'posted')
                     ])
-                    (move_lines+move_lines_srch).reconcile()
+                    (move_lines + move_lines_srch).reconcile()
             if not brw_each.move_id:
                 raise ValidationError(_("No se pudo generar el asiento contable "))
             if brw_each.move_id.state != 'posted':
@@ -454,3 +482,7 @@ GROUP BY AM.RULE_ID, AM.ACCOUNT_ID""", (brw_each.id,))
                     brw_line=brw_line.with_context({"internal_type":"batch"})
                     brw_line.send_mail_payslip()
         return True
+
+    def action_paid(self):
+        self.mapped('slip_ids').action_payslip_paid()
+        self.write({'state': 'paid'})

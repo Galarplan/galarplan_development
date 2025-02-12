@@ -10,3 +10,4 @@ class HrLeaveType(models.Model):
 
     salary_rule_id=fields.Many2one('hr.salary.rule',"Regla Salarial")
     subsidies_period=fields.Integer("Dias de Subsidio por Periodo",default=0)
+    vacations=fields.Boolean("Para vacaciones")

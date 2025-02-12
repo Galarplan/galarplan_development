@@ -16,7 +16,7 @@
                     <br></br>
                     <div class="row text-center my-2">
                         <div class="col-12">
-                            <span class="fw-bold">ROL DE PAGOS INDIVIDUAL</span>
+                            <span class="fw-bold">ROL DE PAGOS INDIVIDUAL <br/> <t t-esc="doc.payslip_run_id.month_id.name.upper()"/> DEL <t t-esc="doc.payslip_run_id.year"/> </span>
                         </div>
                     </div>
                     <br></br>
@@ -70,25 +70,36 @@
                                 <tr>
                                     <!-- Ingresos -->
                                     <t t-if="line[1] is not None">
-                                        <td><t t-esc="line[1]"/></td>
-                                        <td class="text-end">$<t t-esc="'{:.2f}'.format(line[2])"/></td>
+                                        <t t-if="line[0]!=1">
+                                            <td><t t-esc="line[1]"/></td>
+                                            <td class="text-end">$<t t-esc="'{:.2f}'.format(line[2])"/></td>
+                                        </t>
+                                        <t t-if="line[0]==1">
+                                            <td><b><t t-esc="line[1]"/></b></td>
+                                            <td class="text-end"><b>$<t t-esc="'{:.2f}'.format(line[2])"/></b></td>
+                                        </t>
+                                    </t>
+                                    <t t-if="line[1] is None">
+                                        <td colspan="2"><t t-esc="line[1]"/></td>
                                     </t>
                                     <!-- Egresos -->
                                     <t t-if="line[3] is not None">
-                                        <td><t t-esc="line[3]"/></td>
-                                        <td class="text-end">$<t t-esc="'{:.2f}'.format(line[4])"/></td>
+                                         <t t-if="line[0]!=1">
+                                           <td><t t-esc="line[3]"/></td>
+                                            <td class="text-end">$<t t-esc="'{:.2f}'.format(line[4])"/></td>
+                                        </t>
+                                        <t t-if="line[0]==1">
+                                            <td><b><t t-esc="line[3]"/></b></td>
+                                              <td class="text-end"><b>$<t t-esc="'{:.2f}'.format(line[4])"/></b></td>
+                                        </t>
+                                    </t>
+                                    <t t-if="line[3] is None">
+                                         <td colspan="2"><t t-esc="line[3]"/></td>
                                     </t>
                                 </tr>
                             </t>
                         </tbody>
                     </table>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
                     <!-- Firmas -->
                     <div class="row mt-5 text-center">
                         <div class="col-6">
@@ -112,7 +123,7 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-set="o" t-value="o.with_context(lang=o.employee_id.sudo().address_home_id.lang or o.env.lang)"/>
-                <t t-call="gps_hr.report_payslip_new" t-lang="o.env.lang"/>
+                <t t-call="payroll_ec.report_payslip_new" t-lang="o.env.lang"/>
             </t>
         </t>
     </template>

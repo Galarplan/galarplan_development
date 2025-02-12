@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_mip_multi_invoice_payment_wizard_form" model="ir.ui.view">
+        <field name="name">sh.mip.multi.invoice.payment.wizard.form</field>
+        <field name="model">sh.mip.register.payment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Register Payment">
+                <group>
+                    <group>
+                        <field name="journal_id" options="{'no_create': True, 'no_open': True}" />
+                        <field name="payment_date" />
+                        <field name="communication" />
+                    </group>
+                </group>
+
+                <field name="register_payment_line">
+                    <tree create="false" editable="bottom">
+                        <field name="wizard_id" invisible="1" />
+                        <field name="invoice_id" />
+                        <field name="partner_id" />
+                        <field name="amount_total" />
+                        <field name="residual" />
+                        <field name="payment_amount" />
+                    </tree>
+                </field>
+
+                <footer>
+                    <button class="btn-primary" name="action_validate_multi_invoice_payment" type="object" string="Validate" />
+                    <button string="Cancel" class="oe_link" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_mip_multi_invoice_payment_action" model="ir.actions.act_window">
+        <field name="name">Multiple Register Payment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.mip.register.payment.wizard</field>
+        <field name="binding_model_id" ref="account.model_account_move" />
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

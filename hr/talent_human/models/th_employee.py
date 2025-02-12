@@ -4,6 +4,10 @@ from odoo.exceptions import UserError, ValidationError
 
 
 BANK_TYPE = [('checking', 'Corriente'), ('savings', 'Ahorros')]
+BANK_TYPE_MAPPING = {
+    'Ahorros': 'savings',
+    'Corriente': 'checking',
+}
 class EmployeeHistory(models.Model):
     _name = 'employee.history'
     _order = 'date desc'
@@ -211,6 +215,118 @@ class HrEmployee(models.Model):
                 #     self.env.user.notify_warning(message=f'Error al crear el usuario: {str(e)}')
         return True
 
+
+    @api.model
+    def load(self, fields, data):
+        print('===================', fields)
+        for row in data:
+            try:
+                # Obtener el nombre de la compañía (si está en los datos)
+                company_name = row[fields.index('company_id')] if 'company_id' in fields else None
+                print('=========================', company_name)
+
+                # Buscar la compañía por nombre
+                company = self.env['res.company'].search([('name', '=', company_name)], limit=1) if company_name else self.env.company
+                print('==============', company)
+
+                # Crear un nuevo recurso automáticamente con los campos adicionales
+                resource = self.env['resource.resource'].create({
+                    'name': row[fields.index('name')],  # Usar el nombre del empleado
+                    'resource_type': 'user',  # Tipo de recurso (usuario)
+                    'calendar_id': company.resource_calendar_id.id,
+                    'company_id': company.id,  # Asignar el company_id
+                    'tz': 'America/Guayaquil',  # Zona horaria
+                    'active': True,  # Activar el recurso
+                    'time_efficiency': 100,  # Eficiencia de tiempo
+                })
+
+                # Preparar los valores para crear el empleado
+                employee_vals = {
+                    'resource_id': resource.id,
+                    'company_id': company.id,
+                }
+
+                # Mapear los campos de la fila a los campos del modelo hr.employee
+                for field in fields:
+                    if field in self._fields and field != 'resource_id':  # Evitar sobrescribir resource_id
+                        if field == 'bank_type':
+                            # Aplicar el mapeo para bank_type
+                            bank_type_value = row[fields.index(field)]
+                            employee_vals[field] = BANK_TYPE_MAPPING.get(bank_type_value, False)
+                        elif field == 'bank_id':
+                            # Buscar o crear el banco
+                            bank_name = row[fields.index(field)]
+                            if bank_name:
+                                bank = self.env['res.bank'].search([('name', '=', bank_name)], limit=1)
+                                if not bank:
+                                    # Crear el banco si no existe
+                                    bank = self.env['res.bank'].create({'name': bank_name})
+                                employee_vals[field] = bank.id
+                        elif field == 'company_id':
+                            employee_vals[field] == company.id
+                        elif field == 'country_of_birth':
+                            country = row[fields.index(field)]
+                            pais = self.env['res.country'].search([('name', '=', country)], limit=1)
+                            employee_vals[field] = pais.id
+                        elif field == 'department_id':
+                            # Buscar o crear el departamento
+                            department_name = row[fields.index(field)]
+                            if department_name:
+                                department = self.env['hr.department'].search([('name', '=', department_name), ('company_id', '=', company.id)], limit=1)
+                                if not department:
+                                    # Crear el departamento si no existe
+                                    department = self.env['hr.department'].create({
+                                        'name': department_name,
+                                        'company_id': company.id,
+                                    })
+                                employee_vals[field] = department.id
+                        elif field == 'job_id':
+                            # Buscar o crear el puesto de trabajo
+                            job_name = row[fields.index(field)]
+                            if job_name:
+                                job = self.env['hr.job'].search([('name', '=', job_name), ('company_id', '=', company.id)], limit=1)
+                                if not job:
+                                    # Crear el puesto de trabajo si no existe
+                                    job = self.env['hr.job'].create({
+                                        'name': job_name,
+                                        'company_id': company.id,
+                                    })
+                                employee_vals[field] = job.id
+                        elif field == 'provincia_inicio':
+                            provincia_name= row[fields.index(field)]
+                            provincia = self.env['res.country.state'].search([('name', '=', provincia_name)], limit=1)
+                            employee_vals[field] = provincia.id
+                        elif field == 'tipo_contrato':
+                            # Buscar o crear el puesto de trabajo
+                            tipo_contrato_name = row[fields.index(field)]
+                            if tipo_contrato_name:
+                                tipo_contrato_obj = self.env['hr.contract.type'].search([('name', '=', tipo_contrato_name)], limit=1)
+                                if not tipo_contrato_obj:
+                                    # Crear el puesto de trabajo si no existe
+                                    job = self.env['hr.job'].create({
+                                        'name': tipo_contrato_name,
+                                        'company_id': company.id,
+                                    })
+                                employee_vals[field] = tipo_contrato_obj.id
+                        else:
+                            employee_vals[field] = row[fields.index(field)]
+                        
+                print('===========================',employee_vals)
+
+                # Crear el empleado
+                employee = self.create(employee_vals)
+                print('=====================================', employee)
+
+            except Exception as e:
+                # Manejar errores durante la creación
+                raise ValidationError(f"Error al crear el empleado: {str(e)}")
+
+        # Retornar un resultado vacío (opcional)
+        return {
+            'ids': [],
+            'messages': [],
+            'nextrow': False
+        }
     
     # @api.model
     # def load(self, fields, data):
@@ -398,7 +514,7 @@ class HrEmployee(models.Model):
                 'name': _('Contrato del empleado %s') % employee.name,
                 'employee_id': employee.id,
                 'company_id': employee.company_id.id,
-                'date_start': fields.Date.today(),
+                'date_start': employee.fecha_ingreso or fields.Date.today(),
                 'state': 'draft',
                 'department_id': employee.department_id.id,
                 'job_id': employee.job_id.id,

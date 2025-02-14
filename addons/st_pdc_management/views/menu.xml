@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<odoo>
+	<menuitem id="menu_action_action_view_account_payment_tree" action="st_pdc_management.action_view_account_payment_tree"
+	parent="account.account_account_menu" sequence="4"/>
+</odoo>

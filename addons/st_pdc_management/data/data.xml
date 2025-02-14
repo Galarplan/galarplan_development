@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+         <record model="ir.sequence" id="pdc_cheque_payment_sequence">
+            <field name="name">Post Dated Cheque</field>
+            <field name="code">cheque.pdc.payment</field>
+            <field name="prefix">PDP/%(y)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+
+        <record model="ir.sequence" id="pdc_cheque_receipt_sequence">
+            <field name="name">Post Dated Cheque</field>
+            <field name="code">cheque.pdc.receipt</field>
+            <field name="prefix">PDR/%(y)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="pdc_post_cron_id" model="ir.cron">
+	        <field name="name">PDC Maturity check</field>
+	        <field name="model_id" ref="model_pdc_registr"/>
+	        <field name="state">code</field>
+	        <field name="code">model._maturity_check()</field>
+	        <field name="interval_number">1</field>
+	        <field name="interval_type">days</field>
+	        <field name="numbercall">-1</field>
+	        <field name="doall" eval="False"/>
+	    </record>
+
+</odoo>

@@ -46,9 +46,9 @@
     'installable': True,
     'application': True,
     
-    'assets': {
-        'web.assets_backend': [
-            'talent_human/static/src/css/custom_styles.css',
-        ],
-    },
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'talent_human/static/src/css/custom_styles.css',
+    #     ],
+    # },
 }

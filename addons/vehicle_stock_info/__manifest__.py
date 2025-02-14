@@ -19,7 +19,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','stock'],
+    'depends': ['base','stock','account'],
 
     # always loaded
     'data': [
@@ -30,7 +30,9 @@
         'views/vehicle_brand.xml',
         'views/vehicle_type.xml',
         'views/vehicle_model.xml',
-        'views/menuitems.xml'
+        'views/menuitems.xml',
+        'data/templates/edi_document.xml',
+        'data/templates/report_invoice.xml'
     ],
     # only loaded in demonstration mode
     # 'demo': [

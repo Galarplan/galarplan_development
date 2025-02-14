@@ -1,0 +1,22 @@
+<odoo>
+    <record id="view_account_payment_register_form_inherit_maturedate" model="ir.ui.view">
+        <field name="name">account.payment.register.form.inherit</field>
+        <field name="model">account.payment.register</field>
+        <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+        <field name="arch" type="xml">
+            <!-- Buscar el campo 'date' y agregar 'mature_date' debajo de él -->
+            <xpath expr="//field[@name='payment_date']" position="after">
+                <field name="show_mature_date" invisible="1"/>
+                <field name="mature_date"
+                       attrs="{'invisible': [('show_mature_date','=',False)],
+                        'required': [('show_mature_date','=',True)]}"/>
+                <field name="bank_id"
+                       attrs="{'invisible': [('show_mature_date','=',False)],
+                        'required': [('show_mature_date','=',True)]}"/>      
+                <field name="cheque_no"
+                       attrs="{'invisible': [('show_mature_date','=',False)],
+                        'required': [('show_mature_date','=',True)]}"/>  
+            </xpath>
+        </field>
+    </record>
+</odoo>

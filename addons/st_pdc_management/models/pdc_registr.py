@@ -69,7 +69,6 @@ class PdcRegistr(models.Model):
             raise UserError('Deletion Blocked.')
 
     def action_validate(self):
-        print('===================',self.mature_date)
         if self.mature_date > fields.Date.today():
             self.state = 'valid'
         else:

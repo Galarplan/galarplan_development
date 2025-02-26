@@ -1,0 +1,334 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* st_pdc_management
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-02-26 15:46+0000\n"
+"PO-Revision-Date: 2025-02-26 11:23-0500\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es_EC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.5\n"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Accounts"
+msgstr "Cuentas"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment_register__bank_id
+msgid "Banco"
+msgstr "Banco"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment__bank_id
+msgid "Bank"
+msgstr "Banco"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_res_bank__bank_code
+msgid "Bank Code"
+msgstr "Codigo de Banco"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__bank_id
+msgid "Bank Name"
+msgstr "Nombre del Banco"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Cancel"
+msgstr "Cancelado"
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__account_move__state__cancel
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__state__cancel
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__cheque_amount
+msgid "Cheque Amount"
+msgstr "Monto del cheque"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__mature_date
+msgid "Cheque Date/Mature Date"
+msgstr "Fecha de Vencimiento"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment__mature_date
+msgid "Cheque Maturing Date"
+msgstr "Fecha de Vencimiento"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment__cheque_no
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment_register__cheque_no
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__cheque_no
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_tree
+msgid "Cheque No"
+msgstr "Numero de cheque"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_tree
+msgid "Cheque/Mature Date"
+msgstr "Cheque/Fecha de vencimiento"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__company_id
+msgid "Company"
+msgstr "Compañia"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__create_uid
+msgid "Created by"
+msgstr "Creado por:"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__create_date
+msgid "Created on"
+msgstr "Creado en:"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__currency_id
+msgid "Currency"
+msgstr "Moneda"
+
+#. module: st_pdc_management
+#: model:ir.model,name:st_pdc_management.model_res_bank
+msgid "Custom Bank"
+msgstr "Banco"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__display_name
+msgid "Display Name"
+msgstr "Nombre completo"
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__account_move__state__draft
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__state__draft
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Draft"
+msgstr "Borrador"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment_register__mature_date
+msgid "Fecha del Cheque/Mature Date"
+msgstr "Fecha del cheque/Fecha de vencimiento"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_res_bank__iban_code
+msgid "IBAN Code"
+msgstr "Codigo IBAN"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__id
+msgid "ID"
+msgstr "ID"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,help:st_pdc_management.field_account_payment_register__show_mature_date
+msgid "Indica si el campo 'mature_date' debe mostrarse y ser requerido."
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model,name:st_pdc_management.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__state__matured
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Matured"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__memo
+msgid "Memo"
+msgstr "Referencia"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__name
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Name"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__account_move__state__on_pdc
+msgid "On PDC"
+msgstr "Posfechado"
+
+#. module: st_pdc_management
+#: model:account.payment.method,name:st_pdc_management.account_payment_method_pdc_in
+#: model:account.payment.method,name:st_pdc_management.account_payment_method_pdc_out
+msgid "PDC"
+msgstr "Posfechado"
+
+#. module: st_pdc_management
+#: model:ir.actions.server,name:st_pdc_management.pdc_post_cron_id_ir_actions_server
+#: model:ir.cron,cron_name:st_pdc_management.pdc_post_cron_id
+msgid "PDC Maturity check"
+msgstr "PDC Fechas de Vencimiento"
+
+#. module: st_pdc_management
+#: model:ir.ui.menu,name:st_pdc_management.pdc_registr_account_main_menu
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_form
+msgid "PDC Register"
+msgstr "Registro Cheques Postfechado"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__partner_id
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Partner"
+msgstr "Cliente/Proveedor"
+
+#. module: st_pdc_management
+#: model:ir.actions.act_window,name:st_pdc_management.action_view_account_payment_tree
+#: model:ir.ui.menu,name:st_pdc_management.menu_action_action_view_account_payment_tree
+msgid "Payment Method"
+msgstr "Metodo de pago"
+
+#. module: st_pdc_management
+#: model:ir.model,name:st_pdc_management.model_account_payment_method
+msgid "Payment Methods"
+msgstr "Métodos de pago"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__payment_type
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Payment Type"
+msgstr "Tipo de pago"
+
+#. module: st_pdc_management
+#: model:ir.actions.act_window,name:st_pdc_management.action_pdc_registr_payment_pdc
+#: model:ir.model,name:st_pdc_management.model_account_payment
+#: model:ir.ui.menu,name:st_pdc_management.menu_action_pdc_registr_payment_pdc
+msgid "Payments"
+msgstr "Pagos"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment__pdc_register_id
+msgid "Post Dated Cheque"
+msgstr "Cheque postfechado"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_form
+msgid "Post-Dated Cheque"
+msgstr "Cheque postfechado"
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__account_move__state__posted
+msgid "Posted"
+msgstr "Publicado"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_form
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_tree
+msgid "Process"
+msgstr "Contabilizado"
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__state__processed
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Processed"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.actions.act_window,name:st_pdc_management.action_pdc_registr_receipt_pdc
+#: model:ir.ui.menu,name:st_pdc_management.menu_action_pdc_registr_receipt_pdc
+msgid "Receipts"
+msgstr "Recibo"
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__payment_type__inbound
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Receive Money"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__reg_date
+msgid "Register Date"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model,name:st_pdc_management.model_account_payment_register
+msgid "Register Payment"
+msgstr "Registrar pago"
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__payment_id
+msgid "Related Payment"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__payment_type__outbound
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Send Money"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment_register__show_mature_date
+msgid "Show Mature Date"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_bank_statement_line__state
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_move__state
+#: model:ir.model.fields,field_description:st_pdc_management.field_account_payment__state
+#: model:ir.model.fields,field_description:st_pdc_management.field_pdc_registr__state
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Status"
+msgstr "Estado"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_tree
+msgid "Total"
+msgstr ""
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_form
+msgid "Validate"
+msgstr "Validar"
+
+#. module: st_pdc_management
+#: model:ir.model.fields.selection,name:st_pdc_management.selection__pdc_registr__state__valid
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.pdc_registr_view_search_view
+msgid "Validated"
+msgstr "Validado"
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.view_account_payment_form
+msgid "Vessel"
+msgstr ""
+
+#. module: st_pdc_management
+#: model_terms:ir.ui.view,arch_db:st_pdc_management.view_account_payment_tree
+msgid "Vessels"
+msgstr ""
+
+#. module: st_pdc_management
+#: model:ir.model,name:st_pdc_management.model_pdc_registr
+msgid "pdc.registr"
+msgstr ""

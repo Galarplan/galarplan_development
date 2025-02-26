@@ -10,4 +10,4 @@ from . import acc_move
 from . import acc_payment
 from . import pdc_registr
 from . import res_bank
-from . import acc_payment_register
+from . import account_payment_register

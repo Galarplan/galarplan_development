@@ -20,12 +20,12 @@
                                 'readonly':[('state','!=','draft')]}"/>
             </xpath>
 
-            <!-- <xpath expr="//field[@name='bank_id']" position="after">
+            <xpath expr="//field[@name='bank_id']" position="after">
                 <field name="cheque_no"
                        attrs="{'invisible': [('payment_method_code','!=','pdc')],
                                 'required': [('payment_method_code','=','pdc'),('state','!=', 'posted')],
                                 'readonly':[('state','!=','draft')]}"/>
-            </xpath> -->
+            </xpath>
 
 
 

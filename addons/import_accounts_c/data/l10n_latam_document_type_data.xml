@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="ec_dt_01N" model="l10n_latam.document.type">
+            <field name="sequence">1</field>
+            <field name="code">00</field>
+            <field name="name">Fact. Sin Validez Tributaria</field>
+            <field name="report_name">Doc. Sin Validez Tributaria</field>
+            <field name="internal_type">invoice</field>
+            <field name="doc_code_prefix">SinDoc</field>
+            <field name="country_id" ref="base.ec"/>
+            <field name="active">True</field>
+            <field name="l10n_ec_check_format">False</field>
+        </record>
+        <!-- <record id="ec_dt_02N" model="l10n_latam.document.type">
+            <field name="sequence">1</field>
+            <field name="code">00</field>
+            <field name="name">NotCr. Sin Validez Tributaria</field>
+            <field name="report_name">Doc. Sin Validez Tributaria</field>
+            <field name="internal_type">invoice</field>
+            <field name="doc_code_prefix">SinDoc</field>
+            <field name="country_id" ref="base.ec"/>
+            <field name="active">True</field>
+            <field name="l10n_ec_check_format">False</field>
+        </record>
+        <record id="ec_dt_03N" model="l10n_latam.document.type">
+            <field name="sequence">1</field>
+            <field name="code">00</field>
+            <field name="name">Notdb. Sin Validez Tributaria</field>
+            <field name="report_name">Doc. Sin Validez Tributaria</field>
+            <field name="internal_type">invoice</field>
+            <field name="doc_code_prefix">SinDoc</field>
+            <field name="country_id" ref="base.ec"/>
+            <field name="active">True</field>
+            <field name="l10n_ec_check_format">False</field>
+        </record> -->
+    </data>
+</odoo>

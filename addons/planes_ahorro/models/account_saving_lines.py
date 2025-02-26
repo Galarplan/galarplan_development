@@ -9,38 +9,75 @@ class AccountSavingLines(models.Model):
     _description = 'listado de cuotas para planes de ahorro'
 
     name=fields.Char(compute="_compute_name",store=True)
-    sequence=fields.Integer("# Secuencia",required=True)
+    sequence=fields.Integer("# Secuencia",required=False,default=0)
     saving_id = fields.Many2one('account.saving', string='Plan de ahorro',ondelete="cascade")
-    currency_id = fields.Many2one(related="saving_id.currency_id", string='Moneda',store=False,readonly=True)
-    number = fields.Integer(string='Número de cuota')
-    date = fields.Date(string='Fecha de cuota')
-    saving_amount = fields.Monetary(string='Aportaciones')
-    principal_amount=fields.Monetary(string='Planes de Ahorro')
+    company_id = fields.Many2one(related="saving_id.company_id", string='Compañía', store=True, readonly=True)
 
-    serv_admin_percentage = fields.Float(string='% Serv. Adm.')
-    seguro_percentage = fields.Float(string='% Seguro')
+    currency_id = fields.Many2one(related="saving_id.currency_id", string='Moneda',store=False,readonly=True)
+    partner_id = fields.Many2one(related="saving_id.partner_id", string='Cliente', store=True, readonly=True)
+    number = fields.Integer(string='Número de cuota',tracking=True)
+    date = fields.Date(string='Fecha de cuota',tracking=True)
+    saving_amount = fields.Monetary(string='Aportaciones',tracking=True)
+    principal_amount=fields.Monetary(string='Planes de Ahorro',tracking=True)
+
+    serv_admin_percentage = fields.Float(string='% Serv. Adm.',tracking=True)
+    seguro_percentage = fields.Float(string='% Seguro',tracking=True)
 
     serv_admin_amount = fields.Monetary(string='Serv. Adm.')
     seguro_amount = fields.Monetary(string='Seguro')
 
-    por_pagar = fields.Monetary(string='Por Pagar', compute="_compute_pendientes", store=True, readonly=False)
-    pagos = fields.Monetary(string='Pagos',compute="_compute_pendientes",store=True,readonly=False)
-    pendiente = fields.Monetary(string='Pendiente',compute="_compute_pendientes",store=True,readonly=False)
+    por_pagar = fields.Monetary(string='Por Pagar', compute="_compute_pendientes", store=True, readonly=False,tracking=True)
+    pagos = fields.Monetary(string='Pagos',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
+    pendiente = fields.Monetary(string='Pendiente',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
     estado_pago = fields.Selection([ ('sin_aplicar', 'Sin Aplicar'),
                                      ('pendiente', 'Pendiente'),
-                                     ('pagado', 'Pagado')], string='Estado de pago', default='pendiente',compute="_compute_pendientes",store=True,readonly=False)
+                                     ('pagado', 'Pagado')], string='Estado de pago', default='pendiente',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
     invoice_id=fields.Many2one("account.move",string="# Factura")
 
     parent_saving_state=fields.Selection(related="saving_id.state",store=False,readonly=True)
 
     payment_line_ids=fields.One2many("account.saving.line.payment","saving_line_id","Pagos Parciales")
 
-    old_id = fields.Integer("Antiguo ID")
+    old_id = fields.Integer("Antiguo ID",tracking=True)
 
-    migrated=fields.Boolean("Migrado",default=False)
-    migrated_has_invoices=fields.Boolean("# Factura")
-    migrated_payment_amount=fields.Monetary("Monto Pagado Migrado",default=0.00)
-    enabled_invoice=fields.Boolean(string='Habilitado para Facturar',compute="_compute_facturable",store=False,readonly=False)
+    migrated=fields.Boolean("Migrado",default=False,tracking=True)
+    migrated_has_invoices=fields.Boolean("# Factura",default=False,tracking=True)
+    migrated_payment_amount=fields.Float("Monto Pagado Migrado",default=0.00,tracking=True)
+    enabled_for_invoice=fields.Boolean(string='Habilitado para Facturar',compute="_compute_facturable",store=False,readonly=False,default=False)
+
+    days_difference = fields.Integer(
+        string="Diferencia en días",
+        compute="_compute_days_difference",
+        store=True,
+        search="_search_days_difference"
+    )
+
+    old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
+
+    @api.depends('date')
+    def _compute_days_difference(self):
+        """Calcula la diferencia en días entre date_filtered y date"""
+        for record in self:
+            date_filtered=fields.Date.context_today(record)
+            if record.date and date_filtered:
+                record.days_difference = (date_filtered - record.date).days
+            else:
+                record.days_difference = 0
+
+    def _search_days_difference(self, operator, value):
+        """Permite buscar registros según la diferencia en días entre hoy y 'date'"""
+        if operator not in ('=', '!=', '>', '>=', '<', '<='):
+            return []
+
+        today = fields.Date.context_today(self)
+        query = """
+     SELECT  id FROM account_saving_lines 
+            WHERE (date - DATE %s {} %s
+        """.format(operator)
+
+        self.env.cr.execute(query, (today, value))
+        ids = [row[0] for row in self.env.cr.fetchall()]
+        return [('id', 'in', ids)]
 
     @api.depends('saving_id','number')
     def _compute_name(self):
@@ -48,22 +85,21 @@ class AccountSavingLines(models.Model):
             brw_each.name="Plan %s ,cuota %s" % (brw_each.saving_id.id,brw_each.number)
 
     @api.depends('saving_id.state', 'invoice_id' )
-    @api.onchange('saving_id.state', 'invoice_id')
     def _compute_facturable(self):
         invoice_days_enable=int(self.env["ir.config_parameter"].get_param('days.invoice.enable', '120'))
         for brw_each in self:
-            enabled_invoice=False
+            enabled_for_invoice=False
             if brw_each.saving_id.state in ('open',):
                 if brw_each.invoice_id or brw_each.migrated_has_invoices:
-                    enabled_invoice = False
+                    enabled_for_invoice = False
                 else:
                     days=(brw_each.date - fields.Date.context_today(self)).days
-                    print(days)
-                    enabled_invoice = days>0 or days>= -invoice_days_enable
-            brw_each.enabled_invoice = enabled_invoice
+                    if days>0 or days>= -invoice_days_enable:
+                        enabled_for_invoice=True
+            brw_each.enabled_for_invoice = enabled_for_invoice
 
-    @api.depends('saving_id.state','invoice_id','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
-    @api.onchange('saving_id.state','invoice_id','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
+    @api.depends('saving_id.state','payment_line_ids.type','invoice_id','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
+    @api.onchange('saving_id.state','payment_line_ids.type','invoice_id','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
     def _compute_pendientes(self):
         DEC=2
         for brw_each in self:
@@ -75,7 +111,8 @@ class AccountSavingLines(models.Model):
                 estado_pago="pendiente"
                 por_pagar=round(brw_each.serv_admin_amount+brw_each.seguro_amount+brw_each.principal_amount,DEC)
                 for brw_line_payment in brw_each.payment_line_ids:
-                    pagos+=brw_line_payment.aplicado
+                    if brw_line_payment.type!='historic':
+                        pagos+=brw_line_payment.aplicado
                 pagos+=brw_each.migrated_payment_amount
                 pendiente=round(por_pagar-pagos,DEC)
             if brw_each.saving_id.state in ('close',):
@@ -108,69 +145,105 @@ class AccountSavingLines(models.Model):
                 base_amount = total / (1 + tax.amount / 100)  # Opcional si se requiere separar impuestos
         return base_amount
 
+
+
+
     def action_invoice(self):
         OBJ_MOVE = self.env["account.move"].sudo()
         for brw_each in self:
+            if not brw_each.saving_id.journal_id:
+                raise ValidationError(_("Debes configurar un diario para registrar las facturas de venta en %s") % (brw_each.saving_id.name,))
             if brw_each.parent_saving_state!='open':
-                raise ValidationError(_("El estado del plan de ahorro no es valido para facturar"))
+                raise ValidationError(_("El estado del plan de ahorro no es valido para facturar en %s") % (brw_each.saving_id.name,) )
             if not brw_each.invoice_id:
-                vals = {
-                    "partner_id":brw_each.saving_id.partner_id.id,
-                    "move_type":"out_invoice",
-                    "date": brw_each.date,
-                    "invoice_date":brw_each.date,
-                    "journal_id":brw_each.saving_id.journal_id.id,
-                    "company_id": brw_each.saving_id.company_id.id,
-                    "currency_id": brw_each.saving_id.company_id.currency_id.id,
-                    "saving_line_id":brw_each.id,
-                    "l10n_latam_document_type_id": brw_each.saving_id.document_type_id.id,
-                    "l10n_latam_use_documents": True,
-                    "state":"draft",
-                    "l10n_ec_sri_payment_id":self.env.ref("l10n_ec.P1").id
-                }
-                invoice_line_ids = [(5,)]
-                sequence = 1
-                if brw_each.seguro_amount>0:
-                    service_id=brw_each.saving_id.saving_plan_id.seguro_id
-                    if not  service_id:
-                        raise ValidationError(_("Debes configurar un servicio para el seguro"))
-                    base_seguro=self.calculate_base_amount(brw_each.seguro_amount, service_id.taxes_id)
-                    invoice_line_ids.append((0, 0, {
-                            "product_id":service_id.id,
+                srch_invoice=self.env["account.move"].sudo().search([('saving_line_id','=',brw_each.id),
+                                                                     ('state','!=','cancel')
+                                                                     ])
+                if not srch_invoice:
+                    vals = {
+                        "partner_id":brw_each.saving_id.partner_id.id,
+                        "move_type":"out_invoice",
+                        "date": brw_each.date,
+                        "invoice_date":brw_each.date,
+                        "journal_id":brw_each.saving_id.journal_id.id,
+                        "company_id": brw_each.saving_id.company_id.id,
+                        "currency_id": brw_each.saving_id.company_id.currency_id.id,
+                        "saving_line_id":brw_each.id,
+                        'saving_id':brw_each.saving_id.id,
+                        "l10n_latam_document_type_id": brw_each.saving_id.document_type_id.id,
+                        "l10n_latam_use_documents": True,
+                        "state":"draft",
+                        "l10n_ec_sri_payment_id":self.env.ref("l10n_ec.P1").id
+                    }
+                    invoice_line_ids = [(5,)]
+                    sequence = 1
+                    if brw_each.seguro_amount>0:
+                        service_id=brw_each.saving_id.saving_plan_id.seguro_id
+                        if not  service_id:
+                            raise ValidationError(_("Debes configurar un servicio para el seguro en %s") % (brw_each.saving_id.name,) )
+                        base_seguro=self.calculate_base_amount(brw_each.seguro_amount, service_id.taxes_id)
+                        invoice_line_ids.append((0, 0, {
+                                "product_id":service_id.id,
+                                "name": service_id.name,
+                                "quantity": 1,
+                                "price_unit": base_seguro,
+                                # "analytic_account_id":brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
+                                "tax_ids": [(6,0,service_id.taxes_id and service_id.taxes_id.ids or [])] ,
+                        }))
+                    if brw_each.serv_admin_amount>0:
+                        if brw_each.sequence>1:
+                            if not  brw_each.saving_id.saving_plan_id.product_id:
+                                raise ValidationError(_("Debes configurar un servicio para el gasto administrativo  en %s") % (brw_each.saving_id.name,) )
+                            service_id=brw_each.saving_id.saving_plan_id.product_id
+                        else:
+                            if not  brw_each.saving_id.saving_plan_id.inscripcion_id:
+                                raise ValidationError(_("Debes configurar un servicio para la inscripcion  en %s") % (brw_each.saving_id.name,) )
+                            service_id=brw_each.saving_id.saving_plan_id.inscripcion_id
+                        base_serv = self.calculate_base_amount(brw_each.serv_admin_amount, service_id.taxes_id)
+                        invoice_line_ids.append((0, 0, {
+                            "product_id": service_id.id,
                             "name": service_id.name,
                             "quantity": 1,
-                            "price_unit": base_seguro,
-                            # "analytic_account_id":brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
-                            "tax_ids": [(6,0,service_id.taxes_id and service_id.taxes_id.ids or [])] ,
-                    }))
-                if brw_each.serv_admin_amount>0:
-                    if brw_each.sequence>1:
-                        if not  brw_each.saving_id.saving_plan_id.product_id:
-                            raise ValidationError(_("Debes configurar un servicio para el gasto administrativo"))
-                        service_id=brw_each.saving_id.saving_plan_id.product_id
-                    else:
-                        if not  brw_each.saving_id.saving_plan_id.inscripcion_id:
-                            raise ValidationError(_("Debes configurar un servicio para la inscripcion"))
-                        service_id=brw_each.saving_id.saving_plan_id.inscripcion_id
-                    base_serv = self.calculate_base_amount(brw_each.serv_admin_amount, service_id.taxes_id)
-                    invoice_line_ids.append((0, 0, {
-                        "product_id": service_id.id,
-                        "name": service_id.name,
-                        "quantity": 1,
-                        "price_unit": base_serv,
-                        #"analytic_account_id": brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
-                        "tax_ids": [(6, 0,
-                                     service_id.taxes_id and service_id.taxes_id.ids or [])],
-                    }))
-                sequence += 1
-                vals["invoice_line_ids"] = invoice_line_ids
-                brw_process_doc = OBJ_MOVE.create(vals)
-                brw_process_doc.action_post()
-                for brw_payment in brw_each.payment_line_ids:
-                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
-                            brw_process_doc.id, brw_payment.payment_id.id)
-                brw_each.write({"invoice_id": brw_process_doc.id})
+                            "price_unit": base_serv,
+                            #"analytic_account_id": brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
+                            "tax_ids": [(6, 0,
+                                         service_id.taxes_id and service_id.taxes_id.ids or [])],
+                        }))
+                    sequence += 1
+                    vals["invoice_line_ids"] = invoice_line_ids
+                    brw_process_doc = OBJ_MOVE.create(vals)
+                    brw_process_doc.action_post()
+                    for brw_payment in brw_each.payment_line_ids:
+                        self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
+                                brw_process_doc.id, brw_payment.payment_id.id)
+                    brw_each.write({"invoice_id": brw_process_doc.id})
+                else:
+                    if len(srch_invoice)==1:
+                        if srch_invoice.state=='draft':
+                            srch_invoice.action_post()
+                            brw_each.write({"invoice_id": srch_invoice.id})
+                        else:#posted
+                            brw_each.write({"invoice_id": srch_invoice.id})
             else:
                 if self._context.get("raise_error",False):
-                    raise ValidationError(_("La cuota %s ya esta facturada del plan de ahorro %s") % (brw_each.sequence,brw_each.saving_id.id))
+                    raise ValidationError(_("La cuota %s ya esta facturada del plan de ahorro %s") % (brw_each.sequence,brw_each.saving_id.name))
+        return True
+
+    def action_do_invoices(self):
+        if not self:
+            return False
+
+        company_id = self.mapped('saving_id').mapped('company_id')  # Extrae todas las compañías en el recordset
+
+        if len(company_id) > 1:
+            raise ValidationError("Solo puedes facturar de una sola compañía a la vez %s" % (company_id.name,))
+
+        for record in self:
+            if record.invoice_id or record.migrated_has_invoices:  # Si tiene factura, no cumple
+                raise ValidationError("Solo puedes facturar una cuota sin facturar .Revisa %s" % (record.name,))
+            if record.saving_id.state != 'open':  # Si no está confirmado, no cumple
+                raise ValidationError("Solo puedes facturar una cuota en estado abierto.Revisa %s" % (record.name,) )
+
+        for brw_each in self:
+            brw_each.action_invoice()
         return True

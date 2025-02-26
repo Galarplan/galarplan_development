@@ -1,168 +1,127 @@
 # coding: utf-8
 from odoo.exceptions import ValidationError
-from odoo import api, fields, models, _, SUPERUSER_ID
+from odoo import api, fields, models, _,SUPERUSER_ID
 import base64
 from xml.etree.ElementTree import Element, SubElement, tostring
 from ...message_dialog.tools import FileManager
 from ...calendar_days.tools import DateManager
 from ...calendar_days.tools import CalendarManager
-
-fileO = FileManager()
-dateO = DateManager()
-calendarO = CalendarManager()
-
+fileO=FileManager()        
+dateO=DateManager()
+calendarO=CalendarManager()
 
 class l10n_ec_ats(models.TransientModel):
     _name = "l10n.ec.ats"
     _description = "ATS"
-
+    
     @api.model
     def get_default_company_id(self):
         if self._context.get("allowed_company_ids", []):
             return self._context.get("allowed_company_ids", [])[0]
         return self.env["res.users"].browse(self._uid).company_id.id
-
+    
     @api.model
     def get_default_year(self):
         return fields.Date.today().year
-
+    
     @api.model
     def get_default_month_id(self):
-        month = fields.Date.today().month
-        srch = self.env["calendar.month"].sudo().search([("value", "=", month)])
+        month=fields.Date.today().month
+        srch=self.env["calendar.month"].sudo().search([('value','=',month)])
         return srch and srch[0].id or False
+    
+    company_id=fields.Many2one("res.company","Compañia",default=get_default_company_id)
+    report_file = fields.Binary(copy=False, )
+    file_name = fields.Char(copy=False, )
+    type_report = fields.Selection([('ATS', '(ATS) ANEXO TRANSACCIONAL SIMPLIFICADO')],default='ATS', copy=False)
+    year=fields.Integer("Año",default=get_default_year)
+    month_id=fields.Many2one("calendar.month","Mes",required=True,default=get_default_month_id)
 
-    company_id = fields.Many2one(
-        "res.company", "Compañia", default=get_default_company_id
-    )
-    report_file = fields.Binary(
-        copy=False,
-    )
-    file_name = fields.Char(
-        copy=False,
-    )
-    type_report = fields.Selection(
-        [("ATS", "(ATS) ANEXO TRANSACCIONAL SIMPLIFICADO")], default="ATS", copy=False
-    )
-    year = fields.Integer("Año", default=get_default_year)
-    month_id = fields.Many2one(
-        "calendar.month", "Mes", required=True, default=get_default_month_id
-    )
-
-    type_info = fields.Selection(
-        [("detailed", "Detallado"), ("grouped", "Agrupado")],
-        string="Tipo de Reporte",
-        default="grouped",
-    )
+    type_info=fields.Selection([('detailed','Detallado'),('grouped','Agrupado')],string="Tipo de Reporte",default="grouped")
 
     @api.model
     def get_default_date_start(self):
-        if self._context.get("is_report", False):
-            NOW = fields.Date.today()
-            YEAR = NOW.year
-            MONTH = NOW.month
-            return dateO.create(YEAR, MONTH, 1).date()
+        if self._context.get("is_report",False):
+            NOW=fields.Date.today()
+            YEAR=NOW.year
+            MONTH=NOW.month      
+            return dateO.create(YEAR,MONTH, 1).date()
         return None
-
+    
     @api.model
     def get_default_date_end(self):
-        if self._context.get("is_report", False):
-            NOW = fields.Date.today()
-            YEAR = NOW.year
-            MONTH = NOW.month
-            LAST_DAY = calendarO.days(YEAR, MONTH)
-            return dateO.create(YEAR, MONTH, LAST_DAY).date()
+        if self._context.get("is_report",False):
+            NOW=fields.Date.today()
+            YEAR=NOW.year
+            MONTH=NOW.month        
+            LAST_DAY=calendarO.days(YEAR,MONTH)
+            return dateO.create(YEAR,MONTH,LAST_DAY).date()
         return None
-
-    date_start = fields.Date(
-        "Fecha Inicial",
-        required=True,
-        store=True,
-        readonly=False,
-        default=get_default_date_start,
-    )
-    date_end = fields.Date(
-        "Fecha Final",
-        required=True,
-        store=True,
-        readonly=False,
-        default=get_default_date_end,
-    )
-
-    @api.onchange("year", "month_id")
+    
+    date_start=fields.Date("Fecha Inicial",required=True,store=True,readonly=False,default=get_default_date_start)
+    date_end=fields.Date("Fecha Final",required=True,store=True,readonly=False,default=get_default_date_end)
+    
+    @api.onchange('year','month_id')
     def onchange_year_month(self):
-        YEAR = self.year
-        MONTH = self.month_id.value
-
-        LAST_DAY = calendarO.days(YEAR, MONTH)
-        self.date_start = dateO.create(YEAR, MONTH, 1).date()
-        self.date_end = dateO.create(YEAR, MONTH, LAST_DAY).date()
-
+        YEAR=self.year
+        MONTH=self.month_id.value
+        
+        LAST_DAY=calendarO.days(YEAR,MONTH)
+        self.date_start=dateO.create(YEAR,MONTH,1).date() 
+        self.date_end=dateO.create(YEAR,MONTH,LAST_DAY).date() 
+        
+        
     def process(self):
-        if self.type_report == "ATS":
+        if self.type_report == 'ATS':
             file = self.ATS(self.date_start, self.date_end)
-            file_name = str(self.type_report) + ".xml"
+            file_name = str(self.type_report)+".xml"
 
             self.report_file = file
             self.file_name = file_name
             return {
-                "type": "ir.actions.act_url",
-                "url": "/web/content/%s/%s/report_file/%s"
-                % (self._name, self.id, file_name),
-                "target": "new",
-            }
+                         'type' : 'ir.actions.act_url',
+                         'url': '/web/content/%s/%s/report_file/%s' % (self._name,self.id,file_name),
+                         'target': 'new'
+                }
 
     # region ATS
     def ATS(self, date_from, date_to):
-        config = self.env["ir.config_parameter"].sudo()
+        config = self.env['ir.config_parameter'].sudo()
         company_id = self.env.user.company_id
 
         root = Element("iva")
-        SubElement(root, "TipoIDInformante").text = "R"
+        SubElement(root, "TipoIDInformante").text = 'R'
         SubElement(root, "IdInformante").text = company_id.vat
-        SubElement(root, "razonSocial").text = self.xmlGen(
-            company_id.name.replace(".", "")
-        ).upper()
+        SubElement(root, "razonSocial").text = self.xmlGen(company_id.name.replace('.', '')).upper()
         SubElement(root, "Anio").text = str(date_to.year)
         SubElement(root, "Mes").text = str(date_to.month).zfill(2)
-        str_date_from = (
-            str(date_from.year)
-            + "-"
-            + str(date_from.month).zfill(2)
-            + "-"
-            + str(date_from.day).zfill(2)
-        )
-        str_date_to = (
-            str(date_to.year)
-            + "-"
-            + str(date_to.month).zfill(2)
-            + "-"
-            + str(date_to.day).zfill(2)
-        )
+        str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+        str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
-        sql = f"""
-            SELECT 
-                substring(right(replace(t0.name, '-', ''), 15) FROM 1 FOR 3) AS codEstab, 
-                COUNT(1)
-            FROM account_move t0
-            INNER JOIN l10n_latam_document_type t1 
-                ON t1.id = t0.l10n_latam_document_type_id 
-            WHERE 
-                t0.state IN ('posted', 'paid') 
-                AND t0.move_type IN ('out_invoice', 'out_refund') 
-                AND t0.invoice_date <= '{str_date_to}' 
-                AND t1.code != '00'
-            GROUP BY substring(right(replace(t0.name, '-', ''), 15) FROM 1 FOR 3)
-            ORDER BY substring(right(replace(t0.name, '-', ''), 15) FROM 1 FOR 3) DESC
-        """
+        sql = """
+            select substring(right(replace(t0.name,'-',''),15) from 1 for 3) codEstab, 
+            COUNT(1)
+            from account_move t0
+            inner join l10n_latam_document_type t1 on t1.id = t0.l10n_latam_document_type_id 
+            where t0.state in ('posted', 'paid')
+            and t0.move_type in ('out_invoice', 'out_refund') 
+           and t0.invoice_date<='"""+str_date_to+"""' and t1.code!='00' 
+            group by substring(right(replace(t0.name,'-',''),15) from 1 for 3)    
+            order by substring(right(replace(t0.name,'-',''),15) from 1 for 3)  desc        
+        """#
         self.env.cr.execute(sql)
-        result = self.env.cr.fetchall()
-        SubElement(root, "numEstabRuc").text = str(len(result)).zfill(3)
-        SubElement(root, "totalVentas").text = "0.00"
+        result=self.env.cr.fetchall()
+        if len(result) != 0:
+            SubElement(root, "numEstabRuc").text = str(len(result)).zfill(3)
+        else:
+            SubElement(root, "numEstabRuc").text = str(len(result)+1).zfill(3)
+        SubElement(root, "totalVentas").text = "0.00"        
         SubElement(root, "codigoOperativo").text = "IVA"
-
+        
         self._generate_compras(root, date_from, date_to)
         self._generate_ventas(root, date_from, date_to)
+        
+
 
         self._generate_ventasEstablecimiento(root, date_from, date_to)
         self._generate_anulados(root, date_from, date_to)
@@ -172,20 +131,8 @@ class l10n_ec_ats(models.TransientModel):
 
     def _generate_ventas_general(self, root, date_from, date_to):
         company_id = self.env.user.company_id
-        str_date_from = (
-            str(date_from.year)
-            + "-"
-            + str(date_from.month).zfill(2)
-            + "-"
-            + str(date_from.day).zfill(2)
-        )
-        str_date_to = (
-            str(date_to.year)
-            + "-"
-            + str(date_to.month).zfill(2)
-            + "-"
-            + str(date_to.day).zfill(2)
-        )
+        str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+        str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
         sql = """
                         select 
@@ -235,37 +182,22 @@ group by        rp.vat,
                 case when res_partner.is_company='f' then '01' else '02' end ,                
                 case when doc_document_type.code='01' then '18' else doc_document_type.code end 
                 
-        """ % (
-            str_date_from,
-            str_date_from,
-            company_id,
-        )
+        """ % (str_date_from,str_date_from,company_id)
 
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
         totalVentas = 0
         for line in result:
-            totalVentas = line["ventas_ventasestab"]
-        SubElement(root, "totalVentas").text = "%.2f" % float(totalVentas)
+            totalVentas = line['ventas_ventasestab']
+        SubElement(root, "totalVentas").text = '%.2f' % float(totalVentas)
         SubElement(root, "codigoOperativo").text = "IVA"
         return root
 
     def _generate_compras(self, root, date_from, date_to):
-        str_date_from = (
-            str(date_from.year)
-            + "-"
-            + str(date_from.month).zfill(2)
-            + "-"
-            + str(date_from.day).zfill(2)
-        )
-        str_date_to = (
-            str(date_to.year)
-            + "-"
-            + str(date_to.month).zfill(2)
-            + "-"
-            + str(date_to.day).zfill(2)
-        )
+        str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+        str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
         company_id = self.env.user.company_id
+        
 
         sql = """;with variables as (
     select '%s'::date as fecha_inicial,
@@ -392,146 +324,82 @@ select
                 left join retenciones_detalle rdfte on rdfte.id=account_move.id and rdfte.l10n_ec_type='withhold_income_purchase'
                 left join retenciones_detalle_retencion dtr on dtr.move_id=account_move.id 
                 where doc_document_type.code!='00'                  
-                """ % (
-            date_from,
-            date_to,
-            company_id.id,
-        )
+                """ % (date_from,date_to,company_id.id)
 
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
         if result:
-            compras = SubElement(root, "compras")
+            compras = SubElement(root, "compras")        
             for line in result:
                 detalleCompras = SubElement(compras, "detalleCompras")
-                SubElement(detalleCompras, "codSustento").text = line[
-                    "compras_codsustento"
-                ]
-                SubElement(detalleCompras, "tpIdProv").text = line["compras_tpidprov"]
-
-                SubElement(detalleCompras, "idProv").text = line["compras_idprov"]
-                SubElement(detalleCompras, "tipoComprobante").text = line[
-                    "compras_tipocomprobante"
-                ]
-
-                if line["compras_tpidprov"] == "03":
-                    SubElement(detalleCompras, "tipoProv").text = (
-                        "01"  # line['compras_tipoprov']
-                    )
-                    SubElement(detalleCompras, "denoProv").text = line[
-                        "compras_nombreprov"
-                    ]
-
-                SubElement(detalleCompras, "parteRel").text = line[
-                    "compras_parterel"
-                ].upper()
-                SubElement(detalleCompras, "fechaRegistro").text = (
-                    str(line["compras_fechaemision"])[8:10]
-                    + "/"
-                    + str(line["compras_fechaemision"])[5:7]
-                    + "/"
-                    + str(line["compras_fechaemision"])[0:4]
-                )
-                SubElement(detalleCompras, "establecimiento").text = line[
-                    "compras_establecimiento"
-                ]
-                SubElement(detalleCompras, "puntoEmision").text = line[
-                    "compras_puntoemision"
-                ]
-                SubElement(detalleCompras, "secuencial").text = line[
-                    "compras_secuencial"
-                ]
-                SubElement(detalleCompras, "fechaEmision").text = (
-                    str(line["compras_fechaemision"])[8:10]
-                    + "/"
-                    + str(line["compras_fechaemision"])[5:7]
-                    + "/"
-                    + str(line["compras_fechaemision"])[0:4]
-                )
-                SubElement(detalleCompras, "autorizacion").text = line[
-                    "compras_autorizacion"
-                ]
-
-                SubElement(detalleCompras, "baseNoGraIva").text = "%.2f" % float(
-                    line["compras_basenograiva"]
-                )
-                SubElement(detalleCompras, "baseImponible").text = "%.2f" % float(
-                    line["compras_baseimponible"]
-                )
-                SubElement(detalleCompras, "baseImpGrav").text = "%.2f" % float(
-                    line["compras_baseimpgrav"]
-                )
-                SubElement(detalleCompras, "baseImpExe").text = "%.2f" % float(
-                    line["compras_baseimpexe"]
-                )
-
-                SubElement(detalleCompras, "montoIce").text = "%.2f" % float(
-                    line["compras_montoice"]
-                )
-                SubElement(detalleCompras, "montoIva").text = "%.2f" % float(
-                    line["compras_montoiva"]
-                )
-
-                SubElement(detalleCompras, "valRetBien10").text = "%.2f" % float(
-                    line["compras_valretbien10"]
-                )
-                SubElement(detalleCompras, "valRetServ20").text = "%.2f" % float(
-                    line["compras_valretserv20"]
-                )
-                SubElement(detalleCompras, "valorRetBienes").text = "%.2f" % float(
-                    line["compras_valorretbienes"]
-                )
-                SubElement(detalleCompras, "valRetServ50").text = "%.2f" % float(
-                    line["compras_valretserv50"]
-                )
-                SubElement(detalleCompras, "valorRetServicios").text = "%.2f" % float(
-                    line["compras_valorretservicios"]
-                )
-                SubElement(detalleCompras, "valRetServ100").text = "%.2f" % float(
-                    line["compras_valretserv100"]
-                )
+                SubElement(detalleCompras, "codSustento").text = line['compras_codsustento']
+                SubElement(detalleCompras, "tpIdProv").text = line['compras_tpidprov']
+    
+                SubElement(detalleCompras, "idProv").text = line['compras_idprov']
+                SubElement(detalleCompras, "tipoComprobante").text = line['compras_tipocomprobante']
+    
+                if line['compras_tpidprov'] == "03":
+                    SubElement(detalleCompras, "tipoProv").text = "01"# line['compras_tipoprov']
+                    SubElement(detalleCompras, "denoProv").text = self.xmlGen(line['compras_nombreprov'])
+    
+                SubElement(detalleCompras, "parteRel").text = line['compras_parterel'].upper()
+                SubElement(detalleCompras, "fechaRegistro").text = str(line['compras_fechaemision'])[8:10] + "/" + str(line['compras_fechaemision'])[5:7] + "/" + str(line['compras_fechaemision'])[0:4]
+                SubElement(detalleCompras, "establecimiento").text = line['compras_establecimiento']
+                SubElement(detalleCompras, "puntoEmision").text = line['compras_puntoemision']
+                SubElement(detalleCompras, "secuencial").text = line['compras_secuencial']
+                SubElement(detalleCompras, "fechaEmision").text = str(line['compras_fechaemision'])[8:10] + "/" + str(line['compras_fechaemision'])[5:7] + "/" + str(line['compras_fechaemision'])[0:4]
+                SubElement(detalleCompras, "autorizacion").text = line['compras_autorizacion']
+    
+                SubElement(detalleCompras, "baseNoGraIva").text = '%.2f' % float(line['compras_basenograiva'])
+                SubElement(detalleCompras, "baseImponible").text = '%.2f' % float(line['compras_baseimponible'])
+                SubElement(detalleCompras, "baseImpGrav").text = '%.2f' % float(line['compras_baseimpgrav'])
+                SubElement(detalleCompras, "baseImpExe").text = '%.2f' % float(line['compras_baseimpexe'])
+    
+                SubElement(detalleCompras, "montoIce").text = '%.2f' % float(line['compras_montoice'])
+                SubElement(detalleCompras, "montoIva").text = '%.2f' % float(line['compras_montoiva'])
+    
+                SubElement(detalleCompras, "valRetBien10").text = '%.2f' % float(line['compras_valretbien10'])
+                SubElement(detalleCompras, "valRetServ20").text = '%.2f' % float(line['compras_valretserv20'])
+                SubElement(detalleCompras, "valorRetBienes").text = '%.2f' % float(line['compras_valorretbienes'])
+                SubElement(detalleCompras, "valRetServ50").text = '%.2f' % float(line['compras_valretserv50'])
+                SubElement(detalleCompras, "valorRetServicios").text = '%.2f' % float(line['compras_valorretservicios'])
+                SubElement(detalleCompras, "valRetServ100").text = '%.2f' % float(line['compras_valretserv100'])
                 SubElement(detalleCompras, "valorRetencionNc").text = "0.00"
                 SubElement(detalleCompras, "totbasesImpReemb").text = "0.00"
                 #
-
+                
                 pagoExterior = SubElement(detalleCompras, "pagoExterior")
                 SubElement(pagoExterior, "pagoLocExt").text = "01"
                 SubElement(pagoExterior, "paisEfecPago").text = "NA"
                 SubElement(pagoExterior, "aplicConvDobTrib").text = "NA"
                 SubElement(pagoExterior, "pagExtSujRetNorLeg").text = "NA"
-                # if(line['compras_baseimponible'])>1000:
+                #if(line['compras_baseimponible'])>1000:
                 formasDePago = SubElement(detalleCompras, "formasDePago")
-                SubElement(formasDePago, "formaPago").text = line["compras_formapago"]
-
-                if line["detalle"]:
+                SubElement(formasDePago, "formaPago").text = line['compras_formapago']
+                
+                if (line["detalle"]):
                     air = SubElement(detalleCompras, "air")
                     for detalle in line["detalle"]:
                         detalleAir = SubElement(air, "detalleAir")
                         SubElement(detalleAir, "codRetAir").text = detalle["codretair"]
-                        SubElement(detalleAir, "baseImpAir").text = (
-                            "%.2f" % detalle["baseimpair"]
-                        )
-                        SubElement(detalleAir, "porcentajeAir").text = (
-                            "%.2f" % detalle["porcentajeair"]
-                        )
-                        SubElement(detalleAir, "valRetAir").text = (
-                            "%.2f" % detalle["valretair"]
-                        )
-                #
-                # totalreembolso = 0
-                # if line['compras_tipocomprobante'] != "20":
+                        SubElement(detalleAir, "baseImpAir").text = '%.2f' % detalle["baseimpair"]
+                        SubElement(detalleAir, "porcentajeAir").text = '%.2f' % detalle["porcentajeair"]
+                        SubElement(detalleAir, "valRetAir").text = '%.2f' % detalle["valretair"]
+                #                    
+                #totalreembolso = 0
+                #if line['compras_tipocomprobante'] != "20":
                 #    for reem in self.env['account.sustent.doc'].search([('invoice_id', '=', line['id_compras'])]):
                 #        totalreembolso = totalreembolso + (reem.baseImponibleReemb + reem.baseImpGravReemb + reem.baseNoGraIvaReemb + reem.baseImpExeReemb)
-
-                # SubElement(detalleCompras, "totbasesImpReemb").text = '%.2f' % float(totalreembolso)
-
+    
+                #SubElement(detalleCompras, "totbasesImpReemb").text = '%.2f' % float(totalreembolso)
+    
                 # if not line.compras_docmodificado:
                 # pagoExterior = SubElement(detalleCompras, "pagoExterior")
                 # SubElement(pagoExterior, "pagoLocExt").text = line['compras_pagolocext']
                 # SubElement(pagoExterior, "paisEfecPago").text = line['compras_paisefecpago']
                 # SubElement(pagoExterior, "aplicConvDobTrib").text = line['compras_aplicconvdobtrib']
                 # SubElement(pagoExterior, "pagExtSujRetNorLeg").text = line['compras_pagextsujretnorleg']
-
+    
                 # if not line['compras_docmodificado'] or line['compras_tipocomprobante'] != "04":
                 #     formasDePago = SubElement(detalleCompras, "formasDePago")
                 #     SubElement(formasDePago, "formaPago").text = line['compras_formapago']
@@ -589,63 +457,28 @@ select
                 #                         SubElement(detalleAir, "anioUtDiv").text = str(retencion_line.anioUtDiv)
                 #
                 #
-                if line["fechaemiret1"]:
-                    SubElement(detalleCompras, "estabRetencion1").text = line[
-                        "estabretencion1"
-                    ]
-                    SubElement(detalleCompras, "ptoEmiRetencion1").text = line[
-                        "ptoemiretencion1"
-                    ]
-                    SubElement(detalleCompras, "secRetencion1").text = line[
-                        "secretencion1"
-                    ]
-                    SubElement(detalleCompras, "autRetencion1").text = line[
-                        "autretencion1"
-                    ]
-                    fechaEmiRet1 = (
-                        str(line["fechaemiret1"])[8:10]
-                        + "/"
-                        + str(line["fechaemiret1"])[5:7]
-                        + "/"
-                        + str(line["fechaemiret1"])[0:4]
-                    )
+                if line['fechaemiret1']:
+                    SubElement(detalleCompras, "estabRetencion1").text = line['estabretencion1']
+                    SubElement(detalleCompras, "ptoEmiRetencion1").text = line['ptoemiretencion1']
+                    SubElement(detalleCompras, "secRetencion1").text = line['secretencion1']
+                    SubElement(detalleCompras, "autRetencion1").text = line['autretencion1']
+                    fechaEmiRet1 = str(line['fechaemiret1'])[8:10] + "/" + str(line['fechaemiret1'])[5:7] + "/" + str(line['fechaemiret1'])[0:4]
                     SubElement(detalleCompras, "fechaEmiRet1").text = fechaEmiRet1
-
-                if line["compras_docmodificado"]:
-                    SubElement(detalleCompras, "docModificado").text = line[
-                        "compras_docmodificado"
-                    ]
-                    SubElement(detalleCompras, "estabModificado").text = line[
-                        "compras_estabmodificado"
-                    ]
-                    SubElement(detalleCompras, "ptoEmiModificado").text = line[
-                        "compras_ptoemimodificado"
-                    ]
-                    SubElement(detalleCompras, "secModificado").text = line[
-                        "compras_secmodificado"
-                    ]
-                    SubElement(detalleCompras, "autModificado").text = line[
-                        "compras_autmodificado"
-                    ]
+                
+                
+                if line['compras_docmodificado']:
+                    SubElement(detalleCompras, "docModificado").text = line['compras_docmodificado']
+                    SubElement(detalleCompras, "estabModificado").text = line['compras_estabmodificado']
+                    SubElement(detalleCompras, "ptoEmiModificado").text = line['compras_ptoemimodificado']
+                    SubElement(detalleCompras, "secModificado").text = line['compras_secmodificado']
+                    SubElement(detalleCompras, "autModificado").text = line['compras_autmodificado']
 
         return root
-
+    
     def _generate_ventas(self, root, date_from, date_to):
         company_id = self.env.user.company_id
-        str_date_from = (
-            str(date_from.year)
-            + "-"
-            + str(date_from.month).zfill(2)
-            + "-"
-            + str(date_from.day).zfill(2)
-        )
-        str_date_to = (
-            str(date_to.year)
-            + "-"
-            + str(date_to.month).zfill(2)
-            + "-"
-            + str(date_to.day).zfill(2)
-        )
+        str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+        str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
         sql = """
 
@@ -724,161 +557,93 @@ group by        rp.vat,
                 end,
                 res_partner.vat,Coalesce(doc_payment_type.code,'01'),
                 case when res_partner.is_company='f' then '01' else '02' end ,                
-                case when doc_document_type.code='01' then '18' else doc_document_type.code end """ % (
-            str_date_from,
-            str_date_to,
-            company_id.id,
-        )
+                case when doc_document_type.code='01' then '18' else doc_document_type.code end """ % (str_date_from,str_date_to,company_id.id)
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
         if result:
             ventas = SubElement(root, "ventas")
             for line in result:
                 detalleVentas = SubElement(ventas, "detalleVentas")
-                SubElement(detalleVentas, "tpIdCliente").text = line[
-                    "ventas_tpidcliente"
-                ]
-
-                SubElement(detalleVentas, "idCliente").text = self.xmlGen(
-                    line["ventas_idcliente"]
-                )
-
-                if line["ventas_tpidcliente"] != "07":
+                SubElement(detalleVentas, "tpIdCliente").text = line['ventas_tpidcliente']
+                
+                SubElement(detalleVentas, "idCliente").text = self.xmlGen(line['ventas_idcliente'])
+    
+                if line['ventas_tpidcliente'] != "07":
                     SubElement(detalleVentas, "parteRelVtas").text = "NO"
-
-                if (
-                    line["ventas_tpidcliente"] == "06"
-                    or line["ventas_tpidcliente"] == "08"
-                ):
-                    SubElement(detalleVentas, "tipoCliente").text = line[
-                        "ventas_tipocliente"
-                    ]
-                    SubElement(detalleVentas, "denoCli").text = self.xmlGen(
-                        line["ventas_denocli"]
-                    )
-
-                SubElement(detalleVentas, "tipoComprobante").text = line[
-                    "ventas_tipocomprobante"
-                ]
-                SubElement(detalleVentas, "tipoEmision").text = line["ventas_tipoem"]
-                SubElement(detalleVentas, "numeroComprobantes").text = str(
-                    int(line["ventas_numerocomprobantes"])
-                )
-
-                SubElement(detalleVentas, "baseNoGraIva").text = "%.2f" % float(
-                    line["ventas_basenograiva"]
-                )
-                SubElement(detalleVentas, "baseImponible").text = "%.2f" % float(
-                    line["ventas_baseimponible"]
-                )
-                SubElement(detalleVentas, "baseImpGrav").text = "%.2f" % float(
-                    line["ventas_baseimpgrav"]
-                )
-
-                SubElement(detalleVentas, "montoIva").text = "%.2f" % float(
-                    line["ventas_montoiva"]
-                )
-                SubElement(detalleVentas, "montoIce").text = "%.2f" % float(
-                    line["ventas_montoice"]
-                )
-
-                SubElement(detalleVentas, "valorRetIva").text = "%.2f" % float(
-                    line["ventas_valorretiva"]
-                )
-                SubElement(detalleVentas, "valorRetRenta").text = "%.2f" % float(
-                    line["ventas_valorretrenta"]
-                )
-
-                if line["ventas_tipocomprobante"] != "04":
+    
+                if line['ventas_tpidcliente'] == "06" or line['ventas_tpidcliente'] == "08":
+                    SubElement(detalleVentas, "tipoCliente").text = line['ventas_tipocliente']
+                    SubElement(detalleVentas, "denoCli").text = self.xmlGen(line['ventas_denocli'])
+    
+                SubElement(detalleVentas, "tipoComprobante").text = line['ventas_tipocomprobante']
+                SubElement(detalleVentas, "tipoEmision").text = line['ventas_tipoem']
+                SubElement(detalleVentas, "numeroComprobantes").text = str(int(line['ventas_numerocomprobantes']))
+    
+                SubElement(detalleVentas, "baseNoGraIva").text = '%.2f' % float(line['ventas_basenograiva'])
+                SubElement(detalleVentas, "baseImponible").text = '%.2f' % float(line['ventas_baseimponible'])
+                SubElement(detalleVentas, "baseImpGrav").text = '%.2f' % float(line['ventas_baseimpgrav'])
+    
+                SubElement(detalleVentas, "montoIva").text = '%.2f' % float(line['ventas_montoiva'])
+                SubElement(detalleVentas, "montoIce").text = '%.2f' % float(line['ventas_montoice'])
+    
+                SubElement(detalleVentas, "valorRetIva").text = '%.2f' % float(line['ventas_valorretiva'])
+                SubElement(detalleVentas, "valorRetRenta").text = '%.2f' % float(line['ventas_valorretrenta'])
+                
+                if  line['ventas_tipocomprobante']!="04":
                     formasDePago = SubElement(detalleVentas, "formasDePago")
-                    SubElement(formasDePago, "formaPago").text = line[
-                        "ventas_formapago"
-                    ]
+                    SubElement(formasDePago, "formaPago").text = line['ventas_formapago']
 
         return root
 
     def _generate_ventasEstablecimiento(self, root, date_from, date_to):
         company_id = self.env.user.company_id
-        str_date_from = (
-            str(date_from.year)
-            + "-"
-            + str(date_from.month).zfill(2)
-            + "-"
-            + str(date_from.day).zfill(2)
-        )
-        str_date_to = (
-            str(date_to.year)
-            + "-"
-            + str(date_to.month).zfill(2)
-            + "-"
-            + str(date_to.day).zfill(2)
-        )
+        str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+        str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
-        sql = (
-            """
+        
+
+        sql = """
             select substring(right(replace(t0.name,'-',''),15) from 1 for 3) codEstab, 
             sum(case when t0.move_type = 'out_invoice' then t0.amount_untaxed else -t0.amount_untaxed end) ventasEstab
             from account_move t0 
             inner join account_journal aj on  aj.id=t0.journal_id and coalesce(aj.l10n_latam_use_documents,false)=true 
             inner join l10n_latam_document_type t1 on t1.id = t0.l10n_latam_document_type_id 
-            where t0.state in ('posted', 'paid') and t0.company_id="""
-            + str(company_id.id)
-            + """ 
+            where t0.state in ('posted', 'paid') and t0.company_id="""+str(company_id.id)+""" 
             and t0.move_type in ('out_invoice', 'out_refund') and coalesce(t0.anulado_sri,false)!=true  
-           and t0.invoice_date>='"""
-            + str_date_from
-            + """' and t0.invoice_date<='"""
-            + str_date_to
-            + """' and t1.code!='00' 
+           and t0.invoice_date>='"""+str_date_from+"""' and t0.invoice_date<='"""+str_date_to+"""' and t1.code!='00' 
             group by substring(right(replace(t0.name,'-',''),15) from 1 for 3)            
         """
-        )
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
 
         existlines = False
-        i = 0
+        i=0
         for line in result:
-            i += 1
-        # SubElement(root, "numEstabRuc").text = str(i).zfill(3)
+            i+=1
+        #SubElement(root, "numEstabRuc").text = str(i).zfill(3)
         if result:
             ventasEstablecimiento = SubElement(root, "ventasEstablecimiento")
             for line in result:
                 existlines = True
                 ventaEst = SubElement(ventasEstablecimiento, "ventaEst")
-                SubElement(ventaEst, "codEstab").text = line["codestab"]
-                SubElement(ventaEst, "ventasEstab").text = (
-                    "0.00"  # %.2f' % float(line['ventasestab'])
-                )
-                SubElement(ventaEst, "ivaComp").text = "%.2f" % float(0)
+                SubElement(ventaEst, "codEstab").text = line['codestab']
+                SubElement(ventaEst, "ventasEstab").text = '0.00'#%.2f' % float(line['ventasestab'])
+                SubElement(ventaEst, "ivaComp").text = '%.2f' % float(0)
 
         if not existlines:
             pass
-            # ventaEst = SubElement(ventasEstablecimiento, "ventaEst")
-            # SubElement(ventaEst, "codEstab").text = "000"
-            # SubElement(ventaEst, "ventasEstab").text = '0.00'
-            # SubElement(ventaEst, "ivaComp").text = '0.00'
+            #ventaEst = SubElement(ventasEstablecimiento, "ventaEst")
+            #SubElement(ventaEst, "codEstab").text = "000"
+            #SubElement(ventaEst, "ventasEstab").text = '0.00'
+            #SubElement(ventaEst, "ivaComp").text = '0.00'
 
     def _generate_anulados(self, root, date_from, date_to):
         company_id = self.env.user.company_id
         anulados = False
-        str_date_from = (
-            str(date_from.year)
-            + "-"
-            + str(date_from.month).zfill(2)
-            + "-"
-            + str(date_from.day).zfill(2)
-        )
-        str_date_to = (
-            str(date_to.year)
-            + "-"
-            + str(date_to.month).zfill(2)
-            + "-"
-            + str(date_to.day).zfill(2)
-        )
-
-        sql = (
-            """ select 'anulados' tipo,
+        str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+        str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
+        
+        sql = """ select 'anulados' tipo,
             rp.vat as idinformante,
             rp.name as razonsocial,
             'iva' codigooperativo,           
@@ -894,17 +659,11 @@ group by        rp.vat,
             inner join res_partner rp on rp.id=res_company.partner_id 
             inner join account_journal aj on  aj.id=t0.journal_id and coalesce(aj.l10n_latam_use_documents,false)=true 
             inner join l10n_latam_document_type t1 on t1.id = t0.l10n_latam_document_type_id 
-            where t0.state!='draft' and t0.company_id="""
-            + str(company_id.id)
-            + """  
+            where t0.state!='draft' and t0.company_id="""+str(company_id.id)+"""  
             and t0.move_type in ('out_invoice', 'out_refund') and coalesce(t0.anulado_sri,false)=true  and t1.code!='00' 
-           and t0.invoice_date>='"""
-            + str_date_from
-            + """' and t0.invoice_date<='"""
-            + str_date_to
-            + """' 
-             """
-        )
+           and t0.invoice_date>='"""+str_date_from+"""' and t0.invoice_date<='"""+str_date_to+"""' 
+             """           
+            
 
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
@@ -914,18 +673,12 @@ group by        rp.vat,
 
         for line in result:
             detalleAnulados = SubElement(anulados, "detalleAnulados")
-            SubElement(detalleAnulados, "tipoComprobante").text = line[
-                "tipocomprobante"
-            ]
-            SubElement(detalleAnulados, "establecimiento").text = line[
-                "establecimiento"
-            ]
-            SubElement(detalleAnulados, "puntoEmision").text = line["puntoemision"]
-            SubElement(detalleAnulados, "secuencialInicio").text = line[
-                "secuencialinicio"
-            ]
-            SubElement(detalleAnulados, "secuencialFin").text = line["secuencialfin"]
-            SubElement(detalleAnulados, "autorizacion").text = line["autorización"]
+            SubElement(detalleAnulados, "tipoComprobante").text = line['tipocomprobante']
+            SubElement(detalleAnulados, "establecimiento").text = line['establecimiento']
+            SubElement(detalleAnulados, "puntoEmision").text = line['puntoemision']
+            SubElement(detalleAnulados, "secuencialInicio").text = line['secuencialinicio']
+            SubElement(detalleAnulados, "secuencialFin").text = line['secuencialfin']
+            SubElement(detalleAnulados, "autorizacion").text = line['autorización']
 
     # endregion
 
@@ -936,56 +689,57 @@ group by        rp.vat,
             str_field = str_field
 
         if isinstance(str_field, str):
-            str_field = str_field.replace("&", "&amp;")
-            str_field = str_field.replace("&", "&amp;")
-            str_field = str_field.replace("<", "&lt;")
-            str_field = str_field.replace(">", "&gt;")
-            str_field = str_field.replace('"', "&quot;")
-            str_field = str_field.replace("'", "&apos;")
             str_field = str_field.replace("á", "a")
             str_field = str_field.replace("é", "e")
             str_field = str_field.replace("í", "i")
             str_field = str_field.replace("ó", "o")
             str_field = str_field.replace("ú", "u")
             str_field = str_field.replace("ñ", "n")
-            str_field = str_field.replace("-", "")
-            str_field = str_field.replace("(", "")
-            str_field = str_field.replace(")", "")
-            str_field = str_field.replace("\n", "")
-            str_field = str_field.replace("\r", "")
-            str_field = str_field.replace(".", "")
+            str_field = str_field.replace('\n', '')
+            str_field = str_field.replace('\r', '')
+            
+            str_field = str_field.upper()
+            
+            str_field = str_field.replace("&", " ")
+            # str_field = str_field.replace("&", "&amp;")
+            # str_field = str_field.replace("<", "&lt;")
+            # str_field = str_field.replace(">", "&gt;")
+            # str_field = str_field.replace("\"", "&quot;")
+            # str_field = str_field.replace("'", "&apos;")
+
+            # str_field = str_field.replace("&", "&amp;")
+            str_field = str_field.replace("<", " ")
+            str_field = str_field.replace(">", " ")
+            str_field = str_field.replace("\"", " ")
+            str_field = str_field.replace("'", " ")
+            
+            str_field = str_field.replace('-', ' ')
+            str_field = str_field.replace('(', '')
+            str_field = str_field.replace(')', '')
+            str_field = str_field.replace('.', '')
 
         return str_field
-
+    
     def process_report(self):
-        # print(self._context)
-        REPORT = self._context.get("default_report", "")
-        self = self.with_context({"no_raise": True})
-        self = self.with_user(SUPERUSER_ID)
+        #print(self._context)
+        REPORT=self._context.get('default_report','')
+        self=self.with_context({"no_raise":True})
+        self=self.with_user(SUPERUSER_ID)        
         for brw_each in self:
             try:
-                OBJ_ATS = self.env[self._name].sudo()
-                context = dict(
-                    active_ids=[brw_each.id],
-                    active_id=brw_each.id,
-                    active_model=self._name,
-                    landscape=True,
-                )
-                OBJ_ATS = OBJ_ATS.with_context(context)
-                report_value = (
-                    OBJ_ATS.env.ref(REPORT)
-                    .with_user(SUPERUSER_ID)
-                    .report_action(OBJ_ATS)
-                )
-                report_value["target"] = "new"
+                OBJ_ATS=self.env[self._name].sudo()
+                context = dict(active_ids=[brw_each.id], 
+                               active_id=brw_each.id,
+                               active_model=self._name,
+                               landscape=True
+                               )            
+                OBJ_ATS=OBJ_ATS.with_context(context)
+                report_value= OBJ_ATS.env.ref(REPORT).with_user(SUPERUSER_ID).report_action(OBJ_ATS)
+                report_value["target"]="new"
                 return report_value
             except Exception as e:
-                raise ValidationError(
-                    _("Error al Imprimir %s -- %s")
-                    % (
-                        REPORT,
-                        str(e),
-                    )
-                )
-
+                raise ValidationError(_("Error al Imprimir %s -- %s") % (REPORT,str(e),))
+    
     # endregion
+
+

@@ -8,7 +8,7 @@ from datetime import timedelta
 from odoo import fields
 
 class AccountSaving(models.Model):
-    _inherit = 'account.saving.plan'
+    _inherit="account.saving.plan"
     _name = 'account.saving'
     _description = 'Planes de ahorro'
 
@@ -17,36 +17,36 @@ class AccountSaving(models.Model):
         brw_ref=self.env.ref("planes_ahorro.seq_plan_ahorro")
         return brw_ref.next_by_id()
 
-    name = fields.Char(string='Nombre', required=True,default=_get_default_name)
-    saving_plan_id = fields.Many2one('account.saving.plan',string='Planes de Ahorro	')
-    partner_id = fields.Many2one('res.partner', string='Socio',required=True)
-    seller_id = fields.Many2one('res.users', string='Vendedor')
-    start_date = fields.Date(string='Fecha de inicio',default=fields.Date.today())
-    end_date = fields.Date(string='Fecha de fin')
+    name = fields.Char(string='Nombre', required=True,default=_get_default_name,tracking=True)
+    saving_plan_id = fields.Many2one('account.saving.plan',string='Planes de Ahorro	',tracking=True)
+    partner_id = fields.Many2one('res.partner', string='Socio',required=True,tracking=True)
+    seller_id = fields.Many2one('res.users', string='Vendedor',tracking=True)
+    start_date = fields.Date(string='Fecha de inicio',default=fields.Date.today(),tracking=True)
+    end_date = fields.Date(string='Fecha de fin',compute="onchange_lines_date",store=True,tracking=True)
 
-    analytic_account_id = fields.Many2one('account.analytic.account', string='Cuenta analítica')
+    analytic_account_id = fields.Many2one('account.analytic.account', string='Cuenta analítica',tracking=True)
 
     state = fields.Selection([
         ('draft', 'Borrador'),
         ('open', 'Abierto'),
         ('close', 'Cerrado'),
         ('cancel', 'Anulado')
-    ], string='Estado', default='draft')
+    ], string='Estado', default='draft',tracking=True)
 
     state_plan = fields.Selection([
         ('draft', 'Borrador'),
-        ('open', 'Publicado'),
-        ('close', 'Cerrado'),
-        ('cancel', 'Cancelado'),
+        ('posted', 'Publicado'),
         ('active', 'Activo'),
         ('adjudicated_with_assets', 'Adjudicado con Bien'),
         ('adjudicated_without_assets', 'Adjudicado sin Bien'),
         ('awarded', 'Adjudicado'),
-        ('pending_authorizated', 'Autorizacion de Retiro Pendiente'),
+        ('pending_authorizated', 'Autorización de Retiro Pendiente'),
+        ('anulled', 'Anulado'),
         ('disabled', 'Desactivado'),
-        ('retired', 'Retirado')
-
-    ], string='Estado del Plan', default='draft')
+        ('retired', 'Retirado'),
+        ('cancelled', 'Cancelado'),
+        ('closed', 'Cerrado'),
+    ], string='Estado del Plan', default='draft',tracking=True)
 
 
     info_migrate = fields.Boolean(string='Información Migrada', default=False)
@@ -69,12 +69,15 @@ class AccountSaving(models.Model):
     invoice_count=fields.Integer(compute="_compute_documents",store=True,readonly=False,string="# Documentos")
     payments_count = fields.Integer(compute="_compute_documents", store=True, readonly=False, string="# Pagos")
 
-    por_pagar = fields.Monetary(string='Por Pagar', compute="_compute_documents", store=True, readonly=False)
-    pagos = fields.Monetary(string='Pagos', compute="_compute_documents", store=True, readonly=False)
-    pendiente = fields.Monetary(string='Pendiente', compute="_compute_documents", store=True, readonly=False)
+    por_pagar = fields.Monetary(string='Por Pagar', compute="_compute_documents", store=True, readonly=False,tracking=True)
+    pagos = fields.Monetary(string='Pagos', compute="_compute_documents", store=True, readonly=False,tracking=True)
+    pendiente = fields.Monetary(string='Pendiente', compute="_compute_documents", store=True, readonly=False,tracking=True)
+    periods = fields.Integer(string='Periodo',default=0,tracking=True)
 
+    old_id = fields.Integer("Antiguo ID",tracking=True)
+    old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 
-    old_id = fields.Integer("Antiguo ID")
+    historic_payment_ids=fields.One2many("account.saving.payment","saving_id","Historial de Pagos")
 
     @api.depends('state', 'line_ids.invoice_id', 'payment_ids', 'payment_ids','line_ids.migrated_payment_amount')
     @api.onchange('state', 'line_ids.invoice_id', 'payment_ids', 'payment_ids','line_ids.migrated_payment_amount')
@@ -102,13 +105,24 @@ class AccountSaving(models.Model):
             brw_each.write({"state":"draft"})
         return True
 
+    def validate(self):
+        for brw_each in self:
+            if not self._context.get('pass_validate', False):
+                if not brw_each.partner_id.vat:
+                    raise ValidationError(_("Debes definir una identificacion al cliente"))
+                if not brw_each.partner_id.country_id:
+                    raise ValidationError(_("Debes definir un pais para el cliente"))
+        return True
+
     def action_open(self):
         for brw_each in self:
+            brw_each.validate()
             brw_each.write({"state":"open"})
         return True
 
     def action_close(self):
         for brw_each in self:
+            brw_each.validate()
             brw_each.write({"state":"close"})
         return True
 
@@ -138,10 +152,8 @@ class AccountSaving(models.Model):
         self.rate_expense = 0.00
         self.rate_insurance    = 0.00
         self.rate_decrement_year = 0.00
-        self.periods=0
         self.journal_id=False
         brw_plan=self.saving_plan_id
-        print(brw_plan)
         if brw_plan:
             self.saving_amount =brw_plan.saving_amount or 0.00
             self.fixed_amount = brw_plan.fixed_amount or 0.00
@@ -150,16 +162,22 @@ class AccountSaving(models.Model):
             self.rate_expense = brw_plan.rate_expense or 0.00
             self.rate_insurance = brw_plan.rate_insurance or 0.00
             self.rate_decrement_year =brw_plan.rate_decrement_year or 0.00
-            self.periods=brw_plan.periods or 0
+            self.periods=int(brw_plan.periods) or 0
             self.journal_id=brw_plan.journal_id
             self.document_type_id = brw_plan.document_type_id
 
     @api.onchange('periods','start_date')
     def onchange_periods(self):
         self.end_date=None
-        if self.start_date:
-            self.end_date=self.start_date+relativedelta(months=self.periods)
         self.compute_lines()
+
+    @api.onchange('periods', 'start_date','line_ids','line_ids.date')
+    @api.depends('periods', 'start_date', 'line_ids', 'line_ids.date')
+    def onchange_lines_date(self):
+        if self.line_ids:
+            self.end_date = max(self.line_ids.mapped('date')) if self.line_ids.mapped('date') else None
+        else:
+            self.end_date = None
 
     def compute_lines(self):
         DEC=2
@@ -187,7 +205,12 @@ class AccountSaving(models.Model):
                     "pagos":0.00,
                     "pendiente":0.00,
                     "estado_pago":"sin_aplicar",
-                    "parent_saving_state":"draft"
+                    "parent_saving_state":"draft",
+                    "enabled_for_invoice":False,
+                    "migrated":False,
+                    "migrated_has_invoices":False,
+                    "migrated_payment_amount":False
+
                 }
                 if quota>1:
                     values.update({
@@ -212,20 +235,18 @@ class AccountSaving(models.Model):
                 if totalglobal > brw_each.saving_amount:
                     continue
             brw_each.line_ids= line_ids
-
         return True
 
     @api.model
-    def create_invoices(self, order, domain, last_days=7):
+    def create_invoices(self, order, domain, last_days=0):
         TODAY=fields.Date.context_today(self)
         date_from=TODAY - timedelta(days=last_days)
         new_domain = domain + [('saving_id.state','=','open'),
                                ('saving_id.journal_id','!=',False),
                                ('date','>=',date_from),
                                ('date', '<=',TODAY),
-                               '|',
                                ('invoice_id','=',False),
-                               ('migrated_has_invoices', '=', False)
+                               ('migrated_has_invoices', '!=', True)
                                ]#  # se omite error
         srch = self.env["account.saving.lines"].sudo().search(new_domain, order=order)
         if srch:
@@ -235,7 +256,18 @@ class AccountSaving(models.Model):
                     #self._cr.commit()
             except Exception as e:
                 result = (str(e))
-    
+
+    def action_open_lines(self):
+        self.ensure_one()
+        return {
+            'name': 'Detalles de Ahorro',
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.saving.lines',
+            'view_mode': 'tree',
+            'view_id': self.env.ref('planes_ahorro.account_saving_lines_tree_editable_view').id,
+            'domain': [('id', 'in', self.line_ids.ids)],
+        }
+
 
 
     

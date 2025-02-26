@@ -6,7 +6,25 @@ from odoo import _, api, fields, models
 from datetime import datetime,timedelta
 from odoo.exceptions import ValidationError
 
-from ...l10n_ec_edi.models.account_tax import L10N_EC_TAXSUPPORTS
+
+from ...l10n_ec_edi.models import account_tax
+
+L10N_EC_TAXSUPPORTS=[('01','01 Crédito fiscal por declaración de IVA (servicios y bienes distintos a inventarios y activos fijos)'),
+('02','02 Costo o gasto para la declaración de IR (servicios y bienes distintos a inventarios y activos fijos)'),
+('03','03 Activo fijo - Crédito fiscal por declaración de IVA'),
+('04','04 Activo fijo - Costo o gasto para la declaración de IR'),
+('05','05 Liquidación de gastos de viaje, alojamiento y comida (gastos por IR en nombre de los empleados y no de la empresa)'),
+('06','06 Inventario - Crédito fiscal por declaración de IVA'),
+('07','07 Inventario - Costo o gasto para declaración de IR'),
+('08','08 Monto pagado para solicitar reembolso de gastos (intermediarios)'),
+('09','09 Reembolso de reclamaciones'),
+('10','10 Distribución de dividendos, beneficios o ganancias'),
+('15','15 Pagos realizados por consumo propio y de terceros de servicios digitales'),
+('00','00 Casos especiales cuyo soporte no aplica a las opciones anteriores'),
+]
+
+account_tax.L10N_EC_TAXSUPPORTS=L10N_EC_TAXSUPPORTS
+
 
 class AccountMove(models.Model):
     _inherit = 'account.move'

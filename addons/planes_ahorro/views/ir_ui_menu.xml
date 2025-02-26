@@ -5,7 +5,6 @@
         <menuitem id="planes_ahorro_root" 
                   name="Planes de Ahorro" 
                   sequence="0"
-                  web_icon="planes_ahorro,static/description/plan_ahoroo.svg"
         />
 
         <menuitem id="plan_ahorro"
@@ -16,11 +15,19 @@
     />
 
 
+        <menuitem id="lineas_plan_ahorro"
+              name="Detalle de Planes de Ahorro"
+              parent="planes_ahorro_root"
+              action="account_saving_line_action"
+              sequence="1"
+    />
+
+
         <menuitem id="account_saving_wizard_menu"
               name="Importar Planes de Ahorro"
               parent="planes_ahorro_root"
               action="account_saving_wizard2_action"
-              sequence="1"
+              sequence="2"
     />
 
 

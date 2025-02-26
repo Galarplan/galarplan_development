@@ -4,7 +4,6 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 class AccountSavingPlan(models.Model):
-    _inherit = ['mail.thread', 'mail.activity.mixin']
     _name = 'account.saving.plan'
     _description = 'Plantilla de Planes de ahorro'
 
@@ -13,7 +12,7 @@ class AccountSavingPlan(models.Model):
         ('ballon', 'Balón'),
     ], string='Tipo de ahorro', default='normal')
     name = fields.Integer(string='Nombre', required=True)
-    periods = fields.Integer(string='Periodo')
+    periods = fields.Integer(string='Periodo',default=0)
     saving_amount    = fields.Monetary(string='Monto de ahorro')
 
     company_id = fields.Many2one(

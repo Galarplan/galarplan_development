@@ -6,6 +6,8 @@
       <field name="model">account.saving</field>
       <field name="arch" type="xml">
         <search>
+                      <field name="id" string="# ID" />
+
           <field name="company_id" />
             <field name="name"/>
             <field name="partner_id"/>
@@ -17,13 +19,18 @@
 <filter name="filter_close" string="Cerrado" domain="[('state', '=', 'close')]"/>
 <filter name="filter_cancel" string="Cancelado" domain="[('state', '=', 'cancel')]"/>
  <separator/>
-<filter name="filter_plan_active" string="Activo" domain="[('state_plan', '=', 'active')]"/>
-<filter name="filter_plan_adjudicated_with_assets" string="Adjudicado con Bien" domain="[('state_plan', '=', 'adjudicated_with_assets')]"/>
-<filter name="filter_plan_adjudicated_without_assets" string="Adjudicado sin Bien" domain="[('state_plan', '=', 'adjudicated_without_assets')]"/>
-<filter name="filter_plan_awarded" string="Adjudicado" domain="[('state_plan', '=', 'awarded')]"/>
-<filter name="filter_plan_pending_authorizated" string="Autorización de Retiro Pendiente" domain="[('state_plan', '=', 'pending_authorizated')]"/>
-<filter name="filter_plan_disabled" string="Desactivado" domain="[('state_plan', '=', 'disabled')]"/>
-<filter name="filter_plan_retired" string="Retirado" domain="[('state_plan', '=', 'retired')]"/>
+ <filter name="filter_draft" string="Borrador" domain="[('state_plan', '=', 'draft')]"/>
+            <filter name="filter_posted" string="Publicado" domain="[('state_plan', '=', 'posted')]"/>
+            <filter name="filter_active" string="Activo" domain="[('state_plan', '=', 'active')]"/>
+            <filter name="filter_adjudicated_with_assets" string="Adjudicado con Bien" domain="[('state_plan', '=', 'adjudicated_with_assets')]"/>
+            <filter name="filter_adjudicated_without_assets" string="Adjudicado sin Bien" domain="[('state_plan', '=', 'adjudicated_without_assets')]"/>
+            <filter name="filter_awarded" string="Adjudicado" domain="[('state_plan', '=', 'awarded')]"/>
+            <filter name="filter_pending_authorizated" string="Autorización de Retiro Pendiente" domain="[('state_plan', '=', 'pending_authorizated')]"/>
+            <filter name="filter_anulled" string="Anulado" domain="[('state_plan', '=', 'anulled')]"/>
+            <filter name="filter_disabled" string="Desactivado" domain="[('state_plan', '=', 'disabled')]"/>
+            <filter name="filter_retired" string="Retirado" domain="[('state_plan', '=', 'retired')]"/>
+            <filter name="filter_cancelled" string="Cancelado" domain="[('state_plan', '=', 'cancelled')]"/>
+            <filter name="filter_closed" string="Cerrado" domain="[('state_plan', '=', 'closed')]"/>
 
             <separator/>
                 <filter string="Sin Facturas" name="filter_without_invoice" domain="[('invoice_count', '=', 0)]"/>
@@ -52,6 +59,8 @@
               decoration-success="state=='close'"
               decoration-muted="state=='cancel'"
         >
+
+
             <field name="id" string="# ID" optional="hide"/>
           <field name="company_id" optional="show"/>
             <field name="name"/>
@@ -148,8 +157,7 @@
                   <field name="currency_id" invisible="1" options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
                            <field name="info_migrate" attrs="{'readonly':[('state','!=','draft')]}" />
 
-    <field name="periods"  required="1"
-                             attrs="{'readonly':[('state','!=','draft')]}"/>
+    <field name="periods"   attrs="{'readonly':[('state','!=','draft')]}"/>
                   <field name="saving_amount"  required="1"
                              attrs="{'readonly':[('state','!=','draft')]}"/>
                   <field name="fixed_amount"  required="1"
@@ -166,7 +174,15 @@
               </group>
             <notebook>
                 <page string="Cuotas">
-                   <field name="line_ids" context="{'default_parent_saving_state':state}">
+                    <group colspan="4">
+                         <button name="action_open_lines" colspan="1"
+                      string="Actualizar" icon="fa-search"
+                      type="object" invisible="1"
+                      attrs="{'invisible':[('state','not in',('draft',))]}"
+                      />
+                    </group>
+                    <newline/>
+                   <field name="line_ids" context="{'tree_view_ref':'planes_ahorro.account_saving_lines_tree_view','default_parent_saving_state':state}">
 
 
 
@@ -179,19 +195,19 @@
                  <page string="Pagos">
                    <field name="payment_ids">
 
-<tree create="false" delete="false" edit="true" decoration-bf="not saving_line_id"
-                    decoration-it="pendiente!=aplicado"
-                    >
-                        <field name="number" />
-                        <field name="date"  />
-                        <field name="saving_line_id"  />
-                        <field name="pendiente" />
-                        <field name="aplicado"  />
-    <field name="payment_id" />
-                    </tree>
-
-
                    </field>
+                     <newline/>
+                     <separator string="Historial" attrs="{'invisible':[('historic_payment_ids','=',[])]}"/>
+                     <field name="historic_payment_ids" attrs="{'invisible':[('historic_payment_ids','=',[])]}" readonly="1">
+                         <tree string="Historial">
+                            <field name="payment_journal_name" />
+                        <field name="payment_date"  />
+                        <field name="payment_ref"  />
+                        <field name="amount" sum="total"/>
+                         </tree>
+                     </field>
+
+
                  </page>
               <page string="Contrato">
                    <group colspan="2">
@@ -230,17 +246,16 @@
                    <field name="rate_expense" readonly="1" force_save="1"/>
                    <field name="rate_insurance" readonly="1" force_save="1"/>
                    <field name="rate_decrement_year" readonly="1" force_save="1"/>
+
+                  <field name="old_ref_id" readonly="1"
+       attrs="{'invisible': [('old_ref_id', 'in', [False, '', None])]}"/>
+
     </group>
 
     </group>
 </page>
             </notebook>
           </sheet>
-          <div class="oe_chatter">
-            <field name="message_follower_ids"/>
-            <field name="activity_ids"/>
-            <field name="message_ids"/>
-          </div>
         </form>
       </field>
 

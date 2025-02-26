@@ -33,20 +33,40 @@
 					<header>
 						<button name="process" type="object" string="Procesar"
 							icon='fa-cogs'
-						attrs="{'invisible':[('id','&gt;',0)]}"
+						action="Estas seguro?"
+						/>
+
+						<button name="process_payments" type="object" string="Procesar Pagos"
+							icon='fa-cogs'
+						action="Estas seguro?"
 						/>
 					</header>
 						<notebook>
 							<page string="Archivo">
 								<group>
+								<group>
 									<field name="id" readonly="1" />
 									<field name="file_name" invisible="1" colspan="2" />
-									<field name="file" colspan="2" filename="file_name" require="1" />
+									<field name="file" colspan="2" filename="file_name" required="1" readonly="0"/>
+
+											<field attrs="{'invisible':[('file_result','=',False)]}" name="file_name_result" invisible="1" colspan="2" readonly="1" />
+									<field  attrs="{'invisible':[('file_result','=',False)]}" name="file_result" colspan="2" filename="file_name_result" require="1" readonly="1" />
+
+
 								</group>
-								<group attrs="{'invisible':[('file_result','=',False)]}">
-									<field name="file_name_result" invisible="1" colspan="2" readonly="1" />
-									<field name="file_result" colspan="2" filename="file_name_result" require="1" readonly="1" />
+
+								<group>
+
+									<field name="file_payment_name" invisible="1" colspan="2" />
+									<field name="file_payment" colspan="2" filename="file_payment_name" required="1" readonly="0"/>
+
+											<field attrs="{'invisible':[('file_payment_result','=',False)]}" name="file_payment_name_result" invisible="1" colspan="2" readonly="1" />
+									<field  attrs="{'invisible':[('file_payment_result','=',False)]}" name="file_payment_result" colspan="2" filename="file_payment_name_result" require="1" readonly="1" />
+
+
 								</group>
+								</group>
+
 							</page>
 							<page string="Configuración">
 								<group colspan="4" cols="2">

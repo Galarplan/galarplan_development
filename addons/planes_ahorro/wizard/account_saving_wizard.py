@@ -12,16 +12,17 @@ from datetime import datetime, timedelta
 
 status_dict_inverted = {
     'Borrador': 'draft',
-    'Publicado': 'open',
-    'Cerrado': 'close',
-    'Cancelado': 'cancel',
+    'Publicado': 'posted',
     'Activo': 'active',
     'Adjudicado con Bien': 'adjudicated_with_assets',
     'Adjudicado sin Bien': 'adjudicated_without_assets',
     'Adjudicado': 'awarded',
-    'Autorizacion de Retiro Pendiente': 'pending_authorizated',
+    'Autorización de Retiro Pendiente': 'pending_authorizated',
+    'Anulado': 'anulled',
     'Desactivado': 'disabled',
-    'Retirado': 'retired'
+    'Retirado': 'retired',
+    'Cancelado': 'cancelled',
+    'Cerrado': 'closed',
 }
 
 class AccountSavingWizard(models.Model):
@@ -39,8 +40,14 @@ class AccountSavingWizard(models.Model):
     file=fields.Binary("Archivo",required=False,filters='*.xlsx')
     file_name=fields.Char("Nombre de Archivo",required=False,size=255)
 
+    file_payment = fields.Binary("Archivo", required=False, filters='*.xlsx')
+    file_payment_name = fields.Char("Nombre de Archivo", required=False, size=255)
+
     file_result = fields.Binary("Archivo Resultado", required=False, filters='*.xlsx')
     file_name_result = fields.Char("Nombre de Archivo Resultado", required=False, size=255)
+
+    file_payment_result = fields.Binary("Archivo Resultado Pagos", required=False, filters='*.xlsx')
+    file_payment_name_result = fields.Char("Nombre de Archivo Resultado Pagos", required=False, size=255)
 
     _rec_name="id"
     _order="id desc"
@@ -84,15 +91,17 @@ class AccountSavingWizard(models.Model):
         worksheet = workbook.add_worksheet()
         print(mensajes)
         # Escribir encabezados
-        worksheet.write(0, 0, "Nombre")
-        worksheet.write(0, 1, "Valores")
-        worksheet.write(0, 2, "Mensaje")
+        worksheet.write(0, 0, "id")
+        worksheet.write(0, 1, "Nombre")
+        worksheet.write(0, 2, "Valores")
+        worksheet.write(0, 3, "Mensaje")
 
         # Escribir errores en las filas
-        for row_idx, (nombre,valores, mensaje) in enumerate(mensajes, start=1):
-            worksheet.write(row_idx, 0, nombre)
-            worksheet.write(row_idx, 1, str(valores))
-            worksheet.write(row_idx, 2, mensaje)
+        for row_idx, (id,nombre,valores, mensaje) in enumerate(mensajes, start=1):
+            worksheet.write(row_idx, 0, id)
+            worksheet.write(row_idx, 1, nombre)
+            worksheet.write(row_idx, 2, str(valores))
+            worksheet.write(row_idx, 3, mensaje)
 
         workbook.close()
 
@@ -103,16 +112,23 @@ class AccountSavingWizard(models.Model):
         """ Ejecuta la transacción y guarda mensajes si los hay """
         OBJ_PLAN = self.env["account.saving"].sudo()
         #print(values)
-        srch_plan = OBJ_PLAN.search([('name', '=', nombre)])
+        srch_plan = OBJ_PLAN.search([('name', '=', nombre),
+                                     ('partner_id','=',values["partner_id"]),
+                                      ('start_date','=',values["start_date"].date()),
+                                      ('saving_plan_id', '=', values["saving_plan_id"]),
+                                      ('state_plan','=',values['state_plan']),
+                                     ('old_ref_id','=',values["old_ref_id"])
+                                     ])
         try:
             if nombre not in procesados:
                 if not srch_plan:
                     srch_plan = OBJ_PLAN.create(values)
+                    srch_plan=srch_plan.with_context({"pass_validate":True})
                     if srch_plan.state_plan=='close':
                         srch_plan.action_close()
-                    if srch_plan.state_plan=='cancel':
+                    if srch_plan.state_plan in ('cancelled','anulled'):
                         srch_plan.action_cancel()
-                    if srch_plan.state_plan not in ('draft','cancel','close'):
+                    if srch_plan.state_plan not in ('draft','cancelled','anulled','close'):
                         srch_plan.action_open()
                     self._cr.commit()
                 else:
@@ -120,11 +136,12 @@ class AccountSavingWizard(models.Model):
                         srch_plan.write(values)
                         self._cr.commit()
 
-            mensajes.append((nombre, str(values), "ok"))
-            procesados.append(nombre)
+            mensajes.append((values["old_ref_id"],nombre, str(values), "ok"))
+            procesados.append(values["old_ref_id"])
         except Exception as e:
             error_msg = f"Error en {nombre}: {str(e)}"
-            mensajes.append((nombre, error_msg,"error"))  # Guardar error
+            print(error_msg)
+            mensajes.append((values["old_ref_id"],nombre, error_msg,"error"))  # Guardar error
             #self._cr.rollback()
         return srch_plan
 
@@ -183,6 +200,9 @@ class AccountSavingWizard(models.Model):
         LINEA_SERV_ADMIN=42
         LINEA_SEGURO = 43
 
+        ANT_REF = 44
+        LINEA_ANT_REF = 45
+
         DEC=2
         mensajes = []  # Lista para almacenar mensajes
 
@@ -196,7 +216,9 @@ class AccountSavingWizard(models.Model):
 
             values = {}
             last_name = False
+            ant_plan_id=""
             procesados=[]
+            old_payment_id=False
             for row_index in range(1, sheet.nrows):  # Saltamos encabezados
                 try:
                     nombre = sheet.cell(row_index, NOMBRE).value
@@ -255,6 +277,10 @@ class AccountSavingWizard(models.Model):
 
                     linea_serv_admin = sheet.cell(row_index, LINEA_SERV_ADMIN).value
                     linea_seguro = sheet.cell(row_index, LINEA_SEGURO).value
+
+                    ant_ref = sheet.cell(row_index, ANT_REF).value
+
+                    linea_ant_ref = sheet.cell(row_index, LINEA_ANT_REF).value
                     ##############
                     base_date = datetime(1899, 12, 30)  # Excel cuenta incorrectamente 1900 como bisiesto
 
@@ -277,9 +303,10 @@ class AccountSavingWizard(models.Model):
                         "migrated": True,
                         "migrated_has_invoices": tiene_facturas,
                         "migrated_payment_amount": linea_pagos,
+                        "old_ref_id":linea_ant_ref
 
                     })
-                    print(line_values)
+                    #print(line_values)
                     ##############
                     if not nombre:  # Línea de subdetalle
                         values.setdefault("line_ids", [(5,)]).append(line_values)
@@ -291,18 +318,21 @@ class AccountSavingWizard(models.Model):
                         if socio_cedula:
                             srch_socio = OBJ_PARTNER.search([('vat', '=', socio_cedula)])
                             if not srch_socio:
-                                srch_socio = OBJ_PARTNER.create({
-                                    "vat": socio_cedula,
-                                    "name": socio
-                                })
-                                print(srch_socio)
+                                srch_socio = OBJ_PARTNER.search([('name', '=', socio)])
+                                if not srch_socio:
+                                    srch_socio = OBJ_PARTNER.create({
+                                        "vat": socio_cedula,
+                                        "name": socio
+                                    })
+                                else:
+                                    srch_socio = srch_socio[0]
                             else:
                                 srch_socio=srch_socio[0]
                         srch_ahorro_plan = OBJ_PLAN.search([('saving_type', '=', tipo_de_ahorro.lower()),
                                                             ('old_id', '=',ant_plan_id)
                                                             ])
                         if not srch_ahorro_plan:
-                            mensajes.append((nombre, "", "NO EXISTE PLAN DE AHORRO"))
+                            mensajes.append((ant_plan_id,nombre, "", "NO EXISTE PLAN DE AHORRO"))
                             continue
                         seller_srch=self.env["res.users"].sudo().search([('name','=',vendedor)])
                         if not seller_srch:
@@ -318,7 +348,7 @@ class AccountSavingWizard(models.Model):
                         #print(converted_date.strftime("%Y-%m-%d"))
                         srch_journal=OBJ_JOURNAL
                         if centro and diario_nombre:
-                            diario_final="%s %s" % (centro,diario_nombre)
+                            diario_final="%s Facturas de cliente" % (centro,)
                             srch_journal=OBJ_JOURNAL.search([('type','=','sale'),('name','=',diario_final)])
                             # if not srch_journal:
                             #     mensajes.append((nombre, "", "%s NO EXISTE" % (diario_final,)) )
@@ -345,6 +375,7 @@ class AccountSavingWizard(models.Model):
                             "rate_decrement_year": tasa_decrecimiento,
                             "document_type_id":self.env.ref("l10n_ec.ec_dt_01").id,
                             "journal_id":srch_journal and srch_journal.id or False,
+                            "old_ref_id":ant_ref,
                             "line_ids": [(5,),line_values]  # Para almacenar las líneas asociadas
                         }
                     if nombre:
@@ -352,11 +383,12 @@ class AccountSavingWizard(models.Model):
 
                 except Exception as e:
                     error_msg = f"Error en fila {row_index}: {str(e)}"
-                    mensajes.append(("Fila " + str(row_index),"", error_msg))
+                    mensajes.append((ant_plan_id,"Fila " + str(row_index),"", error_msg))
 
             if last_name:
-                print(last_name)
+                #print(last_name)
                 self.ejecutar_transaccion(last_name, values,procesados, mensajes)
+                #break
 
         # Guardar mensajes en un archivo Excel
         #print(mensajes)
@@ -364,11 +396,196 @@ class AccountSavingWizard(models.Model):
         self.write({"file_name_result":"mensajes.xlsx",
                             "file_result":archivo
                             })
-        values= {
-                'type': 'ir.actions.act_url',
-                'url': '/web/content/%s/%s/file_result/%s' % (self._name,
-                                                       self.id,
-                                                       "mensajes.xlsx"),
-                'target': 'new'
-            }
-        return values
+        return True
+
+    def process_payments(self):
+        """ Procesa el archivo Excel """
+        # Definir índices de columnas
+        OBJ_PARTNER = self.env["res.partner"].sudo()
+        OBJ_JOURNAL = self.env["account.journal"].sudo()
+        OBJ_LINE_PAYMENT = self.env["account.saving.line.payment"].sudo()
+
+        LINEA_AHORRO_ID = 0
+        AHORRO_ID = 1
+        AHORRO_NOMBRE_MOSTRADO = 2
+        FECHA = 3
+        DIARIO = 4
+        FECHA_FACTURA = 5
+        NUMERO_FACTURA = 6
+        CLIENTE_PROVEEDOR = 7
+        REFERENCIA = 8
+        CUOTAS = 9
+        IMPORTE = 10
+        EMPRESA = 11
+        ESTADO = 12
+        CUOTAS_ID = 13
+
+        CUOTAS_PAGOS = 14
+        CUOTAS_PENDIENTE = 15
+        CUOTAS_VALOR = 16
+
+        LINEA_AHORRO_REF_ID = 17
+        CUOTA_REF_ID=18
+
+        PAGO_REF=19
+        APPLY_LINEA_AHORRO_REF_ID = 20
+
+        DEC = 2
+        mensajes = []  # Lista para almacenar mensajes
+
+        for brw_each in self:
+            ext = self.get_ext(brw_each.file_payment_name)
+            fileName = self.create_file(ext)
+            self.write_file(fileName, brw_each.file_payment, modeWrite="wb")
+
+            book = xlrd.open_workbook(fileName)
+            sheet = book.sheet_by_index(0)
+
+            values = {}
+            last_name = False
+            procesados = []
+            linea_ref=False
+            fecha_pago=False
+            pago_ref=False
+            old_payment_id=False
+            for row_index in range(1, sheet.nrows):  # Saltamos encabezados
+                try:
+                    linea_ahorro_id = sheet.cell(row_index, LINEA_AHORRO_ID).value
+                    ahorro_id = sheet.cell(row_index, AHORRO_ID).value
+                    ahorro_nombre_mostrado = sheet.cell(row_index, AHORRO_NOMBRE_MOSTRADO).value
+                    fecha = sheet.cell(row_index, FECHA).value
+                    diario = sheet.cell(row_index, DIARIO).value
+                    fecha_factura = sheet.cell(row_index, FECHA_FACTURA).value
+                    numero_factura = sheet.cell(row_index, NUMERO_FACTURA).value
+                    cliente_proveedor = sheet.cell(row_index, CLIENTE_PROVEEDOR).value
+                    referencia = sheet.cell(row_index, REFERENCIA).value
+                    cuotas = sheet.cell(row_index, CUOTAS).value
+                    importe = sheet.cell(row_index, IMPORTE).value
+                    empresa = sheet.cell(row_index, EMPRESA).value
+                    estado = sheet.cell(row_index, ESTADO).value
+                    linea_id = sheet.cell(row_index, CUOTAS_ID).value
+
+                    cuotas_pago = sheet.cell(row_index, CUOTAS_PAGOS).value
+                    cuotas_pendiente = sheet.cell(row_index, CUOTAS_PENDIENTE).value
+                    cuotas_valor = sheet.cell(row_index, CUOTAS_VALOR).value
+
+                    linea_ref = sheet.cell(row_index, LINEA_AHORRO_REF_ID).value
+
+                    cuota_ref = sheet.cell(row_index, CUOTA_REF_ID).value
+
+                    pago_ref = sheet.cell(row_index, PAGO_REF).value
+
+                    aplicado_linea_ref = sheet.cell(row_index, APPLY_LINEA_AHORRO_REF_ID).value
+
+                    if len(pago_ref)>0 and len(linea_ref)>0:  ###es el primero
+                        print(pago_ref)
+                        base_date = datetime(1899, 12, 30)  # Excel cuenta incorrectamente 1900 como bisiesto
+
+                        # Convertir número de serie a fecha
+                        fecha_pago = base_date + timedelta(days=fecha)
+
+                        saving_line_id = self.env["account.saving.lines"].search([('old_ref_id', '=', linea_ref)])
+                        if saving_line_id:
+                            payment_line_values = {
+                                "type": "historic",
+                                "payment_date": fecha_pago,
+                                "payment_ref": referencia,
+                                "payment_journal_name": diario,
+                                "amount": importe,
+                                "old_ref_id": pago_ref,
+                                "saving_line_id": saving_line_id.id,
+                                "saving_id": saving_line_id.saving_id.id,
+                                "payment_state": estado,
+                                "line_ids":[(5,)]
+                            }
+                            old_payment_id=self.ejecutar_pago_transaccion(pago_ref, payment_line_values, procesados, mensajes)
+                            last_name=False
+                            if aplicado_linea_ref and cuotas_valor:
+                                srch_apply_lines= self.env["account.saving.lines"].search([('old_ref_id', '=', aplicado_linea_ref)])
+                                print("recien lo crea")
+                                brw_lines_payment=OBJ_LINE_PAYMENT.create({
+                                    "saving_id":srch_apply_lines.saving_id.id,
+                                    "type":"historic",
+                                    "number":srch_apply_lines.number,
+                                    "date":srch_apply_lines.date,
+                                    "saving_line_id":srch_apply_lines.id,
+                                    "pendiente":importe,
+                                    "aplicado":cuotas_valor,
+                                    "old_ref_id":cuota_ref,
+                                    "old_payment_id":old_payment_id.id,
+                                })
+                                old_payment_id=brw_lines_payment
+                                last_name = pago_ref
+                        else:
+                            mensajes.append((pago_ref,"Fila " + str(row_index), "", linea_ref+" no fue encontrado"))
+                        # if pago_ref:
+                        #     if nombre and last_name and last_name != nombre:
+                        #         last_name = pago_ref
+                        #         old_payment_id = False
+                    else:#crear enlace pagos cuotas
+                        print("fila vacia")
+                        if last_name:
+                            srch_lines =  self.env["account.saving.payment"].sudo().search([
+                                ('old_ref_id', '=', last_name)
+                            ])
+                            srch_apply_lines = self.env["account.saving.lines"].sudo().search(
+                                [('old_ref_id', '=', aplicado_linea_ref)])
+
+                            old_payment_id=srch_lines
+                            if not old_payment_id:
+                                mensajes.append((aplicado_linea_ref, "Fila " + str(row_index), "", aplicado_linea_ref + " pago no fue encontrado"))
+                                continue
+                            print(aplicado_linea_ref,srch_apply_lines)
+                            #if not srch_apply_lines:
+                            #    raise ValidationError("xxxx")
+                            brw_lines_payment = OBJ_LINE_PAYMENT.create({
+                                "saving_id": srch_apply_lines.saving_id.id,
+                                "type": "historic",
+                                "number": srch_apply_lines.number,
+                                "date": srch_apply_lines.date,
+                                "saving_line_id": srch_apply_lines.id,
+                                "pendiente": importe,
+                                "aplicado": cuotas_valor,
+                                "old_ref_id": cuota_ref,
+                                "old_payment_id": old_payment_id.id,
+                            })
+                            print("fila vacia",brw_lines_payment)
+
+
+
+                except Exception as e:
+                    error_msg = f"Error en fila {row_index}: {str(e)}"
+                    mensajes.append((pago_ref,"Fila " + str(row_index), "", error_msg))
+
+        archivo = self.guardar_mensajes(mensajes)
+        self.write({"file_payment_name_result": "mensajes_pagos.xlsx",
+                    "file_payment_result": archivo
+                    })
+        return True
+
+    def ejecutar_pago_transaccion(self, nombre, values,procesados, mensajes):
+        """ Ejecuta la transacción y guarda mensajes si los hay """
+        OBJ_PAYMENTS = self.env["account.saving.payment"].sudo()
+        #print(values)
+        srch_lines= OBJ_PAYMENTS.search([
+                                     ('old_ref_id','=',nombre)
+                                     ])
+        try:
+            if nombre not in procesados:
+                if not srch_lines:
+                    print("al crer",values)
+                    srch_lines=OBJ_PAYMENTS.create(values)
+                    print("cera",srch_lines)
+                    self._cr.commit()
+                else:
+                    srch_lines.write(values)
+                    self._cr.commit()
+                    print("actualziado")
+            mensajes.append((nombre,nombre, str(values), "ok"))
+            procesados.append(nombre)
+        except Exception as e:
+            error_msg = f"Error en {nombre}: {str(e)}"
+            print("error",error_msg)
+            mensajes.append((nombre,nombre, error_msg,"error"))  # Guardar error
+            #self._cr.rollback()
+        return srch_lines

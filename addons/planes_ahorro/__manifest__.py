@@ -34,6 +34,8 @@
         'views/account_saving_plan.xml',
         'views/account_saving_lines.xml',
         'views/account_saving.xml',
+        'views/account_saving_line_payment.xml',
+
         'views/ir_ui_menu.xml',
 
     ],

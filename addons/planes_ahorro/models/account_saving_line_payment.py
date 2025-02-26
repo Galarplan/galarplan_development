@@ -3,6 +3,29 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
+class AccountSavingPayment(models.Model):
+    _name = 'account.saving.payment'
+    _description = 'Pago Migrado'
+
+    saving_id = fields.Many2one('account.saving', string='Plan de ahorro', ondelete="cascade")
+    saving_line_id = fields.Many2one('account.saving.lines', string='Detalle de Plan de ahorro', ondelete="cascade")
+
+
+    currency_id = fields.Many2one(related="saving_id.currency_id", string='Moneda', store=False, readonly=True)
+    type = fields.Selection([('payment', 'Pago'), ('historic', 'Historico')], default="payment", string="Tipo",
+                            required=True)
+    payment_journal_name = fields.Char("Diario")
+    payment_date = fields.Date("Fecha")
+    payment_ref = fields.Char("Referencia")
+    amount = fields.Monetary(string="Monto")
+    old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
+    payment_state = fields.Selection([('draft', 'Preliminar'),
+                                      ('posted', 'Publicado'),
+                                      ('cancel', 'Anulado'),
+                                      ], "Estado")
+    line_ids=fields.One2many("account.saving.line.payment","old_payment_id","Detalle de Pago")
+
+    _rec_name="payment_ref"
 
 class AccountSavingLines(models.Model):
     _name = 'account.saving.line.payment'
@@ -10,6 +33,7 @@ class AccountSavingLines(models.Model):
 
     saving_id = fields.Many2one('account.saving', string='Plan de ahorro',ondelete="cascade"    )
     currency_id = fields.Many2one(related="saving_id.currency_id", string='Moneda', store=False, readonly=True)
+    type=fields.Selection([('payment','Pago'),('historic','Historico')],default="payment",string="Tipo",required=True)
     number = fields.Integer(string='Número de cuota')
     date = fields.Date(string='Fecha de cuota')
     saving_line_id = fields.Many2one(
@@ -18,6 +42,17 @@ class AccountSavingLines(models.Model):
     aplicado = fields.Float(string="Aplicado", digits=(16, 2))
     payment_id=fields.Many2one("account.payment","Pago")
     reconciled=fields.Boolean(string="Reconciliado",default=True)
+    old_payment_id=fields.Many2one("account.saving.payment","Pago Migrado")
+
+    old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
+
+    computed_payment_name = fields.Char(string="Nombre del Pago", compute="_compute_payment_name", store=True)
+
+    @api.depends("payment_id", "old_payment_id")
+    def _compute_payment_name(self):
+        for record in self:
+            record.computed_payment_name = record.payment_id.name if record.payment_id else record.old_payment_id.payment_ref
+
     @api.model
     def reconcile_invoice_with_payment(self, invoice_id, payment_id):
         """

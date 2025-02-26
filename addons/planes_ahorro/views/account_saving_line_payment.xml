@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="view_account_saving_line_payment_search" model="ir.ui.view">
+        <field name="name">account.saving.line.payment.search</field>
+        <field name="model">account.saving.line.payment</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Pagos">
+
+
+
+            </search>
+        </field>
+    </record>
+
+
+    <record id="account_saving_line_payment_tree_view" model="ir.ui.view">
+      <field name="name">account.saving.line.payment.view</field>
+      <field name="model">account.saving.line.payment</field>
+        <field name="priority">1</field>
+      <field name="arch" type="xml">
+        <tree create="false" delete="false" edit="true" decoration-bf="not saving_line_id" decoration-it="pendiente!=aplicado">
+                        <field name="number"/>
+                        <field name="date"/>
+                        <field name="saving_line_id"/>
+                        <field name="pendiente"/>
+                        <field name="aplicado" sum="total"/>
+    <field name="payment_id"/>
+                    </tree>
+      </field>
+    </record>
+
+
+
+    <record id="account_saving_line_payment_form_view" model="ir.ui.view">
+      <field name="name">account_saving.lines.form.view</field>
+      <field name="model">account.saving.line.payment</field>
+      <field name="arch" type="xml">
+                    <form string="saving items" edit="false" create="false" delete="false">
+                            <header>
+
+                            </header>
+                        <sheet>
+                            <group>
+                            <group>
+                                  <field name="number" readonly="1"/>
+                        <field name="date" readonly="1"/>
+                        <field name="saving_line_id" readonly="1"/>
+    <field name="payment_id" readonly="1"/>
+                            </group>
+                                 <group>
+
+                        <field name="pendiente" readonly="1"/>
+                        <field name="aplicado" readonly="1"/>
+                            </group>
+
+                            </group>
+</sheet>
+                             </form>
+      </field>
+
+    </record>
+
+
+
+
+</odoo>

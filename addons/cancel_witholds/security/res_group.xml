@@ -1,0 +1,8 @@
+<odoo>
+  <data noupdate="1">
+    <!-- Definición del grupo -->
+    <record id="access_cancel_move" model="res.groups">
+      <field name="name">Acceso botones cancelar</field>
+    </record>
+  </data>
+</odoo>

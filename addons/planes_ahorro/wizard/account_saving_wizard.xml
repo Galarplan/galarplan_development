@@ -9,7 +9,7 @@
 			<field name="type">tree</field>
 			<field eval="8" name="priority" />
 			<field name="arch" type="xml">
-				<tree string="Importar Planes de Ahorro" delete="false" edit="false">
+				<tree string="Importar Planes de Ahorro" delete="false"  >
 					<field name="id"  />
 					<field name="create_date"  />
 					<field name="create_uid"  />
@@ -40,6 +40,12 @@
 							icon='fa-cogs'
 						action="Estas seguro?"
 						/>
+
+						<button name="process_invoices" type="object" string="Procesar Facturas"
+							icon='fa-cogs'
+						action="Estas seguro?"
+						/>
+
 					</header>
 						<notebook>
 							<page string="Archivo">
@@ -47,7 +53,7 @@
 								<group>
 									<field name="id" readonly="1" />
 									<field name="file_name" invisible="1" colspan="2" />
-									<field name="file" colspan="2" filename="file_name" required="1" readonly="0"/>
+									<field name="file" colspan="2" filename="file_name" required="0" readonly="0"/>
 
 											<field attrs="{'invisible':[('file_result','=',False)]}" name="file_name_result" invisible="1" colspan="2" readonly="1" />
 									<field  attrs="{'invisible':[('file_result','=',False)]}" name="file_result" colspan="2" filename="file_name_result" require="1" readonly="1" />
@@ -58,13 +64,25 @@
 								<group>
 
 									<field name="file_payment_name" invisible="1" colspan="2" />
-									<field name="file_payment" colspan="2" filename="file_payment_name" required="1" readonly="0"/>
+									<field name="file_payment" colspan="2" filename="file_payment_name" required="0" readonly="0"/>
 
 											<field attrs="{'invisible':[('file_payment_result','=',False)]}" name="file_payment_name_result" invisible="1" colspan="2" readonly="1" />
 									<field  attrs="{'invisible':[('file_payment_result','=',False)]}" name="file_payment_result" colspan="2" filename="file_payment_name_result" require="1" readonly="1" />
 
 
 								</group>
+
+									<group>
+
+									<field name="file_invoice_name" invisible="1" colspan="2" />
+									<field name="file_invoice" colspan="2" filename="file_invoice_name" required="0" readonly="0"/>
+
+											<field attrs="{'invisible':[('file_invoice_result','=',False)]}" name="file_invoice_name_result" invisible="1" colspan="2" readonly="1" />
+									<field  attrs="{'invisible':[('file_invoice_result','=',False)]}" name="file_invoice_result" colspan="2" filename="file_invoice_name_result" require="1" readonly="1" />
+
+
+								</group>
+
 								</group>
 
 							</page>

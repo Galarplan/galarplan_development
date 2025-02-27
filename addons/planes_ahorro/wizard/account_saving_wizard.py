@@ -37,17 +37,23 @@ class AccountSavingWizard(models.Model):
         default=lambda self: self.env.company,
     )
     
-    file=fields.Binary("Archivo",required=False,filters='*.xlsx')
-    file_name=fields.Char("Nombre de Archivo",required=False,size=255)
+    file=fields.Binary("Archivo Planes de Ahorro",required=False,filters='*.xlsx')
+    file_name=fields.Char("Nombre de Archivo Planes de Ahorro",required=False,size=255)
 
-    file_payment = fields.Binary("Archivo", required=False, filters='*.xlsx')
-    file_payment_name = fields.Char("Nombre de Archivo", required=False, size=255)
+    file_payment = fields.Binary("Archivo Pagos", required=False, filters='*.xlsx')
+    file_payment_name = fields.Char("Nombre de Archivo Pagos", required=False, size=255)
+
+    file_invoice = fields.Binary("Archivo Facturas", required=False, filters='*.xlsx')
+    file_invoice_name = fields.Char("Nombre de Archivo Facturas", required=False, size=255)
 
     file_result = fields.Binary("Archivo Resultado", required=False, filters='*.xlsx')
     file_name_result = fields.Char("Nombre de Archivo Resultado", required=False, size=255)
 
     file_payment_result = fields.Binary("Archivo Resultado Pagos", required=False, filters='*.xlsx')
     file_payment_name_result = fields.Char("Nombre de Archivo Resultado Pagos", required=False, size=255)
+
+    file_invoice_result = fields.Binary("Archivo Resultado Facturas", required=False, filters='*.xlsx')
+    file_invoice_name_result = fields.Char("Nombre de Archivo Resultado Facturas", required=False, size=255)
 
     _rec_name="id"
     _order="id desc"
@@ -207,6 +213,8 @@ class AccountSavingWizard(models.Model):
         mensajes = []  # Lista para almacenar mensajes
 
         for brw_each in self:
+            if not brw_each.file:
+                raise ValidationError(_("Debes definir un archivo para procesar facturas"))
             ext = self.get_ext(brw_each.file_name)
             fileName = self.create_file(ext)
             self.write_file(fileName, brw_each.file, modeWrite="wb")
@@ -434,6 +442,8 @@ class AccountSavingWizard(models.Model):
         mensajes = []  # Lista para almacenar mensajes
 
         for brw_each in self:
+            if not brw_each.file_payment:
+                raise ValidationError(_("Debes definir un archivo para procesar facturas"))
             ext = self.get_ext(brw_each.file_payment_name)
             fileName = self.create_file(ext)
             self.write_file(fileName, brw_each.file_payment, modeWrite="wb")
@@ -589,3 +599,111 @@ class AccountSavingWizard(models.Model):
             mensajes.append((nombre,nombre, error_msg,"error"))  # Guardar error
             #self._cr.rollback()
         return srch_lines
+
+    def process_invoices(self):
+        """ Procesa el archivo Excel """
+        # Definir índices de columnas
+        OBJ_PARTNER = self.env["res.partner"].sudo()
+        OBJ_JOURNAL = self.env["account.journal"].sudo()
+        OBJ_INVOICE = self.env["account.saving.invoice"].sudo()
+
+        FACTURA_REF = 0
+        TIPO_DOCUMENTO = 1
+        NUMERO = 2
+        PUNTO_IMPRESION = 3
+        FECHA_FACTURA_RECIBO = 4
+        FECHA_VENCIMIENTO = 5
+        LINEA_AHORRO = 6
+        LINEA_AHORRO_IDENTIFICACION = 7
+        LINEA_AHORRO_AHORRO_IDENTIFICACION = 8
+        LINEA_AHORRO_AHORRO_IDENTIFICACION_EXTERNA = 9
+        TOTAL = 10
+        ESTADO = 11
+        TIPO = 12
+
+        DEC = 2
+        mensajes = []  # Lista para almacenar mensajes
+
+        for brw_each in self:
+            if not brw_each.file_invoice:
+                raise ValidationError(_("Debes definir un archivo para procesar facturas"))
+            ext = self.get_ext(brw_each.file_invoice_name)
+            fileName = self.create_file(ext)
+            self.write_file(fileName, brw_each.file_invoice, modeWrite="wb")
+
+            book = xlrd.open_workbook(fileName)
+            sheet = book.sheet_by_index(0)
+
+            values = {}
+            last_name = False
+            procesados = []
+            linea_ref=False
+            fecha_pago=False
+            pago_ref=False
+            old_payment_id=False
+            for row_index in range(1, sheet.nrows):  # Saltamos encabezados
+                try:
+                    factura_ref = sheet.cell(row_index, FACTURA_REF ).value
+                    tipo_documento = sheet.cell(row_index, TIPO_DOCUMENTO ).value
+                    numero = sheet.cell(row_index, NUMERO ).value
+                    punto_impresion = sheet.cell(row_index, PUNTO_IMPRESION ).value
+                    fecha_factura_recibo = sheet.cell(row_index, FECHA_FACTURA_RECIBO ).value
+                    fecha_vencimiento = sheet.cell(row_index, FECHA_VENCIMIENTO ).value
+                    linea_ahorro = sheet.cell(row_index, LINEA_AHORRO ).value
+                    linea_ahorro_identificacion = sheet.cell(row_index,
+                                                             LINEA_AHORRO_IDENTIFICACION ).value
+                    linea_ahorro_ahorro_identificacion = sheet.cell(row_index,
+                                                                    LINEA_AHORRO_AHORRO_IDENTIFICACION ).value
+                    linea_ahorro_ahorro_identificacion_externa = sheet.cell(row_index,
+                                                                            LINEA_AHORRO_AHORRO_IDENTIFICACION_EXTERNA ).value
+                    total = sheet.cell(row_index, TOTAL ).value
+                    estado = sheet.cell(row_index, ESTADO ).value
+                    tipo = sheet.cell(row_index, TIPO ).value
+
+                    srch_invoice=OBJ_INVOICE.search([('old_ref_id','=',factura_ref)])
+                    dscr_estados={
+                        "Publicado":"posted",
+                        "Cancelado":"cancel",
+                        "Borrador":"draft"
+                    }
+                    dscr_tipos = {
+                        "Factura de cliente":"out_invoice",
+                        "Factura rectificativa de cliente": "out_refund",
+                    }
+                    srch_linea_ahorro=self.env["account.saving.lines"].sudo().search([('old_ref_id','=',linea_ahorro_identificacion)])
+                    if srch_linea_ahorro:
+
+                        base_date = datetime(1899, 12, 30)  # Excel cuenta incorrectamente 1900 como bisiesto
+
+                        # Convertir número de serie a fecha
+                        fecha_factura_recibo_date = base_date + timedelta(days=fecha_factura_recibo)
+
+                        vals={
+                            "type":dscr_tipos[tipo],
+                            "invoice_date":fecha_factura_recibo_date,
+                            "invoice_ref":numero,
+                            "amount":total,
+                            "old_ref_id":factura_ref,
+                            "invoice_state":dscr_estados[estado],
+                            "saving_line_id":srch_linea_ahorro and srch_linea_ahorro[0].id,
+                            "saving_id": srch_linea_ahorro and srch_linea_ahorro[0].saving_id.id
+                        }
+                        if srch_invoice:
+                            srch_invoice.write(vals)
+                            print((srch_invoice))
+                            self._cr.commit()
+                        else:
+                            srch_invoice=OBJ_INVOICE.create(vals)
+                            print(srch_invoice)
+                            self._cr.commit()
+
+                except Exception as e:
+                    error_msg = f"Error en fila {row_index}: {str(e)}"
+                    print(error_msg)
+                    mensajes.append((pago_ref,"Fila " + str(row_index), "", error_msg))
+
+        archivo = self.guardar_mensajes(mensajes)
+        self.write({"file_invoice_name_result": "mensajes_facturas.xlsx",
+                    "file_invoice_result": archivo
+                    })
+        return True

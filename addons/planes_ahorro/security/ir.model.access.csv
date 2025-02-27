@@ -7,3 +7,4 @@ access_planes_ahorro_wizard,account.saving.wizard,model_account_saving_payment_w
 access_planes_ahorro_line_wizard,account.saving.line.wizard,model_account_saving_payment_line_wizard,base.group_user,1,1,1,1
 access_account_saving_wizard,account.saving.wizard,model_account_saving_wizard,base.group_user,1,1,1,1
 access_account_saving_payment,account.saving.payment,model_account_saving_payment,base.group_user,1,1,1,1
+access_account_saving_invoice,account.saving.invoice,model_account_saving_invoice,base.group_user,1,1,1,1

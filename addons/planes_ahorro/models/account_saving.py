@@ -55,6 +55,7 @@ class AccountSaving(models.Model):
 
     line_ids = fields.One2many('account.saving.lines', 'saving_id', string='Cuotas')
     payment_ids=fields.One2many('account.saving.line.payment', 'saving_id', string='Pagos')
+    invoice_ids = fields.One2many('account.move', 'saving_id', string='Facturas')
 
     # pestaña de contrato
     partner_signed_id = fields.Many2one('res.partner', string='Socio firmante')
@@ -78,21 +79,27 @@ class AccountSaving(models.Model):
     old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 
     historic_payment_ids=fields.One2many("account.saving.payment","saving_id","Historial de Pagos")
+    historic_invoice_ids = fields.One2many("account.saving.invoice", "saving_id", "Historial de Facturas")
 
-    @api.depends('state', 'line_ids.invoice_id', 'payment_ids', 'payment_ids','line_ids.migrated_payment_amount')
-    @api.onchange('state', 'line_ids.invoice_id', 'payment_ids', 'payment_ids','line_ids.migrated_payment_amount')
+
+
+    @api.depends('state', 'line_ids.invoice_id', 'payment_ids', 'payment_ids.payment_id','line_ids.migrated_payment_amount','historic_payment_ids','historic_invoice_ids')
+    @api.onchange('state', 'line_ids.invoice_id', 'payment_ids', 'payment_ids.payment_id','line_ids.migrated_payment_amount','historic_payment_ids','historic_invoice_ids')
     def _compute_documents(self):
         for brw_each in self:
             invoice_count = 0
             por_pagar,pagos,pendiente=0.00,0.00,0.00
             if brw_each.state not in ('draft','cancel'):
                 invoice_count=len(brw_each.line_ids.mapped('invoice_id').filtered(lambda x: x.state!='cancel'))
+                invoice_count+= len(brw_each.historic_invoice_ids.filtered(lambda x: x.invoice_state != 'cancel'))
             for brw_line in brw_each.line_ids:
                 por_pagar+=brw_line.por_pagar
                 pagos += brw_line.pagos
                 pendiente += brw_line.pendiente
             brw_each.invoice_count = invoice_count
-            brw_each.payments_count = len(brw_each.payment_ids)
+            payments_count=len(brw_each.payment_ids.mapped('payment_id').filtered(lambda x: x.state!='cancel'))
+            payments_count+=len(brw_each.historic_payment_ids.filtered(lambda x: x.payment_state != 'cancel'))
+            brw_each.payments_count = payments_count
             brw_each.por_pagar = por_pagar
             brw_each.pagos = pagos
             brw_each.pendiente = pendiente
@@ -153,6 +160,7 @@ class AccountSaving(models.Model):
         self.rate_insurance    = 0.00
         self.rate_decrement_year = 0.00
         self.journal_id=False
+        self.line_ids=[(5,)]
         brw_plan=self.saving_plan_id
         if brw_plan:
             self.saving_amount =brw_plan.saving_amount or 0.00
@@ -175,7 +183,11 @@ class AccountSaving(models.Model):
     @api.depends('periods', 'start_date', 'line_ids', 'line_ids.date')
     def onchange_lines_date(self):
         if self.line_ids:
-            self.end_date = max(self.line_ids.mapped('date')) if self.line_ids.mapped('date') else None
+            max_date=None
+            dates=self.line_ids.filtered(lambda x: x.date is not None and x.date).mapped('date')
+            if dates:
+                max_date= max(dates)
+            self.end_date =max_date
         else:
             self.end_date = None
 
@@ -212,7 +224,7 @@ class AccountSaving(models.Model):
                     "migrated_payment_amount":False
 
                 }
-                if quota>1:
+                if quota>=1:
                     values.update({
                         "principal_amount": principal_amount,
                         "saving_amount": brw_each.quota_amount,
@@ -238,7 +250,7 @@ class AccountSaving(models.Model):
         return True
 
     @api.model
-    def create_invoices(self, order, domain, last_days=0):
+    def create_invoices(self, order, domain, last_days=0,post=False):
         TODAY=fields.Date.context_today(self)
         date_from=TODAY - timedelta(days=last_days)
         new_domain = domain + [('saving_id.state','=','open'),
@@ -252,6 +264,7 @@ class AccountSaving(models.Model):
         if srch:
             try:
                 for brw_each in srch:
+                    brw_each=brw_each.with_context({"post":post})
                     brw_each.action_invoice()
                     #self._cr.commit()
             except Exception as e:

@@ -77,8 +77,8 @@
 <field name="saving_id" invisible="context.get('hide_saving',True)" />
             <field name="company_id" invisible="context.get('hide_saving',True)" />
         <field name="partner_id" invisible="context.get('hide_saving',True)" />
-            <field name="sequence"  optional="hide"  />
-                                        <field  name="number"   />
+            <field name="sequence"  />
+                                        <field  name="number"  optional="hide" />
              <field name="id"  optional="hide" string="# ID" />
                  <field name="currency_id" invisible="1"/>
                                 <field name="date"/>

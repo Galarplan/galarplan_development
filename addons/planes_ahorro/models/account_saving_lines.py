@@ -149,6 +149,7 @@ class AccountSavingLines(models.Model):
 
 
     def action_invoice(self):
+        post=self._context.get("post",False)
         OBJ_MOVE = self.env["account.move"].sudo()
         for brw_each in self:
             if not brw_each.saving_id.journal_id:
@@ -212,7 +213,8 @@ class AccountSavingLines(models.Model):
                     sequence += 1
                     vals["invoice_line_ids"] = invoice_line_ids
                     brw_process_doc = OBJ_MOVE.create(vals)
-                    brw_process_doc.action_post()
+                    if post:
+                        brw_process_doc.action_post()
                     for brw_payment in brw_each.payment_line_ids:
                         self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
                                 brw_process_doc.id, brw_payment.payment_id.id)

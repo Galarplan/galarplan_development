@@ -8,7 +8,7 @@
             <xpath expr="//field[@name='partner_id']" position="after">
                 <group>
                     <field name="parcial" />
-                    <field name="total_antes" />
+                    <field name="total_antes"/>
                 </group>
             </xpath>
             <xpath expr="//notebook" position="inside">

@@ -31,8 +31,8 @@
         'views/vehicle_type.xml',
         'views/vehicle_model.xml',
         'views/menuitems.xml',
-        'data/templates/edi_document.xml',
-        'data/templates/report_invoice.xml'
+        # 'data/templates/edi_document.xml',
+        # 'data/templates/report_invoice.xml'
     ],
     # only loaded in demonstration mode
     # 'demo': [

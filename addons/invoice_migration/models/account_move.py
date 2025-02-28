@@ -7,6 +7,7 @@ class AccountMove(models.Model):
     details_ids = fields.One2many('custom.detail.line','move_id',string='Detalle')
     parcial = fields.Boolean(string="Factura Parcial")
     datos_pagos_json = fields.Text(string="Pagos Json")
+    total_antes = fields.Float(string='Importe total sistema antiguo')
 
 
 

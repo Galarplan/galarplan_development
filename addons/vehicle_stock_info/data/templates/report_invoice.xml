@@ -26,10 +26,10 @@
                     <span t-field="line.product_id.vehicle_model_id.name" />
                     <br/>
                     <span>Modelo Homologado:</span>
-                    <span t-field="line.product_id.vehicle_model_id.modelo_homologado_ant" />
+                    <span t-field="line.product_id.modelo_homologado_ant" />
                     <br/>
                     <span>Modelo SRI:</span>
-                    <span t-field="line.product_id.vehicle_model_id.modelo_homologado_sri" />
+                    <span t-field="line.product_id.modelo_sri" />
                     <br/>
                     <span>Color:</span>
                     <span t-field="line.product_id.vehicle_color" />

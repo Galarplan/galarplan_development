@@ -13,11 +13,23 @@
                     <span>Chassis:</span>
                     <span t-field="line.product_id.chassis_number" />
                     <br/>
+                    <span>Número de Motor:</span>
+                    <span t-field="line.product_id.engine_number" />
+                    <br/>
+                    <span>Número RAMW:</span>
+                    <span t-field="line.product_id.ramw_number" />
+                    <br/>
                     <span>Marca:</span>
                     <span t-field="line.product_id.vehicle_brand_id.name" />
                     <br/>
                     <span>Modelo:</span>
                     <span t-field="line.product_id.vehicle_model_id.name" />
+                    <br/>
+                    <span>Modelo Homologado:</span>
+                    <span t-field="line.product_id.vehicle_model_id.modelo_homologado_ant" />
+                    <br/>
+                    <span>Modelo SRI:</span>
+                    <span t-field="line.product_id.vehicle_model_id.modelo_homologado_sri" />
                     <br/>
                     <span>Color:</span>
                     <span t-field="line.product_id.vehicle_color" />
@@ -31,17 +43,14 @@
                     <span>Llantas:</span>
                     <span t-field="line.product_id.number_of_tires" />
                     <br/>
+                    <span>Tonelaje:</span>
+                    <span t-field="line.product_id.ton" />
+                    <br/>
                     <span>Ejes:</span>
                     <span t-field="line.product_id.number_of_axles" />
                     <br/>
                     <span>Año del Modelo:</span>
                     <span t-field="line.product_id.model_year" />
-                    <br/>
-                    <span>Número de Motor:</span>
-                    <span t-field="line.product_id.engine_number" />
-                    <br/>
-                    <span>Número RAMW:</span>
-                    <span t-field="line.product_id.ramw_number" />
                     <br/>
                     <span>Transmisión:</span>
                     <span t-field="line.product_id.transmission" />

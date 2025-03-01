@@ -29,7 +29,7 @@
                     <span t-field="line.product_id.modelo_homologado_ant" />
                     <br/>
                     <span>Modelo SRI:</span>
-                    <span t-field="line.product_id.modelo_sri" />
+                    <span t-field="line.product_id.modelo_SRI" />
                     <br/>
                     <span>Color:</span>
                     <span t-field="line.product_id.vehicle_color" />

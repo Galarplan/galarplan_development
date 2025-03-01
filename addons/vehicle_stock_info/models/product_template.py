@@ -48,7 +48,7 @@ class ProductTemplate(models.Model):
     number_of_doors = fields.Integer(string="Número de Puertas")
     number_of_tires = fields.Integer(string="Número de Llantas")
     number_of_axles = fields.Integer(string="Número de Ejes")
-    ton = fields.Integer(string="Tonelaje")
+    ton = fields.Float(string="Tonelaje")
     model_year = fields.Char(string="Año del Modelo")
 
     # Campos para Motor

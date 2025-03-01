@@ -37,6 +37,8 @@ class ProductTemplate(models.Model):
     is_a_vehicle = fields.Boolean(string="¿Es un Vehículo?")
     chassis_number = fields.Char(string="Número de Chasis", unique=True, index=True)
     vehicle_status = fields.Selection(VEHICLE_STATUS, string="Estado del Vehículo")
+    modelo_homologado_ant = fields.Char(string="Modelo Homologado ANT")
+    modelo_SRI = fields.Char(string="Modelo SRI")
     vehicle_color = fields.Char(string="Color del Vehículo")
     km_value = fields.Float(string='Km', default = 0)
     registration_date = fields.Date(string="Fecha de Registro")
@@ -46,6 +48,7 @@ class ProductTemplate(models.Model):
     number_of_doors = fields.Integer(string="Número de Puertas")
     number_of_tires = fields.Integer(string="Número de Llantas")
     number_of_axles = fields.Integer(string="Número de Ejes")
+    ton = fields.Integer(string="Tonelaje")
     model_year = fields.Char(string="Año del Modelo")
 
     # Campos para Motor

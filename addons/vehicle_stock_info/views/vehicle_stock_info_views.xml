@@ -13,6 +13,8 @@
                     <group string="Vehículo">
                         <field name="vehicle_brand_id" string="Marca" />
                         <field name="vehicle_model_id" string="Modelo" domain="[('brand_id', '=', vehicle_brand_id)]" />
+                        <field name="modelo_homologado_ant" />
+                        <field name="modelo_SRI" />
                         <field name="vehicle_type" string="Tipo de Vehiculo" />
                         <field name="chassis_number" string="Número de Chasis" />
                         <field name="km_value" string='Km del vehiculo'/>
@@ -25,6 +27,7 @@
                         <field name="number_of_doors" string="Número de Puertas" />
                         <field name="number_of_tires" string="Número de Llantas" />
                         <field name="number_of_axles" string="Número de Ejes" />
+                        <field name="ton" />
                         <field name="model_year" string="Año del Modelo" />
                     </group>
                     <group string="Motor">

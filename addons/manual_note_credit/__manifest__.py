@@ -8,10 +8,12 @@
     'license': 'LGPL-3',
     'category': '',
     'depends': [
-        ''
+        'base',
+        'l10n_ec_edi',
     ],
     'data': [
-        ''
+        'views/account_move.xml',
+        'data/edi_document.xml'
     ],
     # 'demo': [
     #     ''

@@ -136,11 +136,11 @@ class AccountEdiFormat(models.Model):
         if not move.commercial_partner_id.country_id:
             errors.append(_("You must set a Country for Partner: %s", move.commercial_partner_id.name))
 
-        if move.move_type == "out_refund" and not move.reversed_entry_id:
-            errors.append(_(
-                "Credit Note %s must have an original invoice related, try to 'Add Credit Note' from invoice",
-                move.display_name
-            ))
+        # if move.move_type == "out_refund" and not move.reversed_entry_id:
+        #     errors.append(_(
+        #         "Credit Note %s must have an original invoice related, try to 'Add Credit Note' from invoice",
+        #         move.display_name
+        #     ))
 
         if move.l10n_latam_document_type_id.internal_type == 'debit_note' and not move.debit_origin_id:
             errors.append(_(

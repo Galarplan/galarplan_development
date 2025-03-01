@@ -6,6 +6,9 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='property_account_receivable_id']" position="after">
                 <field name="property_account_receivable_credit_id"/>
+                <field name="property_account_financial_bank_id"/>
+                <field name="property_account_direct_funds_id"/>
+                <field name="propoerty_account_adjudicated_id"/>
             </xpath>
         </field>
     </record>

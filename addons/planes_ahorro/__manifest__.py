@@ -21,7 +21,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'l10n_ec'],
+    'depends': ['base', 'l10n_ec', 'general_format_document'],
 
     # always loaded
     'data': [
@@ -35,7 +35,8 @@
         'views/account_saving_lines.xml',
         'views/account_saving.xml',
         'views/account_saving_line_payment.xml',
-
+        'reports/report_saving_state.xml',
+        'reports/reports_menu.xml',
         'views/ir_ui_menu.xml',
 
     ],

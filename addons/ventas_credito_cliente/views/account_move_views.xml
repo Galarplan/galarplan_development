@@ -6,9 +6,12 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="after">
                 <group>
-                    <field name="is_credit_sale"/>
+                    <field name="is_credit_sale" attrs="{'invisible': [('move_type', '!=', 'out_invoice')]}"/>
+                    <field name="is_credit_bank" attrs="{'invisible': [('move_type', '!=', 'out_invoice')]}"/>
+                    <field name="is_direct" attrs="{'invisible': [('move_type', '!=', 'out_invoice')]}"/>
+                    <field name="is_galarplan" attrs="{'invisible': [('move_type', '!=', 'out_invoice')]}"/>
                 </group>
-                </xpath>
+            </xpath>
         </field>
     </record>
 </odoo>

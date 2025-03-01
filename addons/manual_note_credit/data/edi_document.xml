@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="common_info_template" inherit_id="l10n_ec_edi.common_info_template">
+        <!-- Modificar los campos existentes -->
+        <xpath expr="//codDocModificado[@t-if='is_cnote or is_dnote']" position="replace">
+            <codDocModificado t-if="is_cnote or is_dnote" t-out="'01'"/>
+        </xpath>
+        
+        <xpath expr="//numDocModificado[@t-if='is_cnote or is_dnote']" position="replace">
+            <numDocModificado t-if="is_cnote or is_dnote" t-out="modified_doc.l10n_latam_document_number or move.manual_document_number"/>
+        </xpath>
+        
+        <xpath expr="//fechaEmisionDocSustento[@t-if='is_cnote or is_dnote']" position="replace">
+            <fechaEmisionDocSustento t-if="is_cnote or is_dnote" t-out="strftime(modified_doc.invoice_date or move.manual_date)"/>
+        </xpath>
+    </template>
+</odoo>

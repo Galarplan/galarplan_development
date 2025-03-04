@@ -19,7 +19,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','stock','account'],
+    'depends': ['base','stock','account','l10n_ec_edi'],
 
     # always loaded
     'data': [

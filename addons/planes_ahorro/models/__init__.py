@@ -7,3 +7,5 @@ from . import account_saving_invoice
 from . import account_saving_lines
 from . import account_saving_line_payment
 from . import account_move
+from . import res_company
+from . import account_payment

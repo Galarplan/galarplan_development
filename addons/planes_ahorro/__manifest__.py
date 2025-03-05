@@ -21,11 +21,14 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'l10n_ec', 'general_format_document'],
+    'depends': ['base', 'l10n_ec','ventas_credito_cliente'],
 
     # always loaded
     'data': [
+        'security/ir_module_category.xml',
+        'security/res_groups.xml',
         'security/ir.model.access.csv',
+        'security/ir_rule.xml',
         'data/ir_sequence.xml',
         'data/ir_cron.xml',
         'data/ir_config_parameter.xml',
@@ -35,10 +38,9 @@
         'views/account_saving_lines.xml',
         'views/account_saving.xml',
         'views/account_saving_line_payment.xml',
-        'reports/report_saving_state.xml',
-        'reports/reports_menu.xml',
+        'views/account_move.xml',
+        'views/res_company.xml',
         'views/ir_ui_menu.xml',
-
     ],
     'installable': True,
     'application': True,

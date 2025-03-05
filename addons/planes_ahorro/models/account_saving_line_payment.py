@@ -44,28 +44,29 @@ class AccountSavingLines(models.Model):
             invoice = self.env['account.move'].browse(invoice_id)
             payment = self.env['account.payment'].browse(payment_id)
 
-            if not invoice or invoice.move_type != 'out_invoice':
-                raise ValueError(_("El ID proporcionado no corresponde a una factura de venta."))
+            if not invoice or invoice.move_type not in ('out_invoice','entry'):
+                raise ValueError(_("El ID proporcionado no corresponde a una factura de venta o asiento de ahorro."))
 
             if not payment or payment.payment_type != 'inbound':
                 raise ValueError(_("El ID proporcionado no corresponde a un cobro válido."))
 
             # Verificar que ambos tengan asientos contables publicados
             if invoice.state != 'posted' or not invoice.line_ids:
-                raise ValueError(_("La factura no está publicada o no tiene líneas contables."))
+                raise ValueError(_("La factura o asiento no está publicada o no tiene líneas contables."))
 
             if payment.state != 'posted' or not payment.move_id.line_ids:
                 raise ValueError(_("El cobro no está publicado o no tiene líneas contables."))
-            partner_account=invoice.partner_id.property_account_receivable_id
+            partner_account=invoice.saving_id.property_account_receivable_id or invoice.partner_id.property_account_receivable_id
             # Obtener las líneas contables a conciliar
             invoice_lines = invoice.line_ids.filtered(
                 lambda line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id==partner_account)
             #print("factura",invoice_lines)
             payment_lines = payment.move_id.line_ids.filtered(
-                lambda line: line.account_id.reconcile and line.account_id==partner_account)
+                lambda line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id==partner_account)
             #print("pago", payment_lines)
             if not invoice_lines or not payment_lines:
-                raise ValueError(_("No se encontraron líneas contables para conciliar."))
+                return True
+                #raise ValueError(_("No se encontraron líneas contables para conciliar."))
 
             # Realizar la conciliación
             lines_to_reconcile = invoice_lines + payment_lines

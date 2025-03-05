@@ -5,6 +5,7 @@
         <menuitem id="planes_ahorro_root" 
                   name="Planes de Ahorro" 
                   sequence="0"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
         />
 
         <menuitem id="plan_ahorro"
@@ -12,6 +13,7 @@
               parent="planes_ahorro_root"
               action="account_saving_action"
               sequence="0"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
     />
 
 
@@ -20,6 +22,7 @@
               parent="planes_ahorro_root"
               action="account_saving_line_action"
               sequence="1"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
     />
 
 
@@ -28,6 +31,7 @@
               parent="planes_ahorro_root"
               action="account_saving_wizard2_action"
               sequence="2"
+                  groups="planes_ahorro.grp_administrador"
     />
 
 
@@ -36,6 +40,7 @@
               name="Configuración"
               parent="planes_ahorro_root"
               sequence="2"
+                   groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
     />
 
 
@@ -44,6 +49,7 @@
               parent="plan_ahorro_conf_parent"
               action="account_saving_plan_action"
               sequence="0"
+                   groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
     />
 
 

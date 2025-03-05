@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="account_move_form_inherit" model="ir.ui.view">
+            <field name="name">account.move.form.inherit</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@id='aml_tab']" position="inside">
+                    <group attrs="{'invisible': [('plan_ahorro_move_id', '=', False)]}">
+                    <field name="plan_ahorro_move_id" attrs="{'invisible': [('plan_ahorro_move_id', '=', False)]}" readonly="1"/>
+ <newline/>
+                    <field name="plan_ahorro_move_line_ids" attrs="{'invisible': [('plan_ahorro_move_id', '=', False)]}"
+                    readonly="1" nolabel="1" colspan="2"
+                    >
+                            <tree string="Detalle">
+                                <field name="account_id" options="{'no_open':True,'no_create':True,'no_edit':True}"/>
+                                <field name="partner_id" options="{'no_open':True,'no_create':True,'no_edit':True}" optional="hide"/>
+                                <field name="name" optional="hide"/>
+                                <field name="debit" sum="total"/>
+                                <field name="credit" sum="total"/>
+                                <field name="amount_residual" sum="total" optional="hide"/>
+                            </tree>
+                         <form string="Detalle">
+                             <group>
+                                  <group>
+                                   <field name="account_id" options="{'no_open':True,'no_create':True,'no_edit':True}" />
+                                <field name="partner_id" options="{'no_open':True,'no_create':True,'no_edit':True}" />
+                                <field name="name" optional="hide"/>
+                                  </group>
+                                  <group>
+                                    <field name="debit" />
+                                <field name="credit"  />
+                                <field name="amount_residual" />
+                                  </group>
+                             </group>
+
+                            </form>
+                    </field>
+
+                    </group>
+
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

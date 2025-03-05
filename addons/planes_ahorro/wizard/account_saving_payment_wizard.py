@@ -1,5 +1,5 @@
-from odoo import api, fields, models
-from zeep.exceptions import ValidationError
+from odoo import api, fields, models,_
+from odoo.exceptions import ValidationError
 
 
 class AccountSavingPaymentWizard(models.TransientModel):
@@ -32,6 +32,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         string='Metodo de Pago',compute="onchange_payment_journal",
         required=True,
     )
+    enable_residual=fields.Boolean("Habilitar Saldo",default=False)
 
     @api.onchange('payment_journal_id')
     @api.depends('payment_journal_id')
@@ -106,10 +107,17 @@ class AccountSavingPaymentWizard(models.TransientModel):
         self.payment_ids = payment_ids
 
     def action_create_payment(self):
+        DEC=2
         """Crea un registro de account.payment basado en las líneas seleccionadas"""
         self.ensure_one()
         if self.amount<=0.00:
-            raise ValidationError("El valor debe ser mayor a 0")
+            raise ValidationError(_("El valor debe ser mayor a 0"))
+        if not self.saving_line_ids:
+            raise ValidationError(_("Al menos una cuota debe ser seleccionada"))
+        sobrantes=self.payment_ids.filtered(lambda x: x.number>=99999999)
+        if sobrantes:
+            sobrante=round(sum(sobrantes.mapped('aplicado')),DEC)
+            raise ValidationError(_("Todo el monto del pago debe distribuirse completamente en una o más cuotas, sin dejar saldos sobrantes.Sobran %s") % (sobrante,))
         payment_vals = {
             'date': self.payment_date,
             'journal_id': self.payment_journal_id.id,
@@ -122,6 +130,9 @@ class AccountSavingPaymentWizard(models.TransientModel):
             'ref': 'PAGO DE PLAN DE AHORRO %s' % (self.saving_id.id,),
         }
         payment = self.env['account.payment'].create(payment_vals)
+        for line in payment.line_ids.filtered(lambda l: l.account_id == payment.partner_id.property_account_receivable_id):
+            line.account_id = self.saving_id.property_account_receivable_id  # Usa la cuenta configurada en el cliente
+
         payment.action_post()
         lines=[]
         for brw_line in self.payment_ids:
@@ -135,7 +146,12 @@ class AccountSavingPaymentWizard(models.TransientModel):
                 "reconciled":False
             }))
             if brw_line.saving_line_id.invoice_id:
-                self.env["account.saving.line.payment"].reconcile_invoice_with_payment(brw_line.saving_line_id.invoice_id.id,payment.id)
+                self.env["account.saving.line.payment"].reconcile_invoice_with_payment(brw_line.saving_line_id.invoice_id.id,
+                                                                                       payment.id)
+                if brw_line.saving_line_id.plan_ahorro_move_id:
+                    #####
+                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
+                        brw_line.saving_line_id.plan_ahorro_move_id.id, payment.id)
         self.saving_id.payment_ids=lines
 
         return {

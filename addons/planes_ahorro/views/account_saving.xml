@@ -73,8 +73,6 @@
             <field name="por_pagar"  readonly="1" optional="show"/>
                   <field name="pagos"  readonly="1" optional="show"/>
                   <field name="pendiente"  readonly="1" optional="show"/>
- <field name="invoice_count"  optional="show"/>
-             <field name="payments_count"  optional="show"/>
           <field name="currency_id" invisible="1"/>
            <field name="state"  optional="show"/>
             <field name="state_plan" optional="hide"/>
@@ -96,12 +94,14 @@
                       string="Aprobar" icon="fa-check"
                       type="object"
                       attrs="{'invisible':[('state','not in',('draft',))]}"
+                      groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                       />
 
                <button name="%(action_account_saving_payment_wizard)d"
                       string="Registrar Pago" icon="fa-money"
                       type="action"
                       attrs="{'invisible':[('state','not in',('open',))]}"
+                       groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                       />
 
 
@@ -109,19 +109,37 @@
                       string="Reversar" icon="fa-rotate-left"
                       type="object"
                       attrs="{'invisible':[('state','not in',('open',))]}"
+                      groups="planes_ahorro.grp_administrador"
                       />
 
               <button name="action_cancel"
                       string="Anular" icon="fa-times"
                       type="object"
                       attrs="{'invisible':[('state','not in',('draft','posted'))]}"
+                      groups="planes_ahorro.grp_administrador"
                       />
 
 
              <field name="state" widget="statusbar"/>
           </header>
           <sheet>
-            <div class="oe_title">
+
+
+                <div class="oe_button_box" name="button_box">
+                <button name="action_open_documents"
+                        type="object" string="Documentos"
+                        class="oe_stat_button"
+                        icon="fa-file-o" >
+                      <field name="documents_count" widget="statinfo"/>
+                </button>
+                    <button name="action_open_payments"
+                        type="object"   string="Pagos"
+                        class="oe_stat_button"
+                        icon="fa-money">
+                          <field name="payments_count" widget="statinfo"/>
+                </button>
+            </div>
+               <div class="oe_title"  colspan="2" >
               <h1>
                 <field name="name" required='1' attrs="{'readonly':[('state','!=','draft')]}"/>
               </h1>
@@ -146,8 +164,7 @@
                       />
                       <field name="start_date"  required="1"
                              attrs="{'readonly':[('state','!=','draft')]}"/>
-                      <field name="end_date"  required="1"
-                             attrs="{'readonly':[('state','!=','draft')]}"/>
+                      <field name="end_date"  required="0" readonly="1" force_save="1"/>
 
 
                     </group>
@@ -160,11 +177,10 @@
     <field name="periods"   attrs="{'readonly':[('state','!=','draft')]}"/>
                   <field name="saving_amount"  required="1"
                              attrs="{'readonly':[('state','!=','draft')]}"/>
-                  <field name="fixed_amount"  required="1"
-                             attrs="{'readonly':[('state','!=','draft')]}"/>
+
                   <field name="quota_amount"  required="1"
                              attrs="{'readonly':[('state','!=','draft')]}"/>
-
+<field name="serv_inscription_amount" readonly="1" force_save="1" />
 <field name="por_pagar"  readonly="1" />
                   <field name="pagos"  readonly="1" />
                   <field name="pendiente"  readonly="1" />
@@ -175,44 +191,56 @@
             <notebook>
                 <page string="Cuotas">
                     <group colspan="4">
-                         <button name="action_open_lines" colspan="1"
-                      string="Actualizar" icon="fa-search"
-                      type="object" invisible="1"
+                         <button name="compute_lines" colspan="1"
+                      string="Calcular" icon="fa-cogs"
+                      type="object" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                       attrs="{'invisible':[('state','not in',('draft',))]}"
                       />
                     </group>
                     <newline/>
-                   <field name="line_ids" context="{'tree_view_ref':'planes_ahorro.account_saving_lines_tree_view','default_parent_saving_state':state}">
+                   <field name="line_ids" context="{'tree_view_ref':'planes_ahorro.account_saving_lines_tree_view','default_parent_saving_state':state}"
+invisible="1"
+                   />
+
+                    <separator string="Inscripción" />
+                    <newline/>
+                    <field name="inscription_ids" context="{'hide_main':True,'hide_inscription':False,'tree_view_ref':'planes_ahorro.account_saving_lines_inscription_tree_view','default_parent_saving_state':state}"
+
+                   />
+                    <newline/>
+                    <separator string="Cuotas" />
+                    <newline/>
+                   <field name="quota_ids" context="{'hide_inscription':True,'tree_view_ref':'planes_ahorro.account_saving_lines_main_tree_view','default_parent_saving_state':state}"
+
+                   />
 
 
 
-
-                   </field>
 
 
 
                 </page>
-                 <page string="Pagos">
-                   <field name="payment_ids">
+                 <page string="Facturas &amp; Pagos">
+                     <separator string="Facturas &amp; Asientos de las Cuotas" attrs="{'invisible':[('invoice_ids','=',[])]}"/>
 
+                     <field name="invoice_ids" readonly="1" attrs="{'invisible':[('invoice_ids','=',[])]}">
+<tree string="Facturas">
+       <field name="id" string="# ID" optional="hide"/>
+                        <field name="move_type"  />
+                        <field name="name"  />
+    <field name="journal_id"  />
+    <field name="partner_id" optional="hide" />
+  <field name="amount_untaxed_signed" sum="total" string="Base Imponible"/>
+    <field name="amount_total_signed" sum="total" string="Total"/>
+
+
+    <field name="payment_state"  attrs="{'invisible':[('move_type','=','entry')]}" widget="badge" decoration-danger="payment_state == 'not_paid'" decoration-warning="payment_state in ('partial', 'in_payment')" decoration-success="payment_state in ('paid', 'reversed')" optional="show" modifiers="{&quot;invisible&quot;: [[&quot;payment_state&quot;, &quot;in&quot;, &quot;invoicing_legacy&quot;]], &quot;readonly&quot;: true}"/>
+  <field name="state" widget="badge" decoration-success="state == 'posted'" decoration-info="state == 'draft'" optional="show" on_change="1" modifiers="{&quot;readonly&quot;: true, &quot;required&quot;: true}"/>
+
+</tree>
                    </field>
                      <newline/>
-                     <separator string="Historial de Pagos" attrs="{'invisible':[('historic_payment_ids','=',[])]}"/>
-                     <field name="historic_payment_ids" attrs="{'invisible':[('historic_payment_ids','=',[])]}" readonly="1">
-                         <tree string="Historial">
-                            <field name="payment_journal_name" />
-                        <field name="payment_date"  />
-                        <field name="payment_ref"  />
-                        <field name="amount" sum="total"/>
-                         </tree>
-                     </field>
-                 </page>
-  <page string="Facturas">
-         <field name="invoice_ids" readonly="1">
-
-                   </field>
-                     <newline/>
-                     <separator string="Historial de Facturas" attrs="{'invisible':[('historic_invoice_ids','=',[])]}"/>
+                     <separator string="Historial de Facturas Migradas" attrs="{'invisible':[('historic_invoice_ids','=',[])]}"/>
                      <field name="historic_invoice_ids" attrs="{'invisible':[('historic_invoice_ids','=',[])]}" readonly="1">
                          <tree string="Historial">
                                <field name="saving_line_id" options="{'no_open':True,'no_create':True,'no_edit':True}"/>
@@ -241,7 +269,29 @@
                          </form>
 
                      </field>
+                     <newline/>
+                      <separator string="Pagos de las Cuotas"  attrs="{'invisible':[('payment_move_ids','=',[])]}"/>
+                       <newline/>
+                     <field name="payment_move_ids" readonly="1" attrs="{'invisible':[('payment_move_ids','=',[])]}">
+
+                   </field>
+                     <newline/>
+                     <separator string="Historial de Pagos" attrs="{'invisible':[('historic_payment_ids','=',[])]}"/>
+                     <field name="historic_payment_ids" attrs="{'invisible':[('historic_payment_ids','=',[])]}" readonly="1">
+                         <tree string="Historial">
+                            <field name="payment_journal_name" />
+                        <field name="payment_date"  />
+                        <field name="payment_ref"  />
+                        <field name="amount" sum="total"/>
+                         </tree>
+                     </field>
+                   <field name="payment_ids" attrs="{'invisible':[('payment_ids','=',[])]}" invisible="1">
+
+                   </field>
+
                  </page>
+
+
               <page string="Contrato">
                    <group colspan="2">
                 <group col="2" >
@@ -273,9 +323,21 @@
            <field name="analytic_account_id"  options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
 
 
+
+    <field name="is_credit_sale" />
+             <field name="is_credit_bank" />
+             <field name="is_direct" />
+             <field name="is_galarplan" />
+
+             <field name="property_account_receivable_id" readonly="1"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}"
+                    />
+
     </group>
          <group>
+             <field name="fixed_amount"  required="1" readonly="1" force_save="1"/>
            <field name="rate_inscription" readonly="1" force_save="1"/>
+
                    <field name="rate_expense" readonly="1" force_save="1"/>
                    <field name="rate_insurance" readonly="1" force_save="1"/>
                    <field name="rate_decrement_year" readonly="1" force_save="1"/>
@@ -289,6 +351,11 @@
 </page>
             </notebook>
           </sheet>
+               <newline/>
+                        <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="message_ids" widget="mail_thread"/>
+            </div>
         </form>
       </field>
 

@@ -1,0 +1,25 @@
+<odoo>
+    <record id="view_reconciliation_wizard_form" model="ir.ui.view">
+        <field name="name">custom.reconciliation.wizard.form</field>
+        <field name="model">custom.reconciliation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Conciliar Factura con Movimiento de Diario">
+                <group>
+                    <field name="invoice_id" required="1"/>
+                    <field name="journal_entry_id" required="1"/>
+                </group>
+                <footer>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    <button string="Conciliar" class="btn-primary" type="object" name="action_reconcile"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_reconciliation_wizard" model="ir.actions.act_window">
+        <field name="name">Conciliar Factura con Movimiento de Diario</field>
+        <field name="res_model">custom.reconciliation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

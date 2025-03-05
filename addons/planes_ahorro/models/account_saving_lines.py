@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError
 
 
 class AccountSavingLines(models.Model):
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _name = 'account.saving.lines'
     _description = 'listado de cuotas para planes de ahorro'
 
@@ -20,9 +21,13 @@ class AccountSavingLines(models.Model):
     saving_amount = fields.Monetary(string='Aportaciones',tracking=True)
     principal_amount=fields.Monetary(string='Planes de Ahorro',tracking=True)
 
+
+
     serv_admin_percentage = fields.Float(string='% Serv. Adm.',tracking=True)
     seguro_percentage = fields.Float(string='% Seguro',tracking=True)
+    rate_inscription = fields.Float(string='% Inscripción', tracking=True)
 
+    serv_inscription_amount = fields.Monetary(string='Inscripción')
     serv_admin_amount = fields.Monetary(string='Serv. Adm.')
     seguro_amount = fields.Monetary(string='Seguro')
 
@@ -33,10 +38,12 @@ class AccountSavingLines(models.Model):
                                      ('pendiente', 'Pendiente'),
                                      ('pagado', 'Pagado')], string='Estado de pago', default='pendiente',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
     invoice_id=fields.Many2one("account.move",string="# Factura")
+    plan_ahorro_move_id = fields.Many2one("account.move", string="# Asiento Plan de Ahorro")
 
     parent_saving_state=fields.Selection(related="saving_id.state",store=False,readonly=True)
 
     payment_line_ids=fields.One2many("account.saving.line.payment","saving_line_id","Pagos Parciales")
+    payment_ids = fields.One2many("account.payment", "saving_line_id", "Documentos de Pagos")
 
     old_id = fields.Integer("Antiguo ID",tracking=True)
 
@@ -94,12 +101,12 @@ class AccountSavingLines(models.Model):
                     enabled_for_invoice = False
                 else:
                     days=(brw_each.date - fields.Date.context_today(self)).days
-                    if days>0 or days>= -invoice_days_enable:
+                    if days>=0 or days>= invoice_days_enable:
                         enabled_for_invoice=True
             brw_each.enabled_for_invoice = enabled_for_invoice
 
-    @api.depends('saving_id.state','payment_line_ids.type','invoice_id','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
-    @api.onchange('saving_id.state','payment_line_ids.type','invoice_id','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
+    @api.depends('saving_id.state','payment_ids','payment_ids.state','payment_line_ids.type','invoice_id','invoice_id.state','invoice_id.payment_state','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
+    @api.onchange('saving_id.state''payment_ids','payment_ids.state','payment_line_ids.type','invoice_id','invoice_id.state','invoice_id.payment_   state','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
     def _compute_pendientes(self):
         DEC=2
         for brw_each in self:
@@ -107,17 +114,33 @@ class AccountSavingLines(models.Model):
             pendiente=0.00
             pagos=0.00
             por_pagar=0.00
+            total=round(brw_each.serv_inscription_amount+brw_each.serv_admin_amount+brw_each.seguro_amount+brw_each.principal_amount,DEC)
             if brw_each.saving_id.state in ('open',):
                 estado_pago="pendiente"
-                por_pagar=round(brw_each.serv_admin_amount+brw_each.seguro_amount+brw_each.principal_amount,DEC)
-                for brw_line_payment in brw_each.payment_line_ids:
-                    if brw_line_payment.type!='historic':
-                        pagos+=brw_line_payment.aplicado
+                por_pagar=total
+                if not brw_each.invoice_id or brw_each.invoice_id.state!='posted':
+                    for brw_line_payment in brw_each.payment_line_ids:
+                        if brw_line_payment.type!='historic':
+                            if brw_line_payment.payment_id.state=='posted':
+                                pagos+=brw_line_payment.aplicado
+                else:##si estado es facturado
+                    partner_account= brw_each.saving_id.property_account_receivable_id or brw_each.invoice_id.partner_id.property_account_receivable_id
+                    total_invoices,total_payment=0.00,0.00
+                    for line in brw_each.invoice_id.line_ids:
+                        if line.account_id.reconcile and line.account_id == partner_account:
+                            total_invoices+=line.debit
+                            total_payment += line.amount_residual
+                    if brw_each.plan_ahorro_move_id:
+                        for line in brw_each.plan_ahorro_move_id.line_ids:
+                            if line.account_id.reconcile and line.account_id == partner_account:
+                                total_invoices += line.debit
+                                total_payment += line.amount_residual
+                    pagos=round(total_invoices-total_payment,DEC)
                 pagos+=brw_each.migrated_payment_amount
                 pendiente=round(por_pagar-pagos,DEC)
             if brw_each.saving_id.state in ('close',):
                 estado_pago = "pagado"
-                por_pagar=round(brw_each.serv_admin_amount+brw_each.seguro_amount+brw_each.principal_amount,DEC)
+                por_pagar=total
                 pagos=por_pagar
                 pendiente=0.00
             if brw_each.saving_id.state not in ('draft','cancel'):
@@ -149,13 +172,19 @@ class AccountSavingLines(models.Model):
 
 
     def action_invoice(self):
-        post=self._context.get("post",False)
-        OBJ_MOVE = self.env["account.move"].sudo()
+        post=self._context.get("post",True)
+        OBJ_MOVE = self.env["account.move"]
         for brw_each in self:
             if not brw_each.saving_id.journal_id:
                 raise ValidationError(_("Debes configurar un diario para registrar las facturas de venta en %s") % (brw_each.saving_id.name,))
             if brw_each.parent_saving_state!='open':
                 raise ValidationError(_("El estado del plan de ahorro no es valido para facturar en %s") % (brw_each.saving_id.name,) )
+            if not (brw_each.saving_id.is_credit_sale or brw_each.saving_id.is_credit_bank or brw_each.saving_id.is_direct or brw_each.saving_id.is_galarplan):
+                raise ValidationError(_("Debes seleccionar al menos un tipo de Venta para facturar en %s") % (brw_each.saving_id.name,) )
+            if not brw_each.saving_id.property_account_receivable_id:
+                brw_each.saving_id._compute_receivable_account()
+            if not brw_each.saving_id.property_account_receivable_id:
+                raise ValidationError(_("Debes definir la cuenta contable correspondiente para facturar en %s") % (brw_each.saving_id.name,) )
             if not brw_each.invoice_id:
                 srch_invoice=self.env["account.move"].sudo().search([('saving_line_id','=',brw_each.id),
                                                                      ('state','!=','cancel')
@@ -174,7 +203,11 @@ class AccountSavingLines(models.Model):
                         "l10n_latam_document_type_id": brw_each.saving_id.document_type_id.id,
                         "l10n_latam_use_documents": True,
                         "state":"draft",
-                        "l10n_ec_sri_payment_id":self.env.ref("l10n_ec.P1").id
+                        "l10n_ec_sri_payment_id":self.env.ref("l10n_ec.P1").id,
+                        'is_credit_sale': brw_each.saving_id.is_credit_sale,
+                        'is_credit_bank': brw_each.saving_id.is_credit_bank,
+                        'is_direct': brw_each.saving_id.is_direct,
+                        'is_galarplan': brw_each.saving_id.is_galarplan
                     }
                     invoice_line_ids = [(5,)]
                     sequence = 1
@@ -192,14 +225,9 @@ class AccountSavingLines(models.Model):
                                 "tax_ids": [(6,0,service_id.taxes_id and service_id.taxes_id.ids or [])] ,
                         }))
                     if brw_each.serv_admin_amount>0:
-                        if brw_each.sequence>1:
-                            if not  brw_each.saving_id.saving_plan_id.product_id:
-                                raise ValidationError(_("Debes configurar un servicio para el gasto administrativo  en %s") % (brw_each.saving_id.name,) )
-                            service_id=brw_each.saving_id.saving_plan_id.product_id
-                        else:
-                            if not  brw_each.saving_id.saving_plan_id.inscripcion_id:
-                                raise ValidationError(_("Debes configurar un servicio para la inscripcion  en %s") % (brw_each.saving_id.name,) )
-                            service_id=brw_each.saving_id.saving_plan_id.inscripcion_id
+                        if not  brw_each.saving_id.saving_plan_id.product_id:
+                            raise ValidationError(_("Debes configurar un servicio para el gasto administrativo  en %s") % (brw_each.saving_id.name,) )
+                        service_id=brw_each.saving_id.saving_plan_id.product_id
                         base_serv = self.calculate_base_amount(brw_each.serv_admin_amount, service_id.taxes_id)
                         invoice_line_ids.append((0, 0, {
                             "product_id": service_id.id,
@@ -210,22 +238,83 @@ class AccountSavingLines(models.Model):
                             "tax_ids": [(6, 0,
                                          service_id.taxes_id and service_id.taxes_id.ids or [])],
                         }))
+                    ###
+                    if brw_each.serv_inscription_amount > 0:
+                        if not brw_each.saving_id.saving_plan_id.inscripcion_id:
+                            raise ValidationError(
+                                    _("Debes configurar un servicio para la inscripcion  en %s") % (
+                                    brw_each.saving_id.name,))
+                        service_id = brw_each.saving_id.saving_plan_id.inscripcion_id
+                        base_serv = self.calculate_base_amount(brw_each.serv_inscription_amount, service_id.taxes_id)
+                        invoice_line_ids.append((0, 0, {
+                            "product_id": service_id.id,
+                            "name": service_id.name,
+                            "quantity": 1,
+                            "price_unit": base_serv,
+                            # "analytic_account_id": brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
+                            "tax_ids": [(6, 0,
+                                         service_id.taxes_id and service_id.taxes_id.ids or [])],
+                        }))
+                    ####
+                    if brw_each.principal_amount > 0:
+                        if not brw_each.saving_id.saving_plan_id.ahorro_account_id:
+                            raise ValidationError(
+                                    _("Debes configurar una cuenta para el ahorro  en %s") % (
+                                    brw_each.saving_id.name,))
+                        if not brw_each.saving_id.property_account_receivable_id:
+                            raise ValidationError(_("Debes definir una cuenta por cobrar al cliente para el ahorro  en %s") % (
+                                    brw_each.saving_id.name,))
+                        ahorro_account_id = brw_each.saving_id.saving_plan_id.ahorro_account_id
+                        lines_ids=[(5,),
+                                   (0, 0, {
+                                        "name": "AHORRO PROGRAMADO",
+                                        "credit":brw_each.principal_amount,
+                                       "partner_id": brw_each.saving_id.partner_id.id,
+                                        "account_id":ahorro_account_id and ahorro_account_id.id or False}),
+                                    (0, 0, {
+                                             "name": "CUENTA POR COBRAR AHORRO PROGRAMADO",
+                                             "debit": brw_each.principal_amount,
+                                            "partner_id": brw_each.saving_id.partner_id.id,
+                                             "account_id":brw_each.saving_id.property_account_receivable_id.id
+                                         }) ]
+                        ahorro_vals = {
+                            "line_ids":lines_ids,
+                            "partner_id": brw_each.saving_id.partner_id.id,
+                            "move_type": "entry",
+                            "date": brw_each.date,
+                            "journal_id": brw_each.saving_id.company_id.ahorro_journal_id.id,
+                            "company_id": brw_each.saving_id.company_id.id,
+                            "currency_id": brw_each.saving_id.company_id.currency_id.id,
+                            "saving_line_id": brw_each.id,
+                            'saving_id': brw_each.saving_id.id,
+                            "state": "draft",
+                        }
+                        brw_move_doc = OBJ_MOVE.create(ahorro_vals)
+                        vals["plan_ahorro_move_id"]=brw_move_doc.id
+                        brw_each.write({"plan_ahorro_move_id": brw_move_doc.id})
+                    ####
                     sequence += 1
                     vals["invoice_line_ids"] = invoice_line_ids
                     brw_process_doc = OBJ_MOVE.create(vals)
                     if post:
                         brw_process_doc.action_post()
-                    for brw_payment in brw_each.payment_line_ids:
-                        self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
-                                brw_process_doc.id, brw_payment.payment_id.id)
-                    brw_each.write({"invoice_id": brw_process_doc.id})
+                    if post:
+                        for brw_payment in brw_each.payment_line_ids:
+                            self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
+                                    brw_process_doc.id, brw_payment.payment_id.id)
+                            if brw_process_doc.plan_ahorro_move_id:
+                                #####
+                                self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
+                                    brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
+                    brw_each.write({"invoice_id": brw_process_doc.id,
+                                    "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False})
                 else:
                     if len(srch_invoice)==1:
                         if srch_invoice.state=='draft':
                             srch_invoice.action_post()
-                            brw_each.write({"invoice_id": srch_invoice.id})
+                            brw_each.write({"invoice_id": srch_invoice.id,"plan_ahorro_move_id": srch_invoice.plan_ahorro_move_id and srch_invoice.plan_ahorro_move_id.id or False})
                         else:#posted
-                            brw_each.write({"invoice_id": srch_invoice.id})
+                            brw_each.write({"invoice_id": srch_invoice.id,"plan_ahorro_move_id": srch_invoice.plan_ahorro_move_id and srch_invoice.plan_ahorro_move_id.id or False})
             else:
                 if self._context.get("raise_error",False):
                     raise ValidationError(_("La cuota %s ya esta facturada del plan de ahorro %s") % (brw_each.sequence,brw_each.saving_id.name))

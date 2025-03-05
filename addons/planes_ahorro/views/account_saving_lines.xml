@@ -77,19 +77,23 @@
 <field name="saving_id" invisible="context.get('hide_saving',True)" />
             <field name="company_id" invisible="context.get('hide_saving',True)" />
         <field name="partner_id" invisible="context.get('hide_saving',True)" />
-            <field name="sequence"  />
-                                        <field  name="number"  optional="hide" />
-             <field name="id"  optional="hide" string="# ID" />
+            <field name="sequence"  optional="hide"  />
+                                        <field  name="number"  />
+             <field name="id"  optional="hide" string="# ID"
+             attrs="{'invisible':[('id','&lt;=',0)]}"
+             />
                  <field name="currency_id" invisible="1"/>
                                 <field name="date"/>
-                                <field name="saving_amount" sum="total"/>
-                               <field name="principal_amount" sum="total"/>
+                                <field name="saving_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="principal_amount" sum="total" invisible="context.get('hide_main',False)"/>
 
-                                 <field name="serv_admin_amount" sum="total"/>
-                               <field name="seguro_amount" sum="total"/>
+                                 <field name="serv_admin_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_amount" sum="total" invisible="context.get('hide_main',False)"/>
+<field name="serv_inscription_amount" sum="total" invisible="context.get('hide_inscription',False)"/>
 
-                                    <field name="serv_admin_percentage"  optional="hide"/>
-                               <field name="seguro_percentage"  optional="hide"/>
+                                    <field name="serv_admin_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+<field name="rate_inscription" optional="hide" invisible="context.get('hide_inscription',False)"/>
 
                                <field name="pagos"  sum="total"/>
                                 <field name="pendiente" sum="total"/>
@@ -104,6 +108,70 @@ widget="badge"
                             <button name="action_invoice"
                       help="Facturar" icon="fa-money"
                       type="object"
+groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                                    confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
+                      attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                      />
+
+
+                       <field name="migrated" optional="hide" />
+                                    <field name="migrated_payment_amount" optional="hide" sum="total"/>
+                        <field name="migrated_has_invoices" optional="hide" />
+ <field name="enabled_for_invoice"   optional="hide" />
+
+
+                               <field name="invoice_id" optional="hide"/>
+                    <field name="plan_ahorro_move_id" optional="hide" />
+                                            <field name="parent_saving_state" invisible="1"/>
+        </tree>
+      </field>
+    </record>
+
+<record id="account_saving_lines_main_tree_view" model="ir.ui.view">
+      <field name="name">account.saving.lines.main.treeview</field>
+      <field name="model">account.saving.lines</field>
+        <field name="priority">100</field>
+      <field name="arch" type="xml">
+        <tree edit="false" create="false" delete="false"
+        decoration-it="(not invoice_id and parent_saving_state not in ('draft','cancel') and estado_pago=='pagado')"
+              decoration-bf="(migrated_has_invoices or migrated_payment_amount!=0.00 )"
+              limit="80"
+        >
+
+<field name="saving_id" invisible="context.get('hide_saving',True)" />
+            <field name="company_id" invisible="context.get('hide_saving',True)" />
+        <field name="partner_id" invisible="context.get('hide_saving',True)" />
+            <field name="sequence"  optional="hide"  invisible="1"/>
+                                        <field  name="number"  />
+             <field name="id"  optional="hide" string="# ID"
+             attrs="{'invisible':[('id','&lt;=',0)]}"
+             />
+                 <field name="currency_id" invisible="1"/>
+                                <field name="date"/>
+                                <field name="saving_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="principal_amount" sum="total" invisible="context.get('hide_main',False)"/>
+
+                                 <field name="serv_admin_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_amount" sum="total" invisible="context.get('hide_main',False)"/>
+<field name="serv_inscription_amount" sum="total" invisible="1"/>
+
+                                    <field name="serv_admin_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+<field name="rate_inscription" optional="hide" invisible="1"/>
+
+                               <field name="pagos"  sum="total"/>
+                                <field name="pendiente" sum="total"/>
+
+
+
+                                <field name="estado_pago" decoration-muted="estado_pago=='sin_aplicar'"
+                                decoration-danger="estado_pago=='pendiente'"
+                                       decoration-success="estado_pago=='pagado'"
+widget="badge"
+                                />
+                            <button name="action_invoice"
+                      help="Facturar" icon="fa-money"
+                      type="object" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                                     confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
                       />
@@ -121,7 +189,68 @@ widget="badge"
       </field>
     </record>
 
+<record id="account_saving_lines_inscription_tree_view" model="ir.ui.view">
+      <field name="name">account.saving.lines.inscription.treeview</field>
+      <field name="model">account.saving.lines</field>
+        <field name="priority">102</field>
+      <field name="arch" type="xml">
+        <tree edit="false" create="false" delete="false"
+        decoration-it="(not invoice_id and parent_saving_state not in ('draft','cancel') and estado_pago=='pagado')"
+              decoration-bf="(migrated_has_invoices or migrated_payment_amount!=0.00 )"
+              limit="80"
+        >
 
+<field name="saving_id" invisible="context.get('hide_saving',True)" />
+            <field name="company_id" invisible="context.get('hide_saving',True)" />
+        <field name="partner_id" invisible="context.get('hide_saving',True)" />
+            <field name="sequence"  optional="hide"  invisible="1"/>
+                                        <field  name="number" optional="hide"  invisible="1" />
+             <field name="id"  optional="hide" string="# ID"
+             attrs="{'invisible':[('id','&lt;=',0)]}"
+             />
+                 <field name="currency_id" invisible="1"/>
+                                <field name="date"/>
+                                <field name="saving_amount" sum="total" invisible="1"/>
+                               <field name="principal_amount" sum="total" invisible="1"/>
+
+                                 <field name="serv_admin_amount" sum="total" invisible="1"/>
+                               <field name="seguro_amount" sum="total" invisible="1"/>
+<field name="serv_inscription_amount" sum="total" />
+
+                                    <field name="serv_admin_percentage"  optional="hide" invisible="1"/>
+                               <field name="seguro_percentage"  optional="hide" invisible="1"/>
+<field name="rate_inscription" optional="hide" invisible="0"/>
+
+                               <field name="pagos"  sum="total"/>
+                                <field name="pendiente" sum="total"/>
+
+
+
+                                <field name="estado_pago" decoration-muted="estado_pago=='sin_aplicar'"
+                                decoration-danger="estado_pago=='pendiente'"
+                                       decoration-success="estado_pago=='pagado'"
+widget="badge"
+                                />
+                            <button name="action_invoice"
+                      help="Facturar" icon="fa-money"
+                      type="object" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                                    confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
+                      attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                      />
+
+
+                       <field name="migrated" optional="hide" />
+                                    <field name="migrated_payment_amount" optional="hide" sum="total"/>
+                        <field name="migrated_has_invoices" optional="hide" />
+ <field name="enabled_for_invoice"   optional="hide" />
+
+
+                               <field name="invoice_id" optional="hide"/>
+            <field name="plan_ahorro_move_id" optional="hide"/>
+                                            <field name="parent_saving_state" invisible="1"/>
+        </tree>
+      </field>
+    </record>
 
     <record id="account_saving_lines_form_view" model="ir.ui.view">
       <field name="name">account_saving.lines.form.view</field>
@@ -129,9 +258,10 @@ widget="badge"
       <field name="arch" type="xml">
                     <form string="saving items" edit="false" create="false" delete="false">
                             <header>
-                            <button name="action_invoice"
+                            <button name="action_invoice" type="object"
                       help="Facturar" icon="fa-money"
-                      string="object"
+                      string="Facturar"
+                                    groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                                     confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
                       />
@@ -156,6 +286,8 @@ widget="badge"
                                         <field name="serv_admin_amount"  readonly="1"/>
                                <field name="seguro_amount"  readonly="1"/>
 
+                               <field name="serv_inscription_amount"  readonly="1"/>
+
                                <field name="pagos"   readonly="1"/>
                             </group>
                                  <group>
@@ -163,6 +295,7 @@ widget="badge"
                                 <field name="estado_pago"  readonly="1"/>
                                                                <field name="invoice_id"  readonly="1"/>
 
+            <field name="plan_ahorro_move_id" readonly="1"/>
                                      <field name="old_ref_id" readonly="1"
        attrs="{'invisible': [('old_ref_id', 'in', [False, '', None])]}"/>
 
@@ -170,6 +303,11 @@ widget="badge"
 
                             </group>
 </sheet>
+                        <newline/>
+                        <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="message_ids" widget="mail_thread"/>
+            </div>
                              </form>
       </field>
 
@@ -212,7 +350,7 @@ widget="badge"
       <field name="type">ir.actions.act_window</field>
       <field name="res_model">account.saving.lines</field>
       <field name="view_mode">tree,form</field>
-      <field name="context">{'create':True,'delete':True,'edit':True,'hide_saving':False}</field>
+      <field name="context">{'search_default_estado_pago_pendiente':1,'search_default_sin_factura':1,'create':True,'delete':True,'edit':True,'hide_saving':False}</field>
       <field name="domain">[('saving_id.state','in',('open','close'))]</field>
       <field name="help" type="html">
         <p class="oe_view_nocontent_create">

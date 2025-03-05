@@ -73,10 +73,11 @@
                    <field name="rate_insurance" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
                    <field name="rate_decrement_year" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
 
-                      <field name="product_id" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
-                   <field name="seguro_id" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
-     <field name="inscripcion_id" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
-<field name="old_id"  attrs="{'readonly':[('state','!=','draft')]}" />
+                      <field name="product_id" required="1" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
+                   <field name="seguro_id" required="1" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
+     <field name="inscripcion_id" required="1" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
+<field name="old_id"  attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
+                    <field name="ahorro_account_id" options="{'no_create':True,'no_edit':True,'no_open':True,}"/>
                 </group>
               </group>
           </sheet>

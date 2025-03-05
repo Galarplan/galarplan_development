@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="grp_lectura" model="res.groups">
+            <field name="category_id" ref="grp_category_plan_ahorro"/>
+            <field name="name">Auditoria</field>
+        </record>
+
+        <record id="grp_usuario" model="res.groups">
+            <field name="category_id" ref="grp_category_plan_ahorro"/>
+            <field name="name">Usuario</field>
+        </record>
+
+        <record id="grp_administrador" model="res.groups">
+            <field name="category_id" ref="grp_category_plan_ahorro"/>
+            <field name="name">Administrador</field>
+        </record>
+
+    </data>
+
+</odoo>

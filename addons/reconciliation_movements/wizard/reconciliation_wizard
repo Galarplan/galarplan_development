@@ -1,0 +1,36 @@
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError
+
+class ReconciliationWizard(models.TransientModel):
+    _name = 'custom.reconciliation.wizard'
+    _description = 'Wizard to reconcile invoices with miscellaneous journal entries'
+
+    invoice_id = fields.Many2one('account.move', string='Factura', domain="[('move_type', 'in', ['out_invoice', 'in_invoice'])]")
+    journal_entry_id = fields.Many2one('account.move', string='Movimiento de Diario', domain="[('journal_id.type', '=', 'general')]")
+
+    def action_reconcile(self):
+        """
+        Reconcile the selected invoice with the journal entry.
+        """
+        self.ensure_one()
+
+        # Obtener las líneas de la factura y el movimiento de diario
+        invoice_lines = self.invoice_id.line_ids.filtered(lambda line: line.account_id.reconcile)
+        journal_lines = self.journal_entry_id.line_ids.filtered(lambda line: line.account_id.reconcile)
+
+        # Verificar que haya líneas reconciliables
+        if not invoice_lines or not journal_lines:
+            raise ValidationError("No hay líneas reconciliables en la factura o el movimiento de diario.")
+
+        # Conciliar las líneas
+        (invoice_lines + journal_lines).reconcile()
+
+        # Mostrar un mensaje de éxito
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'res_id': self.invoice_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'context': {'create': False},
+        }

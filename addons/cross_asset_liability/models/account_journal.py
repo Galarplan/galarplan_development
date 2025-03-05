@@ -8,7 +8,7 @@ class AccountJournal(models.Model):
             ('deprecated', '=', False),
             ('company_id', '=', company_id),
             ('account_type', 'not in', ('asset_receivable', 'liability_payable')),
-            ('account_type', 'in', ('asset_cash', 'liability_credit_card', 'assets_current', 'liability_current') if type == 'bank'
+            ('account_type', 'in', ('asset_cash', 'liability_credit_card', 'asset_current', 'liability_current') if type == 'bank'
                                    else ('asset_cash',) if type == 'cash'
                                    else ('income',) if type == 'sale'
                                    else ('expense',) if type == 'purchase'

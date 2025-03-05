@@ -3,11 +3,76 @@
 
     <data>
         <template id="custom_report_invoice_header">
-            <div style="position: relative !important; top: -50px; z-index:1;font-size:12px;">
+            <div style="font-size:12px;">
+                <div class="row" name="company_info">
+                    <div class="col-12">
+                        <strong>
+                            <t t-if="o.company_id.partner_id.l10n_latam_identification_type_id"
+                                t-esc="o.company_id.partner_id.l10n_latam_identification_type_id.name"
+                                id="inv_tax_id_label" />
+                                        <t t-else="">RUC/Cédula</t>: </strong>
+                        <span t-field="o.company_id.partner_id.vat" />
+                    </div>
+
+
+                </div>
+                <div class="row" name="company_info_2">
+
+                    <div class="col-12">
+
+                        <t t-if="o.journal_id.l10n_ec_emission">
+                            <strong>Direccion: </strong>
+                            <span
+                                t-esc="o.journal_id.l10n_ec_emission_address_id._display_address()" />
+                            <br />
+                        </t>
+
+                    </div>
+
+                </div>
+
+                <div class="row" name="company_info_3">
+                    <div class="col-12">
+                        <t t-if="o.company_id.l10n_ec_special_taxpayer_number">
+                            <strong>Special Taxpayer Number: </strong>
+                            <span t-field="o.company_id.l10n_ec_special_taxpayer_number" />
+                            <br />
+                        </t>
+                        <strong>Ambiente: </strong>
+                        <t
+                            t-if="o.company_id.l10n_ec_production_env">Produccion</t>
+                        <t t-else="">
+                            Testing</t>
+                        <br />
+                        <div>
+                            <strong>Emision: </strong>Normal </div>
+                        <strong>Obligado a llevar contabilidad: </strong>
+                        <t t-if="o.company_id.l10n_ec_forced_accounting">
+                            Si</t>
+                        <t t-else="">No</t>
+                        <br />
+                        <t
+                            t-if="o.company_id.l10n_ec_withhold_agent_number">
+                            <strong>Agente de Retención No.: </strong>
+                            <span t-field="o.company_id.l10n_ec_withhold_agent_number" />
+                            <br />
+                        </t>
+
+
+                    </div>
+                </div>
+
+                <div class="row" name="info_customer_data">
+                    <div class="col-12 text-center"
+                        t-att-style="'border-top: 1px solid {0}; background: {1}; color: {2}; margin-left: 12px; width:98%;'.format('#C1C1C1', '#C1C1C1', '#000000')">
+                        <strong>Datos Del Cliente/Proveedor</strong>
+                    </div>
+                </div>
+
                 <div class="row" name="zero_line">
                     <div class="col-12">
                         <p class="m-0">
-                            <strong>Name:</strong>
+                            <strong>Razón Social:</strong>
                             <span t-esc="docs.partner_id.name" />
                         </p>
                     </div>
@@ -28,7 +93,7 @@
                     <div class="col-6">
                         <t t-if="docs.partner_id.email">
                             <p class="m-0">
-                                <strong>Email:</strong>
+                                <strong>Correo:</strong>
                                 <span class="m-0" t-field="docs.partner_id.email" />
                             </p>
                         </t>
@@ -38,7 +103,7 @@
                     <div class="col-12">
                         <t t-if="docs.partner_id.street">
                             <p class="m-0">
-                                <strong>Address:</strong>
+                                <strong>Dirección:</strong>
                                 <t t-if="docs.partner_id.street">
                                     <span>
                                         <t t-esc="docs.partner_id.street" />
@@ -64,7 +129,7 @@
                     <div class="col-6">
                         <t t-if="docs.partner_id.phone">
                             <p class="m-0">
-                                <strong>Phone:</strong>
+                                <strong>Telefono:</strong>
                                 <span>
                                     <t t-esc="docs.partner_id.phone" />
                                 </span>
@@ -75,7 +140,7 @@
                 <div class="row" name="fourth_line">
                     <div class="col-6">
                         <div class="col-6" t-if="docs.partner_id.ref" name="customer_code">
-                            <strong>Customer Code:</strong>
+                            <strong>Codigo Cliente:</strong>
                             <p class="m-0" t-field="docs.partner_id.ref" />
                         </div>
                     </div>
@@ -84,7 +149,7 @@
                     <div class="col-6">
                         <div t-if="docs.invoice_date" name="invoice_date">
                             <p class="m-0">
-                                <strong>Invoice Date:</strong>
+                                <strong>Fecha de Emisión:</strong>
                                 <span t-field="docs.invoice_date" />
                             </p>
                         </div>
@@ -93,35 +158,37 @@
                         t-if="docs.invoice_date_due and docs.move_type == 'out_invoice' and docs.state == 'posted'"
                         name="due_date">
                         <p class="m-0">
-                            <strong>Due Date:</strong>
+                            <strong>Fecha de Vencimiento:</strong>
                             <span class="m-0" t-field="docs.invoice_date_due" />
                         </p>
                     </div>
                 </div>
                 <div class="row" name="sixth_line">
-                    <div class="col-6" t-if="docs.invoice_payment_term_id" name="payment_term_code">
+                    <div class="col-6 pb-3" t-if="docs.invoice_payment_term_id"
+                        name="payment_term_code">
                         <div t-if="docs.invoice_payment_term_id" name="payment_term">
-                            <strong>Payment Term:</strong>
+                            <strong>Terminos de pago:</strong>
                             <span t-field="docs.invoice_payment_term_id.name" />
                         </div>
                     </div>
                     <div class="col-6" t-if="docs.invoice_user_id" name="user_id_code">
                         <div t-if="docs.invoice_user_id" name="user_id_term">
-                            <strong>Seller:</strong>
-                            <span t-field="docs.invoice_user_id.name" />
+                            <strong>Asesor Comercial:</strong>
+                            <span t-field="docs.invoice_user_id_com.name" />
                         </div>
                     </div>
                 </div>
                 <div class="row" name="seventh_line">
                     <div class="col-6" t-if="docs.invoice_origin" name="origin">
-                        <strong>Source:</strong>
+                        <strong>Origen:</strong>
                         <p class="m-0" t-field="docs.invoice_origin" />
                     </div>
                 </div>
                 <div class="row" name="eighth_line">
-                    <div class="col-6" t-if="docs.fiscal_position_id" name="position_code">
-                        <p t-if="docs.fiscal_position_id.note" name="note">
-                            <span t-field="docs.fiscal_position_id.note" />
+                    <div class="col-6 pb-3" t-if="docs.l10n_ec_sri_payment_id" name="position_code">
+                        <strong>Tipo de Pago:</strong>
+                        <p t-if="docs.l10n_ec_sri_payment_id" name="methodpayment">
+                            <span t-field="docs.l10n_ec_sri_payment_id.name" />
                         </p>
                     </div>
                     <div class="col-6" t-if="docs.invoice_incoterm_id" name="icomterm_code">
@@ -146,14 +213,14 @@
                 <div class="row" name="info_electronic_data">
                     <div class="col-12 text-center"
                         t-att-style="'border-top: 1px solid {0}; background: {1}; color: {2}; margin-left: 12px; width:98%;'.format('#C1C1C1', '#C1C1C1', '#000000')">
-                        <strong>SRI Authorization</strong>
+                        <strong>Autorización SRI</strong>
                     </div>
                 </div>
                 <div class="row" name="data_line_1">
                     <div class="col-12" t-if="docs.l10n_ec_authorization_number">
                         <p class="m-0">
-                            <strong>Authorization:</strong>
-                            <span class="m-0" t-if="docs.l10n_ec_authorization_number"
+                            <strong>Autorización:</strong>
+                            <span class="m-1" t-if="docs.l10n_ec_authorization_number"
                                 t-field="docs.l10n_ec_authorization_number" />
                         </p>
                     </div>
@@ -161,8 +228,8 @@
                 <div class="row" name="data_line_2">
                     <div class="col-12">
                         <p class="m-0">
-                            <strong>Access Key:</strong>
-                            <span class="mm-0" t-if="docs.l10n_ec_authorization_number"
+                            <strong>Clave de acceso:</strong>
+                            <span class="mm-1" t-if="docs.l10n_ec_authorization_number"
                                 t-field="docs.l10n_ec_authorization_number" />
                         </p>
                     </div>
@@ -170,16 +237,16 @@
                 <div class="row" name="data_line_3">
                     <div class="col-8">
                         <div class="row col-6 col-12">
-                            <strong>Authorization Date:</strong>
+                            <strong>Fecha de Autorización:</strong>
                             <span class="m-0" t-if="docs.invoice_date" t-field="docs.invoice_date" />
                         </div>
-                        <div class="row col-3 col-12">
-                            <strong>Emission: </strong>Normal </div>
-                        <div class="row col-3 col-12">
-                            <strong>Environment:</strong>
-                            <t t-if="o.company_id.l10n_ec_production_env">Production</t>
-                            <t t-else="">Testing</t>
-                        </div>
+                        <!-- <div class="row col-12">
+                            <strong>Emision: </strong>Normal </div>
+                        <div class="row col-12">
+                            <strong>Ambiente:</strong>
+                            <t t-if="o.company_id.l10n_ec_production_env">Produccion</t>
+                            <t t-else="">Pruebas</t>
+                        </div> -->
                     </div>
                     <div class="col-4" name="barcode_ec">
                         <div name="right_box">
@@ -212,65 +279,76 @@
 
         <!-- Heredar el template 'account.report_invoice_document' -->
         <template id="report_invoice_document_custom" inherit_id="account.report_invoice_document">
+
+            <xpath expr="//div[hasclass('mt-5')]" position="attributes">
+                <!-- Reemplazar la clase mt-5 con una cadena vacía -->
+                <attribute name="class"></attribute>
+            </xpath>
+
+            <xpath expr="//table[@name='invoice_line_table']" position="attributes">
+                <attribute name="t-att-style">'font-size: 12px;'</attribute>
+            </xpath>
             <!-- Localizar la celda que deseas modificar -->
             <xpath expr="//td[@name='account_invoice_line_name']" position="replace">
                 <!-- Sobrescribir la celda con el nuevo contenido -->
                 <td name="account_invoice_line_name">
-                    <span t-field="line.name" t-options="{'widget': 'text', 'style': 'font-weight: bold;'}" />
+                    <span t-field="line.product_id.name"
+                        t-options="{'widget': 'text', 'style': 'font-weight: bold;'}" />
                     <t t-if="line.product_id.is_a_vehicle">
-                        <br />
-                        <span>Chassis:</span>
-                        <span t-field="line.product_id.chassis_number" />
-                        <br />
-                        <span>Número de Motor:</span>
-                        <span t-field="line.product_id.engine_number" />
-                        <br />
-                        <span>Número RAMW:</span>
-                        <span t-field="line.product_id.ramw_number" />
-                        <br />
-                        <span>Marca:</span>
-                        <span t-field="line.product_id.vehicle_brand_id.name" />
-                        <br />
-                        <span>Modelo:</span>
-                        <span t-field="line.product_id.vehicle_model_id.name" />
-                        <br />
-                        <span>Modelo Homologado:</span>
-                        <span t-field="line.product_id.modelo_homologado_ant" />
-                        <br />
-                        <span>Modelo SRI:</span>
-                        <span t-field="line.product_id.modelo_SRI" />
-                        <br />
-                        <span>Color:</span>
-                        <span t-field="line.product_id.vehicle_color" />
-                        <br />
-                        <span>Asientos:</span>
-                        <span t-field="line.product_id.number_of_seats" />
-                        <br />
-                        <span>Puertas:</span>
-                        <span t-field="line.product_id.number_of_doors" />
-                        <br />
-                        <span>Llantas:</span>
-                        <span t-field="line.product_id.number_of_tires" />
-                        <br />
-                        <span>Tonelaje:</span>
-                        <span t-field="line.product_id.ton" />
-                        <br />
-                        <span>Ejes:</span>
-                        <span t-field="line.product_id.number_of_axles" />
-                        <br />
-                        <span>Año del Modelo:</span>
-                        <span t-field="line.product_id.model_year" />
-                        <br />
-                        <span>Transmisión:</span>
-                        <span t-field="line.product_id.transmission" />
-                        <br />
-                        <span>Combustible:</span>
-                        <span t-field="line.product_id.fuel_type" />
-                        <br />
-                        <span>Cilindraje:</span>
-                        <span t-field="line.product_id.cylinder_capacity" />
+                        <div class="row">
+                            <div class="col">
+                                <strong>Chassis:</strong>
+                                <span class="mx-2" t-field="line.product_id.chassis_number" />
+                                <strong>Número de Motor:</strong>
+                                <span class="mx-2" t-field="line.product_id.engine_number" />
+                                <strong>Número RAMW:</strong>
+                                <span class="mx-2" t-field="line.product_id.ramw_number" />
+                                <strong>Marca:</strong>
+                                <span class="mx-2" t-field="line.product_id.vehicle_brand_id.name" />
+                                <strong>Modelo:</strong>
+                                <span class="mx-2" t-field="line.product_id.vehicle_model_id.name" />
+                                <strong>Modelo Homologado:</strong>
+                                <span class="mx-2" t-field="line.product_id.modelo_homologado_ant" />
+                                <strong>Modelo SRI:</strong>
+                                <span class="mx-2" t-field="line.product_id.modelo_SRI" />
+                                <strong>Color:</strong>
+                                <span class="mx-2" t-field="line.product_id.vehicle_color" />
+                                <strong>Asientos:</strong>
+                                <span class="mx-2" t-field="line.product_id.number_of_seats" />
+                                <strong>Puertas:</strong>
+                                <span class="mx-2" t-field="line.product_id.number_of_doors" />
+                                <strong>Llantas:</strong>
+                                <span class="mx-2" t-field="line.product_id.number_of_tires" />
+                                <strong>Tonelaje:</strong>
+                                <span class="mx-2" t-field="line.product_id.ton" />
+                                <strong>Ejes:</strong>
+                                <span class="mx-2" t-field="line.product_id.number_of_axles" />
+                                <strong>Año del Modelo:</strong>
+                                <span class="mx-2" t-field="line.product_id.model_year" />
+                                <strong>Transmisión:</strong>
+                                <span class="mx-2" t-field="line.product_id.transmission" />
+                                <strong>Combustible:</strong>
+                                <span class="mx-2" t-field="line.product_id.fuel_type" />
+                                <strong>Cilindraje:</strong>
+                                <span class="mx-2" t-field="line.product_id.cylinder_capacity" />
+                            </div>
+
+                        </div>
+
                     </t>
                 </td>
+            </xpath>
+
+            <xpath expr="//div[@id='total']" position="attributes">
+                <attribute name="t-att-style">'font-size: 12px;'</attribute>
+            </xpath>
+        </template>
+
+        <template id="report_invoice_additional_info_custom"
+            inherit_id="l10n_ec_edi.report_invoice_additional_info">
+            <!-- Modificar la tabla para agregar font-size sin perder el estilo existente -->
+            <xpath expr="//table[@class='table table-sm table-borderless']" position="attributes">
+                <attribute name="t-att-style">'page-break-inside: avoid; font-size: 12px;'</attribute>
             </xpath>
         </template>
 
@@ -287,6 +365,12 @@
             <xpath expr="//div[@id='informations']" position="replace">
                 <!-- Este contenido reemplazará el bloque original -->
                 <div></div>
+            </xpath>
+
+            <xpath
+                expr="//div[@id='total']/following-sibling::div[contains(@t-attf-class, 'col-6')]"
+                position="attributes">
+                <attribute name="t-att-style">'display: none;'</attribute>
             </xpath>
 
         </template>

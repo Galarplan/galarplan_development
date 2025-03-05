@@ -4,3 +4,4 @@ access_vehicle_model_user,access_vehicle_model_user,model_vehicle_model,base.gro
 access_vehicle_brand_manager,access_vehicle_brand_manager,model_vehicle_brand,base.group_system,1,1,1,1
 access_vehicle_model_manager,access_vehicle_model_manager,model_vehicle_model,base.group_system,1,1,1,1
 access_vehicle_type_user,vehicle.type,model_vehicle_type,,1,1,1,1
+access_account_details_line,access_account_details_line,model_account_details_line,base.group_user,1,1,1,1

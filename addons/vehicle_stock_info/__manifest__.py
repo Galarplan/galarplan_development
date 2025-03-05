@@ -30,6 +30,7 @@
         'views/vehicle_brand.xml',
         'views/vehicle_type.xml',
         'views/vehicle_model.xml',
+        'views/account_move.xml',
         'views/menuitems.xml',
         # 'data/templates/edi_document.xml',
          'data/templates/report_invoice.xml'

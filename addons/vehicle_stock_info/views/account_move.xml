@@ -1,0 +1,22 @@
+<odoo>
+    <record id="view_invoice_form_inherit" model="ir.ui.view">
+        <field name="name">account.move.form.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <!-- Añadir una nueva pestaña en la vista de la factura -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Detalle Factura">
+                    <label for="invoice_user_id_com" string="Comercial"/>
+                    <field name="invoice_user_id_com" />
+                    <field name="details_invoice_line_id">
+                        <tree string="Detalles" editable="bottom">
+                            <field name="campo" />
+                            <field name="descripcion" />
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

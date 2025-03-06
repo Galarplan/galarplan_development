@@ -13,6 +13,9 @@
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Pagos Migrado">
+                    <group>
+                        <button name="agregar_pagos" string="Historico" type="object" class="oe_highlight"/>
+                    </group>
                     <field name="details_ids">
                         <tree string="Detalles" editable="bottom">
                             <field name="name" />

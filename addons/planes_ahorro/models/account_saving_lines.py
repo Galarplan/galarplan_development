@@ -2,6 +2,10 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+from datetime import datetime
+import pytz
+
+from odoo.odoo import SUPERUSER_ID
 
 
 class AccountSavingLines(models.Model):
@@ -174,6 +178,7 @@ class AccountSavingLines(models.Model):
     def action_invoice(self):
         post=self._context.get("post",True)
         OBJ_MOVE = self.env["account.move"]
+        tz='America/Guayaquil'
         for brw_each in self:
             if not brw_each.saving_id.journal_id:
                 raise ValidationError(_("Debes configurar un diario para registrar las facturas de venta en %s") % (brw_each.saving_id.name,))
@@ -190,24 +195,48 @@ class AccountSavingLines(models.Model):
                                                                      ('state','!=','cancel')
                                                                      ])
                 if not srch_invoice:
+                    detail_info_ids = [(5,)]
+                    if not (brw_each.serv_inscription_amount > 0):
+                        detail_info_ids += [(0, 0, {"campo": "Pago",
+                                                    "descripcion": "Pago de Cuota %s/%s" % (brw_each.number, brw_each.saving_id.periods)}),
+                                            (0, 0, {"campo": "Descripcion",
+                                                    "descripcion": "Factura de gastos administrativos"}),
+                                            (0, 0, {"campo": "Valor del Ahorro",
+                                                    "descripcion": str(brw_each.principal_amount)})
+                                            ]
+                    else:
+                        detail_info_ids += [(0, 0, {"campo": "Descripcion",
+                                                    "descripcion": "Factura de Inscripcion"}),
+                                            ]
+
+                    utc_now = fields.Datetime.context_timestamp(self, fields.Datetime.now())
+
+                    # Convertir a la zona horaria local
+                    local_tz = pytz.timezone("America/Guayaquil")  # Ajusta según tu zona horaria
+                    local_now = utc_now.astimezone(local_tz)
+
+                    # Si solo necesitas la fecha sin la hora
+                    local_date = local_now.date()
+
                     vals = {
-                        "partner_id":brw_each.saving_id.partner_id.id,
-                        "move_type":"out_invoice",
-                        "date": brw_each.date,
-                        "invoice_date":brw_each.date,
-                        "journal_id":brw_each.saving_id.journal_id.id,
+                        "partner_id": brw_each.saving_id.partner_id.id,
+                        "move_type": "out_invoice",
+                        "date": local_date,
+                        "invoice_date": local_date,
+                        "journal_id": brw_each.saving_id.journal_id.id,
                         "company_id": brw_each.saving_id.company_id.id,
                         "currency_id": brw_each.saving_id.company_id.currency_id.id,
-                        "saving_line_id":brw_each.id,
-                        'saving_id':brw_each.saving_id.id,
+                        "saving_line_id": brw_each.id,
+                        'saving_id': brw_each.saving_id.id,
                         "l10n_latam_document_type_id": brw_each.saving_id.document_type_id.id,
                         "l10n_latam_use_documents": True,
-                        "state":"draft",
-                        "l10n_ec_sri_payment_id":self.env.ref("l10n_ec.P1").id,
+                        "state": "draft",
+                        "l10n_ec_sri_payment_id": self.env.ref("l10n_ec.P1").id,
                         'is_credit_sale': brw_each.saving_id.is_credit_sale,
                         'is_credit_bank': brw_each.saving_id.is_credit_bank,
                         'is_direct': brw_each.saving_id.is_direct,
-                        'is_galarplan': brw_each.saving_id.is_galarplan
+                        'is_galarplan': brw_each.saving_id.is_galarplan,
+                        'details_invoice_line_id': detail_info_ids
                     }
                     invoice_line_ids = [(5,)]
                     sequence = 1

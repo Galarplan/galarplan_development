@@ -1,0 +1,8 @@
+<odoo>
+  <data noupdate="1">
+    <!-- Definición del grupo -->
+    <record id="access_create_payment" model="res.groups">
+      <field name="name">Acceso crear pago manual</field>
+    </record>
+  </data>
+</odoo>

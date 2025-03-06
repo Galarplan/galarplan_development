@@ -202,7 +202,9 @@ class AccountSavingLines(models.Model):
                                             (0, 0, {"campo": "Descripcion",
                                                     "descripcion": "Factura de gastos administrativos"}),
                                             (0, 0, {"campo": "Valor del Ahorro",
-                                                    "descripcion": str(brw_each.principal_amount)})
+                                                    "descripcion": str(brw_each.principal_amount)}),
+                                            (0, 0, {"campo": "Valor Mensual Pagado",
+                                                    "descripcion": str(brw_each.saving_amount)})
                                             ]
                     else:
                         detail_info_ids += [(0, 0, {"campo": "Descripcion",

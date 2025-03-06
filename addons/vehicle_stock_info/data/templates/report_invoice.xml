@@ -333,6 +333,8 @@
                                 <span class="mx-2" t-field="line.product_id.cylinder_capacity" />
                                 <strong>Tipo:</strong>
                                 <span class="mx-2" t-field="line.product_id.vehicle_type.name" />
+                                <strong>Clase:</strong>
+                                <span class="mx-2" t-field="line.product_id.vehicle_class" />
                             </div>
 
                         </div>

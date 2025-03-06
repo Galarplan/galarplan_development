@@ -64,6 +64,7 @@ class ProductTemplate(models.Model):
     vehicle_brand_id = fields.Many2one('vehicle.brand', string="Marca del Vehículo")
     vehicle_model_id = fields.Many2one('vehicle.model', string="Modelo del Vehículo")
     vehicle_type = fields.Many2one('vehicle.type',string='Tipo de vehiculo')
+    vehicle_class = fields.Char(string='Clase')
     vehicle_model_domain_ids = fields.Many2many(
         'vehicle.model', compute='_compute_vehicle_model_domain', store=False, string="Domain for Vehicle Models"
     )

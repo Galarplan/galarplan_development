@@ -16,6 +16,7 @@
                         <field name="modelo_homologado_ant" />
                         <field name="modelo_SRI" />
                         <field name="vehicle_type" string="Tipo de Vehiculo" />
+                        <field name="vehicle_class" string="Clase del Vehiculo" />
                         <field name="chassis_number" string="Número de Chasis" />
                         <field name="km_value" string='Km del vehiculo'/>
                         <field name="vehicle_status" string="Estado del Vehículo" />

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 MONTHS = {
     1: 'ENERO',
@@ -38,6 +39,19 @@ class AccountMove(models.Model):
             additional_info[f"{line.campo}"] = line.descripcion
 
         return additional_info
+    
+
+    @api.constrains('move_type', 'l10n_latam_document_type_id')
+    def _check_invoice_type_document_type(self):
+        for rec in self.filtered('l10n_latam_document_type_id.internal_type'):
+            internal_type = rec.l10n_latam_document_type_id.internal_type
+            invoice_type = rec.move_type
+            return
+            # if internal_type in ['debit_note', 'invoice'] and invoice_type in ['out_refund', 'in_refund']:
+            #     raise ValidationError(_('You can not use a %s document type with a refund invoice', internal_type))
+            # elif internal_type == 'credit_note' and invoice_type in ['out_invoice', 'in_invoice']:
+            #     raise ValidationError(_('You can not use a %s document type with a invoice', internal_type))
+
     
 
 

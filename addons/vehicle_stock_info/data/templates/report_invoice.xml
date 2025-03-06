@@ -331,6 +331,8 @@
                                 <span class="mx-2" t-field="line.product_id.fuel_type" />
                                 <strong>Cilindraje:</strong>
                                 <span class="mx-2" t-field="line.product_id.cylinder_capacity" />
+                                <strong>Tipo:</strong>
+                                <span class="mx-2" t-field="line.product_id.vehicle_type.name" />
                             </div>
 
                         </div>

@@ -16,6 +16,13 @@
                         type="object" class="btn-primary"
                         groups="create_payment_move.access_create_payment"
                         attrs="{'invisible' : [('state','=','draft')]}" />
+                    
+
+                    <button name="creat_payment_move_prov"
+                        string="Crear Pago Provedor "
+                        type="object" class="btn-primary"
+                        groups="create_payment_move.access_create_payment"
+                        attrs="{'invisible' : [('state','=','draft')]}" />
 
                 </button>
 

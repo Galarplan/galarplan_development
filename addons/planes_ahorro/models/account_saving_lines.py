@@ -5,7 +5,7 @@ from odoo.exceptions import ValidationError
 from datetime import datetime
 import pytz
 
-from odoo.odoo import SUPERUSER_ID
+from odoo import SUPERUSER_ID
 
 
 class AccountSavingLines(models.Model):

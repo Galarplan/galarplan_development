@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="payment_cheque_print_template">
+        <t t-name="cheque_format.payment_cheque_print_template">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="payment">
+                    <t t-foreach="payment.bank_cheque_id" t-as="cheque_format">
+                        <div
+                            t-att-style="'position:absolute; height:'+ str(cheque_format.cheque_height) + 'px;width:' + str(cheque_format.cheque_width) + 'px;'">
+                            <!-- Beneficiario -->
+                            <div class="row"
+                                t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+ 'position:absolute; float:'+ str(cheque_format.bf_float) + ';font-size:' + str(cheque_format.bf_font_size) + 'px;'+'margin-top:' + str(cheque_format.bf_top_margin) + 'px;'+'margin-left:' + str(cheque_format.bf_left_margin) + 'px;'+'width:' + str(cheque_format.bf_width) + 'px;'">
+                                <span t-esc="payment.partner_id.name" />
+                            </div>
+
+                            <!-- Monto en Números -->
+                            <div class="row"
+                                t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+'position:absolute; float:'+ str(cheque_format.af_float) + ';font-size:' + str(cheque_format.af_font_size) + 'px;'+'margin-top:' + str(cheque_format.af_top_margin) + 'px;'+'margin-left:' + str(cheque_format.af_left_margin) + 'px;'+'width:' + str(cheque_format.af_width) + 'px;'">
+                                <t t-if="not cheque_format.currency_symbol">
+                                    <span t-esc="payment.amount"
+                                        t-options="{'widget': float, 'precision': 2}" />
+                                </t>
+                                <t t-if="cheque_format.currency_symbol">
+                                    <span t-esc="payment.amount"
+                                        t-options="{'widget': 'monetary', 'display_currency': payment.currency_id}" />
+                                </t>
+                            </div>
+
+                            <!-- Monto en Letras -->
+                            <div class="row"
+                                t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+'position:absolute; float:'+ str(cheque_format.fl_float) + ';font-size:' + str(cheque_format.fl_font_size) + 'px;'+'margin-top:' + str(cheque_format.fl_top_margin) + 'px;'+'margin-left:' + str(cheque_format.fl_left_margin) + 'px;'+'width:' + str(cheque_format.fl_width) + 'px;'+'height:' + str(cheque_format.fl_height) + 'px;'">
+                                <span t-esc="payment.check_amount_in_words" />
+                            </div>
+
+                            <!-- Fecha y Ciudad -->
+                            <div class="row"
+                                t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+'position:absolute; float:'+ str(cheque_format.fd_float) + ';font-size:' + str(cheque_format.fd_font_size) + 'px;'+'margin-top:' + str(cheque_format.fd_top_margin) + 'px;'+'margin-left:' + str(cheque_format.fd_left_margin) + 'px;'+'width:' + str(cheque_format.fd_width) + 'px;'">
+                                <t
+                                    t-if="cheque_format.fd_use_city == True and cheque_format.fd_city_position == 'before'">
+                                    <span t-esc="payment.company_id.partner_id.city +','" />
+                                </t>
+                                <span
+                                    t-esc="payment.date.strftime(str(cheque_format.fd_date_format))" />
+                                <t
+                                    t-if="cheque_format.fd_use_city == True and cheque_format.fd_city_position == 'after'">
+                                    , <span t-esc="payment.company_id.partner_id.city" />
+                                </t>
+                            </div>
+
+                            <!-- Caja de Firma -->
+                            <div class="row"
+                                t-att-style="'float:' + str(cheque_format.sb_float) + ';'">
+                                <t t-if="cheque_format.sb_use_signature">
+                                    <div
+                                        t-att-style="'width:' + str(cheque_format.sb_width) + 'px; height:' + str(cheque_format.sb_height) + 'px; margin-top:' + str(cheque_format.sb_top_margin) + 'px; margin-left:' + str(cheque_format.sb_left_margin) + 'px; border: 2px solid gray;'" />
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </t>
+
+    </template>
+
+
+    <record id="action_print_cheque" model="ir.actions.report">
+        <field name="name">Print Cheque</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cheque_format.payment_cheque_print_template</field>
+        <field name="binding_model_id" ref="account.model_account_payment" />
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

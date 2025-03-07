@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Árbol -->
+    <record id="view_cheque_printing_tree" model="ir.ui.view">
+        <field name="name">cheque.printing.tree</field>
+        <field name="model">cheque.printing</field>
+        <field name="arch" type="xml">
+            <tree string="Cheque Printing Formats">
+                <field name="name" />
+                <field name="company_id" />
+                <field name="bank_id" />
+                <field name="cheque_height" />
+                <field name="cheque_width" />
+                <field name="active" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista Formulario -->
+    <record id="view_cheque_printing_form" model="ir.ui.view">
+        <field name="name">cheque.printing.form</field>
+        <field name="model">cheque.printing</field>
+        <field name="arch" type="xml">
+            <form string="Cheque Printing Configuration">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="toggle_active">
+                            <span />
+                            <label for="active" />
+                            <field name="active" widget="boolean_toggle" />
+                        </button>
+                    </div>
+                    <h1>
+                        <field name="name" placeholder="Cheque Format" required="1" />
+                    </h1>
+                    <div class="alert alert-success" role="alert">
+                        <strong>Instruction :</strong> Please configure the cheque in pixels to be
+                        displayed on the screen. Each pixel equals 0.026458333cm. For large
+                        recipient names, you can change the font size or spacing. </div>
+                    <group name="cheque_name">
+                        <group name="base" string="Data">
+                            <field name="type_letter" string="Tipo de Letra" />
+                            <field name="company_id" />
+                            <field name="bank_id" />
+                            <field name="cheque_height" />
+                            <field name="cheque_width" />
+                        </group>
+                        <group name="config" string="Configuration">
+                            <field name="currency_symbol" />
+                            <field name="fd_use_city" />
+                            <field name="sc_use_second_date" />
+                            <field name="sb_use_signature" />
+                        </group>
+                    </group>
+                    <group name="group_beneficiary" string="Beneficiary">
+                        <group>
+                            <field name="bf_top_margin" />
+                            <field name="bf_left_margin" />
+                            <field name="bf_width" />
+                        </group>
+                        <group>
+                            <field name="bf_font_size" />
+                            <field name="bf_float" />
+                            <field name="bf_char_spacing" />
+                        </group>
+                    </group>
+                    <group name="group_amount_value" string="Amount Value">
+                        <group>
+                            <field name="af_top_margin" />
+                            <field name="af_left_margin" />
+                            <field name="af_width" />
+                        </group>
+                        <group>
+                            <field name="af_font_size" />
+                            <field name="af_float" />
+                        </group>
+                    </group>
+                    <group name="group_amount_word" string="Amount in Word">
+                        <group>
+                            <field name="fl_top_margin" />
+                            <field name="fl_left_margin" />
+                            <field name="fl_width" />
+                        </group>
+                        <group>
+                            <field name="fl_font_size" />
+                            <field name="fl_float" />
+                            <field name="fl_height" />
+                        </group>
+                    </group>
+                    <group name="first_date" string="Cheque Date">
+                        <group>
+                            <field name="fd_top_margin" />
+                            <field name="fd_left_margin" />
+                            <field name="fd_width" />
+                            <field name="fd_city_position"
+                                attrs="{'invisible': [('fd_use_city', '=', False)], 'required': [('fd_use_city', '=', True)]}" />
+                        </group>
+                        <group>
+                            <field name="fd_font_size" />
+                            <field name="fd_float" />
+                            <field name="fd_date_format" required="1" />
+                        </group>
+                    </group>
+                    <group name="second_date" string="Second Cheque Date"
+                        attrs="{'invisible': [('sc_use_second_date', '=', False)]}">
+                        <group>
+                            <field name="sc_top_margin" />
+                            <field name="sc_left_margin" />
+                            <field name="sc_width" />
+                            <field name="sc_use_second_city"
+                                attrs="{'invisible': [('sc_use_second_date', '=', False)]}" />
+                        </group>
+                        <group>
+                            <field name="sc_font_size" />
+                            <field name="sc_float" />
+                            <field name="sc_date_format"
+                                attrs="{'required': [('sc_use_second_date', '=', True)]}" />
+                            <field name="sc_city_position"
+                                attrs="{'invisible': [('sc_use_second_city', '=', False)], 'required': [('sc_use_second_city', '=', True)]}" />
+                        </group>
+                    </group>
+                    <group string="Signature Box"
+                        attrs="{'invisible': [('sb_use_signature', '=', False)]}">
+                        <group>
+                            <field name="sb_top_margin" />
+                            <field name="sb_left_margin" />
+                            <field name="sb_width" />
+                        </group>
+                        <group>
+                            <field name="sb_float" />
+                            <field name="sb_height" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Action para el Modelo -->
+    <record id="action_cheque_printing" model="ir.actions.act_window">
+        <field name="name">Cheque Printing Formats</field>
+        <field name="res_model">cheque.printing</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menú para el Action -->
+    <menuitem id="menu_cheque_printing_root" name="Formato de Cheques" />
+    <menuitem id="menu_cheque_printing" name="Formatos" parent="menu_cheque_printing_root"
+        action="action_cheque_printing" sequence="10" />
+</odoo>

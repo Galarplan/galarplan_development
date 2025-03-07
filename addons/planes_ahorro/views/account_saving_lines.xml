@@ -107,7 +107,7 @@ widget="badge"
                                 />
                             <button name="action_invoice"
                       help="Facturar" icon="fa-money"
-                      type="object"
+                      type="object" invisible="context.get('hide_invoice',False)"
 groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                                     confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
@@ -169,11 +169,9 @@ groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                                        decoration-success="estado_pago=='pagado'"
 widget="badge"
                                 />
-                            <button name="action_invoice"
-                      help="Facturar" icon="fa-money"
-                      type="object" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                                    confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
-                      attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                           <button name="%(action_account_saving_line_wizard)d" type="action" invisible="context.get('hide_invoice',False)"
+                      help="Facturar" icon="fa-money"  groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
                       />
 
 
@@ -231,10 +229,9 @@ widget="badge"
                                        decoration-success="estado_pago=='pagado'"
 widget="badge"
                                 />
-                            <button name="action_invoice"
-                      help="Facturar" icon="fa-money"
-                      type="object" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                                    confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
+                            <button name="%(action_account_saving_line_wizard)d" type="action"
+                      help="Facturar" icon="fa-money" invisible="context.get('hide_invoice',False)"
+                     groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
                       />
 
@@ -258,12 +255,11 @@ widget="badge"
       <field name="arch" type="xml">
                     <form string="saving items" edit="false" create="false" delete="false">
                             <header>
-                            <button name="action_invoice" type="object"
-                      help="Facturar" icon="fa-money"
+                            <button name="%(action_account_saving_line_wizard)d" type="action"
+                      help="Facturar" icon="fa-money" invisible="context.get('hide_invoice',False)"
                       string="Facturar"
                                     groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                                    confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
-                      attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                     attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
                       />
                             </header>
                         <sheet>

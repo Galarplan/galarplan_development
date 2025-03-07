@@ -5,7 +5,7 @@ from odoo.exceptions import ValidationError
 from datetime import datetime
 import pytz
 
-from odoo import SUPERUSER_ID
+from odoo.odoo import SUPERUSER_ID
 
 
 class AccountSavingLines(models.Model):
@@ -175,7 +175,17 @@ class AccountSavingLines(models.Model):
 
 
 
-    def action_invoice(self):
+    def action_invoice(self,date=None):
+        local_date=date
+        if date is None:
+            utc_now = fields.Datetime.context_timestamp(self, fields.Datetime.now())
+
+            # Convertir a la zona horaria local
+            local_tz = pytz.timezone("America/Guayaquil")  # Ajusta según tu zona horaria
+            local_now = utc_now.astimezone(local_tz)
+
+            # Si solo necesitas la fecha sin la hora
+            local_date = local_now.date()
         post=self._context.get("post",True)
         OBJ_MOVE = self.env["account.move"]
         tz='America/Guayaquil'
@@ -211,14 +221,7 @@ class AccountSavingLines(models.Model):
                                                     "descripcion": "Factura de Inscripcion"}),
                                             ]
 
-                    utc_now = fields.Datetime.context_timestamp(self, fields.Datetime.now())
 
-                    # Convertir a la zona horaria local
-                    local_tz = pytz.timezone("America/Guayaquil")  # Ajusta según tu zona horaria
-                    local_now = utc_now.astimezone(local_tz)
-
-                    # Si solo necesitas la fecha sin la hora
-                    local_date = local_now.date()
 
                     vals = {
                         "partner_id": brw_each.saving_id.partner_id.id,
@@ -366,6 +369,6 @@ class AccountSavingLines(models.Model):
             if record.saving_id.state != 'open':  # Si no está confirmado, no cumple
                 raise ValidationError("Solo puedes facturar una cuota en estado abierto.Revisa %s" % (record.name,) )
 
-        for brw_each in self:
-            brw_each.action_invoice()
-        return True
+        action = self.env.ref('planes_ahorro.action_account_saving_line_wizard').read()[0]
+        action['context'] = {'active_ids': self.ids}
+        return action

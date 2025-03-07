@@ -216,7 +216,7 @@ class AccountSaving(models.Model):
 
     def validate_reverse(self):
         for brw_each in self:
-            lines = brw_each.line_ids.mapped(lambda x: x.invoice_id.state in ('draft', 'posted'))
+            lines = brw_each.line_ids.mapped('invoice_id').filtered(lambda x: x.state in ('draft', 'posted'))
             if lines:
                 raise ValidationError(_("No puedes cambiar a borrador si existen facturas publicadas"))
             payments = brw_each.payment_ids.mapped('payment_id').filtered(lambda x: x.state != 'cancel')
@@ -383,8 +383,8 @@ class AccountSaving(models.Model):
                    "principal_amount": principal_amount,
                    "saving_amount": brw_each.quota_amount,
                    "serv_admin_amount": round(
-                            brw_each.quota_amount * brw_each.saving_plan_id.rate_expense / 100.00, DEC),
-                   "seguro_amount": round(brw_each.quota_amount * brw_each.saving_plan_id.rate_insurance / 100.00,
+                            principal_amount * brw_each.saving_plan_id.rate_expense / 100.00, DEC),
+                   "seguro_amount": round(principal_amount * brw_each.saving_plan_id.rate_insurance / 100.00,
                                                DEC),
 
                    "serv_admin_percentage":  brw_each.saving_plan_id.rate_expense,

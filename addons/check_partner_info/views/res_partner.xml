@@ -8,7 +8,7 @@
             <!-- Agregar el campo booleano en la pestaña "Contacto" -->
             <xpath expr="//field[@name='mobile']" position="after">
                 <group>
-                    <field name="cliente_proveedor_verificado" />
+                    <field name="cliente_proveedor_verificado" options="{'no_autosave': True}" />
                 </group>
             </xpath>
         </field>

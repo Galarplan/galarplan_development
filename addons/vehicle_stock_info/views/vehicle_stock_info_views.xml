@@ -29,6 +29,7 @@
                         <field name="number_of_tires" string="Número de Llantas" />
                         <field name="number_of_axles" string="Número de Ejes" />
                         <field name="ton" />
+                        <field name="load_capcity"/>
                         <field name="model_year" string="Año del Modelo" />
                     </group>
                     <group string="Motor">

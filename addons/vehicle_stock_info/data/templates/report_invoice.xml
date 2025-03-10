@@ -3,6 +3,11 @@
 
     <data>
         <template id="custom_report_invoice_header">
+            <div class="row" name="info_electronic_data" style="font-size:24px ;">
+                    <div class="col-12 text-center" t-att-style="'border-top: 1px solid {0}; background: {1}; color: {2}; margin-left: 12px; width:98%;'.format('#C1C1C1', '#C1C1C1', '#000000')">
+                        <strong><span t-field="o.l10n_latam_document_type_id.name"/> <span t-field="o.l10n_latam_document_number"/></strong>
+                    </div>
+            </div>
             <div style="font-size:12px;">
                 <div class="row" name="company_info">
                     <div class="col-12">
@@ -321,6 +326,8 @@
                                 <span class="mx-2" t-field="line.product_id.number_of_tires" />
                                 <strong>Tonelaje:</strong>
                                 <span class="mx-2" t-field="line.product_id.ton" />
+                                <strong>Capacidad de Carga:</strong>
+                                <span class="mx-2" t-field="line.product_id.load_capcity" />
                                 <strong>Ejes:</strong>
                                 <span class="mx-2" t-field="line.product_id.number_of_axles" />
                                 <strong>Año del Modelo:</strong>

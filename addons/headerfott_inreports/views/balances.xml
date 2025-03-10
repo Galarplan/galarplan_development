@@ -1,0 +1,127 @@
+<!-- <odoo>
+   
+    <template id="custom_filter_info_template" inherit_id="account_reports.filter_info_template">
+        <xpath expr="//div[@class='row print_only']" position="before">
+            <div class="row print_only" style="text-align: center; margin-bottom: 20px;">
+                <div class="col-12">
+                    <img t-att-src="company.logo" style="max-width: 150px; max-height: 100px;" />
+                    <h2 style="margin-top: 10px;">
+                        <t t-out="company.name" />
+                    </h2>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    
+    <template id="custom_main_template" inherit_id="account_reports.main_template">
+        <xpath expr="//div[@class='js_account_report_footnotes']" position="after">
+            <div class="row print_only" style="margin-top: 50px;">
+                <div class="col-6" style="text-align: center;">
+                    <p>_________________________</p>
+                    <p>Contador</p>
+                    <p>Nombre del Contador</p>
+                </div>
+                <div class="col-6" style="text-align: center;">
+                    <p>_________________________</p>
+                    <p>Gerente</p>
+                    <p>Nombre del Gerente</p>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo> -->
+
+<odoo>
+    <!-- Heredar y modificar el filter_info_template para agregar logo y nombre -->
+    <!-- <template id="custom_filter_info_template"
+    inherit_id="account_reports.filter_info_template">
+        <xpath expr="//div[@class='row print_only']" position="before">
+            <div class="row print_only" style="text-align: center; margin-bottom: 20px;">
+                <div class="col-12">
+                    
+                    <img t-att-src="company.logo" style="max-width: 150px; max-height: 100px;" />
+                    
+                    <h2 style="margin-top: 10px;">
+                        <t t-out="company.name" />
+                    </h2>
+                </div>
+            </div>
+        </xpath>
+    </template> -->
+
+
+    <!-- <template id="custom_print_template" inherit_id="account_reports.print_template">
+        <xpath expr="//head" position="before">
+            <div class="row print_only" style="text-align: center; margin-bottom: 20px;">
+                <div class="col-12">
+
+                    <img t-att-src="company.logo" style="max-width: 150px; max-height: 100px;" />
+
+                    <h2 style="margin-top: 10px;">
+                        <t t-out="company.name" />
+                    </h2>
+                </div>
+            </div>
+            <div class="row print_only" style="text-align: center; margin-bottom: 20px;">
+                <div class="col-12">
+                    
+                    aaaaaaaaaaaaa
+                </div>
+            </div>
+        </xpath>
+    </template> -->
+
+
+    <template id="custom_print_template" inherit_id="account_reports.print_template">
+
+        <xpath expr="//head" position="after">
+            <div class="row print_only align-items-center" style="margin-bottom: 20px;">
+                <div class="col-3">
+                    <!-- Usar la URL absoluta del logo -->
+                    <img t-att-src="'/web/image/res.company/%s/logo' % company.id"
+                        style="max-width: 150px; max-height: 100px;" />
+                </div>
+                <div class="col-9 text-left">
+                    <h1 style="margin-top: 0;">
+                        <t t-out="company.name" />
+                    </h1>
+                </div>
+            </div>
+        </xpath>
+
+        <xpath expr="//body" position="after">
+            <div class="row print_only" style="margin-top: 50px;">
+                <!-- Firma del Contador -->
+                <div class="col-6" style="text-align: center;">
+                    <p>_________________________</p>
+                    <p>Contador</p>
+                    <!-- <p>Nombre del Contador</p> -->
+                </div>
+                <!-- Firma del Gerente -->
+                <div class="col-6" style="text-align: center;">
+                    <p>_________________________</p>
+                    <p>Gerente</p>
+                    <!-- <p>Nombre del Gerente</p> -->
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="custom_main_template" inherit_id="account_reports.main_template">
+        <!-- Quitar la línea que llama a filter_info_template -->
+        <xpath expr="//div[hasclass('o_account_reports_header')]" position="replace">
+            <div class="print_only" style="text-align: center;">
+                <h2>
+                    <strong>
+                        <t t-if="report.filter_show_draft and options['all_entries']">[Draft]</t>
+                        <t t-out="report_title" />
+                    </strong>
+                </h2>
+            </div>
+        </xpath>
+
+        <!-- <xpath expr="//t[@t-call='account_reports.filter_info_template']" position="replace">
+        </xpath> -->
+    </template>
+</odoo>

@@ -8,6 +8,7 @@
             <!-- Localizamos el campo journal_id y añadimos bank_cheque_id debajo -->
             <field name="journal_id" position="after">
                 <field name="bank_cheque_id"/>
+                <field name="beneficiario_id"/>
             </field>
         </field>
     </record>

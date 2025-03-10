@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
     <template id="payment_cheque_print_template">
@@ -11,26 +11,29 @@
                             <!-- Beneficiario -->
                             <div class="row"
                                 t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+ 'position:absolute; float:'+ str(cheque_format.bf_float) + ';font-size:' + str(cheque_format.bf_font_size) + 'px;'+'margin-top:' + str(cheque_format.bf_top_margin) + 'px;'+'margin-left:' + str(cheque_format.bf_left_margin) + 'px;'+'width:' + str(cheque_format.bf_width) + 'px;'">
-                                <span t-esc="payment.partner_id.name" />
+                                <t t-if="not payment.beneficiario_id">
+                                    <span t-raw="payment.partner_id.display_name" />
+                                </t>
+                                <t t-if="payment.beneficiario_id">
+                                    <span t-raw="payment.beneficiario_id.display_name" />
+                                </t>
                             </div>
 
                             <!-- Monto en Números -->
                             <div class="row"
                                 t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+'position:absolute; float:'+ str(cheque_format.af_float) + ';font-size:' + str(cheque_format.af_font_size) + 'px;'+'margin-top:' + str(cheque_format.af_top_margin) + 'px;'+'margin-left:' + str(cheque_format.af_left_margin) + 'px;'+'width:' + str(cheque_format.af_width) + 'px;'">
                                 <t t-if="not cheque_format.currency_symbol">
-                                    <span t-esc="payment.amount"
-                                        t-options="{'widget': float, 'precision': 2}" />
+                                    <span t-esc="payment.amount" t-options="{'widget': 'float', 'precision': 2}" />
                                 </t>
                                 <t t-if="cheque_format.currency_symbol">
-                                    <span t-esc="payment.amount"
-                                        t-options="{'widget': 'monetary', 'display_currency': payment.currency_id}" />
+                                   <span t-esc="'$'" /> <span t-esc="payment.amount" t-options="{'widget': 'float', 'precision': 2}" />
                                 </t>
                             </div>
 
                             <!-- Monto en Letras -->
                             <div class="row"
                                 t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+'position:absolute; float:'+ str(cheque_format.fl_float) + ';font-size:' + str(cheque_format.fl_font_size) + 'px;'+'margin-top:' + str(cheque_format.fl_top_margin) + 'px;'+'margin-left:' + str(cheque_format.fl_left_margin) + 'px;'+'width:' + str(cheque_format.fl_width) + 'px;'+'height:' + str(cheque_format.fl_height) + 'px;'">
-                                <span t-esc="payment.check_amount_in_words" />
+                                <span t-esc="payment.convertir_monto_a_palabras(payment.amount)" />
                             </div>
 
                             <!-- Fecha y Ciudad -->

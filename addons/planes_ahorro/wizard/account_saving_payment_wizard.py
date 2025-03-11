@@ -11,6 +11,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         return self._context.get("active_ids") and self._context.get("active_ids")[0] or False
 
     saving_id  =fields.Many2one("account.saving","Plan de Ahorro",default=_get_default_saving_id)
+    company_id=fields.Many2one(related='saving_id.company_id',store=False,readonly=True)
     saving_line_ids = fields.Many2many(
         'account.saving.lines',
         string='Lineas de Ahorro',
@@ -33,6 +34,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         required=True,
     )
     enable_residual=fields.Boolean("Habilitar Saldo",default=False)
+    ref=fields.Char("Memo",required=True)
 
     @api.onchange('payment_journal_id')
     @api.depends('payment_journal_id')
@@ -127,13 +129,19 @@ class AccountSavingPaymentWizard(models.TransientModel):
             'currency_id': self.currency_id.id,
             'partner_type': 'customer',  # Cambiar según necesidad
             'partner_id': self.saving_id.partner_id.id,  # Podrías vincular a un partner
-            'ref': 'PAGO DE PLAN DE AHORRO %s' % (self.saving_id.id,),
+            'ref': self.ref,
         }
         payment = self.env['account.payment'].create(payment_vals)
         for line in payment.line_ids.filtered(lambda l: l.account_id == payment.partner_id.property_account_receivable_id):
             line.account_id = self.saving_id.property_account_receivable_id  # Usa la cuenta configurada en el cliente
 
         payment.action_post()
+        payment.message_post(
+            body='PAGO DE PLAN DE AHORRO %s' % (self.saving_id.id,),
+            subject="Nota Automática",
+            message_type="notification",
+            subtype_xmlid="mail.mt_note"
+        )
         lines=[]
         for brw_line in self.payment_ids:
             lines.append((0,0,{

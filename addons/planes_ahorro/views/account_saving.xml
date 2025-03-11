@@ -104,6 +104,12 @@
                        groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                       />
 
+               <button name="action_invoice"
+                      string="Facturar" icon="fa-money"
+                      type="object"
+groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+attrs="{'invisible':[('state','not in',('open',))]}"
+                      />
 
               <button name="action_draft"
                       string="Reversar" icon="fa-rotate-left"
@@ -119,6 +125,11 @@
                       groups="planes_ahorro.grp_administrador"
                       />
 
+                <button name="action_print_saving_state"
+                        type="object"
+icon="fa-print" help="Imprimir Estado de Cuenta"
+                        attrs="{'invisible':[('state','in',('cancel'))]}"
+                        string="Imprimir"/>
 
              <field name="state" widget="statusbar"/>
           </header>

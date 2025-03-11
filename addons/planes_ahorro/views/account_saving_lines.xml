@@ -42,7 +42,7 @@
 <separator/>
                 <!-- Filtros por Factura -->
                 <filter name="con_factura" string="Con Factura" domain="['|',('migrated_has_invoices','=',True),('invoice_id', '!=', False)]"/>
-                <filter name="sin_factura" string="Sin Factura" domain="[('invoice_id', '=', False)]"/>
+                <filter name="sin_factura" string="Sin Factura" domain="[('invoice_id', '=', False),('migrated_has_invoices', '=', False)]"/>
 <separator/>
 
 
@@ -105,12 +105,11 @@
                                        decoration-success="estado_pago=='pagado'"
 widget="badge"
                                 />
-                            <button name="action_invoice"
+                            <button  name="%(action_account_saving_line_wizard)d" type="action"
                       help="Facturar" icon="fa-money"
-                      type="object" invisible="context.get('hide_invoice',False)"
+                     invisible="context.get('hide_invoice',False)"
 groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                                    confirm="La facturacion se ejecutara de forma automatica.¿Estas seguro de ejecutar esta accion?"
-                      attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
                       />
 
 
@@ -119,7 +118,7 @@ groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
                         <field name="migrated_has_invoices" optional="hide" />
  <field name="enabled_for_invoice"   optional="hide" />
 
-
+<field name="last_payment_date" optional="hide" />
                                <field name="invoice_id" optional="hide"/>
                     <field name="plan_ahorro_move_id" optional="hide" />
                                             <field name="parent_saving_state" invisible="1"/>
@@ -179,7 +178,7 @@ widget="badge"
                                     <field name="migrated_payment_amount" optional="hide" sum="total"/>
                         <field name="migrated_has_invoices" optional="hide" />
  <field name="enabled_for_invoice"   optional="hide" />
-
+<field name="last_payment_date" optional="hide" />
 
                                <field name="invoice_id" optional="hide"/>
                                             <field name="parent_saving_state" invisible="1"/>
@@ -240,7 +239,7 @@ widget="badge"
                                     <field name="migrated_payment_amount" optional="hide" sum="total"/>
                         <field name="migrated_has_invoices" optional="hide" />
  <field name="enabled_for_invoice"   optional="hide" />
-
+<field name="last_payment_date" optional="hide" />
 
                                <field name="invoice_id" optional="hide"/>
             <field name="plan_ahorro_move_id" optional="hide"/>
@@ -272,6 +271,7 @@ widget="badge"
                                         <field name="partner_id" invisible="context.get('hide_saving',True)" />
 <field name="sequence" readonly="1"/>
                                 <field name="enabled_for_invoice" invisible="1" />
+                                <field name="last_payment_date" optional="hide" />
                                 <field name="parent_saving_state" invisible="1"/>
                  <field name="currency_id" invisible="1"/>
                             <field name="number"  readonly="1"/>
@@ -346,7 +346,7 @@ widget="badge"
       <field name="type">ir.actions.act_window</field>
       <field name="res_model">account.saving.lines</field>
       <field name="view_mode">tree,form</field>
-      <field name="context">{'search_default_estado_pago_pendiente':1,'search_default_sin_factura':1,'create':True,'delete':True,'edit':True,'hide_saving':False}</field>
+      <field name="context">{'search_default_estado_pago_pendiente':1,'search_default_sin_factura':1,'create':True,'delete':True,'edit':True,'hide_saving':False,'hide_invoice':False}</field>
       <field name="domain">[('saving_id.state','in',('open','close'))]</field>
       <field name="help" type="html">
         <p class="oe_view_nocontent_create">

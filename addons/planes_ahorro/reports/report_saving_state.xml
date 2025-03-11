@@ -8,49 +8,58 @@
                     <br />
                     <div class="row" name="fist_line">
                         <div t-if="docs.partner_id.vat" class="col-3" name="div_vat">
-                            <strong>Identificacion:</strong>
+                            <strong>identificación:</strong>
                             <div t-esc="docs.sudo().partner_id.vat" />
                         </div>
                         <div class="col-6" name="partner_header">
-                            <strong>Partner:</strong>
+                            <strong>Socio:</strong>
                             <div t-field="docs.partner_id"
                                 t-options="{'widget': 'contact', 'fields': ['name'], 'no_marker': True}" />
                         </div>
                     </div>
                     <div class="row" name="second_line">
                         <div class="col-3" name="div_plan_code">
-                            <strong>Plan Code:</strong>
-                            <p t-field="docs.analytic_account_id.name" />
+                            <strong>Código del plan:</strong>
+                          <p t-field="docs.name"
+
+                            />
                         </div>
                         <div class="col-3" name="div_saving_type">
-                            <strong>Saving Type:</strong>
-                            <p t-field="docs.saving_type" />
+                            <strong>Tipo de ahorro:</strong>
+
+                            <p t-if="docs.saving_type == 'normal'">Normal</p>
+<p t-else="ballon">Balón</p>
                         </div>
                         <div class="col-3" name="div_amount">
-                            <strong>Plan Amount:</strong>
+                            <strong>Importe del Plan:</strong>
                             <p t-field="docs.saving_amount"
                                 t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
                         </div>
                         <div class="col-3" name="div_currency">
-                            <strong>Currency:</strong>
+                            <strong>Moneda:</strong>
                             <p t-field="docs.currency_id.name" />
                         </div>
                     </div>
                     <div class="row" name="third_line">
                         <div class="col-3" name="div_start_date">
-                            <strong>Start Date:</strong>
+                            <strong>Fecha de inicio:</strong>
                             <p t-field="docs.start_date" />
                         </div>
                         <div class="col-3" name="div_end_date">
-                            <strong>End Date:</strong>
+                            <strong>Fecha de Vencimiento:</strong>
                             <p t-field="docs.end_date" />
                         </div>
                         <div class="col-3" name="div_state">
-                            <strong>State:</strong>
-                            <p t-field="docs.state" />
+                            <strong>Estado:</strong>
+                            <p t-field="docs.state_plan_description" />
                         </div>
+                        <div class="col-3" name="div_state">
+                            <strong>Inscripción:</strong>
+                            <p t-field="docs.serv_inscription_amount" />
+                        </div>
+
                     </div>
-                    <h5 class="mt0 text-center">SAVING PLAN LINES</h5>
+                    <h5 class="mt0 text-center">LÍNEAS DEL PLAN DE AHORRO</h5>
                     <div class="row" style="margin-left:10px; margin-right:10px;"
                         name="saving_line_ids">
                         <t t-set="payment_amount" t-value="0" />
@@ -66,36 +75,36 @@
                                         </th>
                                         <th name="th_date"
                                             style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
-                                            <strong>End Date</strong>
+                                            <strong>Fecha Vencimiento</strong>
                                         </th>
                                         <th name="th_payment_date"
                                             style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
-                                            <strong>Payment Date</strong>
+                                            <strong>Fecha Pago</strong>
                                         </th>
                                         <th name="th_amount"
                                             style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
-                                            <strong>Amount</strong>
+                                            <strong>Importe</strong>
                                         </th>
                                         <th name="th_payment_amount"
                                             style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
-                                            <strong>Payment Amount</strong>
+                                            <strong>Valor Pagado</strong>
                                         </th>
                                         <th name="th_pending_amount"
                                             style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
-                                            <strong>Pending Amount</strong>
+                                            <strong>Pendiente</strong>
                                         </th>
                                         <th name="th_payment_state"
                                             style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
-                                            <strong>Payment State</strong>
+                                            <strong>Estado</strong>
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="docs.line_ids.sorted(key=lambda l: l.sequence)"
+                                    <t t-foreach="docs.quota_ids.sorted(key=lambda l: l.number)"
                                         t-as="ml">
                                         <tr>
                                             <td name="line_document">
-                                                <span t-field="ml.sequence" />
+                                                <span t-field="ml.number" />
                                             </td>
                                             <td name="line_date">
                                                 <t t-if="ml.date">
@@ -103,9 +112,8 @@
                                                 </t>
                                             </td>
                                             <td name="line_payment_date">
-                                                <t t-if="ml.payment_line_ids">
-                                                    <span
-                                                        t-field="ml.payment_line_ids.sorted(key=lambda l: l.payment_id.date, reverse=True)[0].payment_id.date" />
+                                                  <t t-if="ml.last_payment_date">
+                                                    <span t-field="ml.last_payment_date" />
                                                 </t>
                                             </td>
                                             <td name="line_original">

@@ -10,7 +10,8 @@ class AccountMove(models.Model):
     parcial = fields.Boolean(string="Factura Parcial")
     datos_pagos_json = fields.Text(string="Pagos Json")
     total_antes = fields.Float(string='Importe total sistema antiguo')
-
+    total_pagado = fields.Boolean(string="Pagada")
+    
 
     def agregar_pagos(self):
         for record in self:

@@ -13,8 +13,9 @@
 
                 </group>
                 <newline/>
-                <field name="saving_line_ids" readonly="1" force_save="1"
+                <field name="saving_line_ids" readonly="context.get('lock',True)" force_save="1"
                        context="{'hide_invoice':True}"
+                       domain="[('id','in',context.get('active_ids',[-1,-1]))]"
                     />
                 <footer>
                     <button name="action_invoice" icon="fa-money" string="Facturar" type="object" class="btn-primary"/>

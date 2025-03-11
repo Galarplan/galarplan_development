@@ -7,10 +7,10 @@ from odoo.exceptions import ValidationError
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    saving_line_id=fields.Many2one("account.saving.lines","Origen de Plan de Ahorro",required=False)
-    saving_id = fields.Many2one("account.saving", "Plan de Ahorro", required=False)
-    plan_ahorro_move_id = fields.Many2one("account.move", string="# Asiento Plan de Ahorro")
-    plan_ahorro_move_line_ids = fields.One2many(related="plan_ahorro_move_id.line_ids", string="Lineas de # Asiento Plan de Ahorro",store=False,readonly=True)
+    saving_line_id=fields.Many2one("account.saving.lines","Origen de Plan de Ahorro",required=False,copy=False)
+    saving_id = fields.Many2one("account.saving", "Plan de Ahorro", required=False,copy=False)
+    plan_ahorro_move_id = fields.Many2one("account.move", string="# Asiento Plan de Ahorro",copy=False)
+    plan_ahorro_move_line_ids = fields.One2many(related="plan_ahorro_move_id.line_ids", string="Lineas de # Asiento Plan de Ahorro",store=False,readonly=True,copy=False)
 
     def button_draft(self):
         for move in self:
@@ -22,6 +22,8 @@ class AccountMove(models.Model):
         for move in self:
             if move.plan_ahorro_move_id:
                 super(AccountMove, move.plan_ahorro_move_id).action_post()
+            if move.move_type=='out_refund' and move.reversed_entry_id and move.saving_line_id:
+                move.saving_line_id.invoice_id=False
         return super(AccountMove,self).action_post()
 
     def button_cancel(self):
@@ -51,3 +53,21 @@ class AccountMove(models.Model):
 
         return super(AccountMove, self).create(vals)
 
+    def _l10n_ec_get_payment_data(self):
+        """ Get payment data for the XML.  """
+        payment_data = []
+        pay_term_line_ids = self.line_ids.filtered(
+            lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable') and not line.for_planes
+        )
+        for line in pay_term_line_ids:
+            payment_vals = {
+                'payment_code': self.l10n_ec_sri_payment_id.code,
+                'payment_total': abs(line.balance),
+            }
+            if self.invoice_payment_term_id and line.date_maturity and  not line.for_planes:
+                payment_vals.update({
+                    'payment_term': max(((line.date_maturity - self.invoice_date).days), 0),
+                    'time_unit': "dias",
+                })
+            payment_data.append(payment_vals)
+        return payment_data

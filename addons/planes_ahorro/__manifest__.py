@@ -32,6 +32,10 @@
         'data/ir_sequence.xml',
         'data/ir_cron.xml',
         'data/ir_config_parameter.xml',
+
+        'reports/report_saving_state.xml',
+        'reports/reports_menu.xml',
+
         "wizard/account_saving_payment_wizard.xml",
         'wizard/account_saving_wizard.xml',
         'wizard/account_saving_line_wizard.xml',

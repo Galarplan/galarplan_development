@@ -7,11 +7,11 @@
       <field name="model">account.saving.plan</field>
       <field name="arch" type="xml">
         <tree>
+          <field name="company_id"/>
           <field name="name"/>
           <field name="saving_type"/>
           <field name="periods"/>
           <field name="saving_amount"/>
-          <field name="company_id"/>
           <field name="currency_id"/>
            <field name="state"/>
             <field name="old_id" />
@@ -66,7 +66,9 @@
                 <group col="2">
                   <field name="company_id" options="{'no_create':True,'no_edit':True,'no_open':True,}" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
                   <field name="currency_id" readonly="1" options="{'no_create':True,'no_edit':True,'no_open':True,}" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
-                  <field name="journal_id" options="{'no_create':True,'no_edit':True,'no_open':True,}" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
+                  <field name="journal_id"
+                         domain="[('company_id','=',company_id)]"
+                         options="{'no_create':True,'no_edit':True,'no_open':True,}" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
                   <field name="document_type_id" options="{'no_create':True,'no_edit':True,'no_open':True,}" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
                   <field name="rate_inscription" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
                    <field name="rate_expense" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>

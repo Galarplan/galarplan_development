@@ -65,6 +65,34 @@ class AccountSavingLines(models.Model):
 
     old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 
+    last_payment_date = fields.Date(string="Última Fecha de Pago", compute="_compute_last_payment_date", store=True)
+
+    @api.depends('saving_id')
+    def _compute_last_payment_date(self):
+        if not self:
+            return
+
+        self.env.cr.execute("""
+                SELECT aslp.saving_line_id, MAX(COALESCE(am.date, asp.payment_date)) AS date
+                FROM account_saving_line_payment aslp
+                LEFT JOIN account_payment ap ON ap.id = aslp.payment_id  
+                LEFT JOIN account_move am ON am.payment_id = ap.id AND am.state = 'posted'
+                LEFT JOIN account_saving_payment asp ON asp.id = aslp.old_payment_id  
+                    AND asp.payment_state = 'posted'
+                WHERE aslp.saving_id IN %s
+                    AND (
+                        aslp.old_payment_id IS NOT NULL 
+                        OR 
+                        aslp.payment_id IS NOT NULL
+                    )
+                GROUP BY aslp.saving_line_id
+            """, (tuple(self.mapped('saving_id.id')),))
+
+        results = dict(self.env.cr.fetchall())  # Convierte resultados en un diccionario
+
+        for record in self:
+            record.last_payment_date = results.get(record.id, False)
+
     @api.depends('date')
     def _compute_days_difference(self):
         """Calcula la diferencia en días entre date_filtered y date"""
@@ -212,9 +240,7 @@ class AccountSavingLines(models.Model):
                                             (0, 0, {"campo": "Descripcion",
                                                     "descripcion": "Factura de gastos administrativos"}),
                                             (0, 0, {"campo": "Valor del Ahorro",
-                                                    "descripcion": str(brw_each.principal_amount)}),
-                                            (0, 0, {"campo": "Valor Mensual Pagado",
-                                                    "descripcion": str(brw_each.saving_amount)})
+                                                    "descripcion": str(brw_each.principal_amount)})
                                             ]
                     else:
                         detail_info_ids += [(0, 0, {"campo": "Descripcion",
@@ -299,33 +325,42 @@ class AccountSavingLines(models.Model):
                             raise ValidationError(_("Debes definir una cuenta por cobrar al cliente para el ahorro  en %s") % (
                                     brw_each.saving_id.name,))
                         ahorro_account_id = brw_each.saving_id.saving_plan_id.ahorro_account_id
-                        lines_ids=[(5,),
-                                   (0, 0, {
-                                        "name": "AHORRO PROGRAMADO",
-                                        "credit":brw_each.principal_amount,
-                                       "partner_id": brw_each.saving_id.partner_id.id,
-                                        "account_id":ahorro_account_id and ahorro_account_id.id or False}),
-                                    (0, 0, {
-                                             "name": "CUENTA POR COBRAR AHORRO PROGRAMADO",
-                                             "debit": brw_each.principal_amount,
-                                            "partner_id": brw_each.saving_id.partner_id.id,
-                                             "account_id":brw_each.saving_id.property_account_receivable_id.id
-                                         }) ]
-                        ahorro_vals = {
-                            "line_ids":lines_ids,
-                            "partner_id": brw_each.saving_id.partner_id.id,
-                            "move_type": "entry",
-                            "date": brw_each.date,
-                            "journal_id": brw_each.saving_id.company_id.ahorro_journal_id.id,
-                            "company_id": brw_each.saving_id.company_id.id,
-                            "currency_id": brw_each.saving_id.company_id.currency_id.id,
-                            "saving_line_id": brw_each.id,
-                            'saving_id': brw_each.saving_id.id,
-                            "state": "draft",
-                        }
-                        brw_move_doc = OBJ_MOVE.create(ahorro_vals)
-                        vals["plan_ahorro_move_id"]=brw_move_doc.id
-                        brw_each.write({"plan_ahorro_move_id": brw_move_doc.id})
+
+                        invoice_line_ids+= [#(5,),
+                                     (0, 0, {
+                                        'display_type':'planes',
+                                         "for_planes":True,
+                                         "name": "AHORRO PROGRAMADO",
+                                         "credit": brw_each.principal_amount,
+                                         "date_maturity":local_date,
+                                         "date": local_date,
+                                         "partner_id": brw_each.saving_id.partner_id.id,
+                                         "account_id": ahorro_account_id and ahorro_account_id.id or False}),
+                                     (0, 0, {
+                                         'display_type': 'planes',
+                                         "for_planes": True,
+                                         "name": "CUENTA POR COBRAR AHORRO PROGRAMADO",
+                                         "debit": brw_each.principal_amount,
+                                         "date_maturity": local_date,
+                                         "date": local_date,
+                                         "partner_id": brw_each.saving_id.partner_id.id,
+                                         "account_id": brw_each.saving_id.property_account_receivable_id.id
+                                     })]
+                        # ahorro_vals = {
+                        #     "line_ids":lines_ids,
+                        #     "partner_id": brw_each.saving_id.partner_id.id,
+                        #     "move_type": "entry",
+                        #     "date": brw_each.date,
+                        #     "journal_id": brw_each.saving_id.company_id.ahorro_journal_id.id,
+                        #     "company_id": brw_each.saving_id.company_id.id,
+                        #     "currency_id": brw_each.saving_id.company_id.currency_id.id,
+                        #     "saving_line_id": brw_each.id,
+                        #     'saving_id': brw_each.saving_id.id,
+                        #     "state": "draft",
+                        # }
+                        # brw_move_doc = OBJ_MOVE.create(ahorro_vals)
+                        # vals["plan_ahorro_move_id"]=brw_move_doc.id
+                        # brw_each.write({"plan_ahorro_move_id": brw_move_doc.id})
                     ####
                     sequence += 1
                     vals["invoice_line_ids"] = invoice_line_ids

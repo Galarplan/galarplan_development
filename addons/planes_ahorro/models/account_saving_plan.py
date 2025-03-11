@@ -13,6 +13,11 @@ class AccountSavingPlan(models.Model):
         srch=self.env["account.journal"].sudo().search([('type','=','sale')])
         return srch and srch[0].id or False
 
+    @api.model
+    def _get_default_document_type_id(self):
+        srch = self.env["l10n_latam.document.type"].sudo().search([('code', '=', '01')])
+        return srch and srch[0].id or False
+
     saving_type = fields.Selection([
         ('normal', 'normal'),
         ('ballon', 'Balón'),
@@ -38,7 +43,7 @@ class AccountSavingPlan(models.Model):
         ('cancel', 'Cancelado'),
     ], string='Estado', default='draft')
 
-    document_type_id = fields.Many2one('l10n_latam.document.type', string='Tipo de Documento')
+    document_type_id = fields.Many2one('l10n_latam.document.type', string='Tipo de Documento',default=_get_default_document_type_id)
 
     fixed_amount = fields.Monetary(string='Cantidad Fija')
     quota_amount = fields.Monetary(string='Importe de la cuota')
@@ -113,11 +118,11 @@ class AccountSavingPlan(models.Model):
             brw_each.write({"state":"cancel"})
         return True
 
-        def unlink(self):
-            for brw_each in self:
-                if brw_each.state!='draft':
-                    raise ValidationError(_("No puedes eliminar un documento que no este en estado preliminar"))
-            return super(AccountSavingPlan,self).unlink()
+    def unlink(self):
+        for brw_each in self:
+            if brw_each.state!='draft':
+                raise ValidationError(_("No puedes eliminar un documento que no este en estado preliminar"))
+        return super(AccountSavingPlan,self).unlink()
 
 
 

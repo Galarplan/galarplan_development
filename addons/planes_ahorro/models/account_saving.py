@@ -101,6 +101,17 @@ class AccountSaving(models.Model):
         help="Cuenta contable seleccionada según el tipo de venta del cliente.",
     )
 
+    state_plan_description = fields.Char(
+        string="Descripción del Estado",
+        compute="_compute_state_plan_description",
+        store=True
+    )
+
+    @api.depends('state_plan')
+    def _compute_state_plan_description(self):
+        for record in self:
+            record.state_plan_description = dict(self._fields['state_plan'].selection).get(record.state_plan, '')
+
     @api.depends('is_credit_sale', 'is_credit_bank', 'is_direct', 'is_galarplan', 'partner_id')
     def _compute_receivable_account(self):
         """ Asigna automáticamente la cuenta contable según la opción seleccionada en el cliente (partner_id) """
@@ -458,5 +469,18 @@ class AccountSaving(models.Model):
             'domain': [('id', 'in', self.payment_move_ids.ids)],
         }
 
+    def action_invoice(self):
+        self.ensure_one()
+        record = self
+        if record.state != 'open':  # Si no está confirmado, no cumple
+            raise ValidationError("Solo puedes facturar una cuota en estado abierto.Revisa %s" % (record.name,))
+        lines=record.line_ids.filtered(lambda line: not line.invoice_id and not line.migrated_has_invoices)
+        if not lines:
+            raise ValidationError("Solo puedes facturar una cuota sin facturar .Revisa %s" % (record.name,))
 
-    
+        action = self.env.ref('planes_ahorro.action_account_saving_line_wizard').read()[0]
+        action['context'] = {'active_ids': lines.ids,'lock':False}
+        return action
+
+    def action_print_saving_state(self):
+        return self.env.ref('planes_ahorro.action_report_state_saving').report_action(self)

@@ -12,8 +12,10 @@ class AccountSavingLineWizard(models.TransientModel):
 
     @api.model
     def _get_default_saving_line_ids(self):
-        return [(6,0,self._context.get("active_ids",[]))]
-
+        active_ids=self._context.get("active_ids",[])
+        if not self._context.get('lock',True):
+            active_ids= [(6,0,[])]
+        return active_ids
 
     date = fields.Date(string='Fecha', required=True,default=_get_default_date)
     saving_line_ids=fields.Many2many("account.saving.lines","wizard_account_saving_line_rel","wizard_id","saving_line_id","Linea de Ahorro",default=_get_default_saving_line_ids)

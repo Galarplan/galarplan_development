@@ -334,6 +334,7 @@ class HrContract(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        print('=======================================',vals_list)
         res = super().create(vals_list)
         self._recompute_calendar_changed(res.mapped('employee_id'))
         return res

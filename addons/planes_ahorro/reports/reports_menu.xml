@@ -11,4 +11,12 @@
         <field name="binding_type">report</field>
     </record>
 
+    <record id="action_report_state_saving_xlsx" model="ir.actions.report">
+        <field name="name">Estado de Cuenta (Excel)</field>
+        <field name="model">account.saving</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">planes_ahorro.report_saving_state_xlsx</field>
+        <field name="print_report_name">'Estado de cuenta - %s.xlsx' % (object.name)</field>
+    </record>
+
 </odoo>

@@ -111,6 +111,12 @@ groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
 attrs="{'invisible':[('state','not in',('open',))]}"
                       />
 
+               <button name="%(action_report_state_saving_xlsx)d"
+                        type="action"
+                        icon="fa-file-excel-o" help="Generar Estado de Cuenta en Excel"
+                        attrs="{'invisible':[('state','in',('cancel'))]}"
+                        string="Excel"/>
+
               <button name="action_draft"
                       string="Reversar" icon="fa-rotate-left"
                       type="object"

@@ -332,6 +332,8 @@
                                 <span class="mx-2" t-field="line.product_id.number_of_axles" />
                                 <strong>Año del Modelo:</strong>
                                 <span class="mx-2" t-field="line.product_id.model_year" />
+                                <strong>Pais de origen:</strong>
+                                <span class="mx-2" t-field="line.product_id.origin_vehicle.name" />
                                 <strong>Transmisión:</strong>
                                 <span class="mx-2" t-field="line.product_id.transmission" />
                                 <strong>Combustible:</strong>

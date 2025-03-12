@@ -15,6 +15,7 @@
                         <field name="vehicle_model_id" string="Modelo" domain="[('brand_id', '=', vehicle_brand_id)]" />
                         <field name="modelo_homologado_ant" />
                         <field name="modelo_SRI" />
+                        <field name='origin_vehicle'/>
                         <field name="vehicle_type" string="Tipo de Vehiculo" />
                         <field name="vehicle_class" string="Clase del Vehiculo" />
                         <field name="chassis_number" string="Número de Chasis" />

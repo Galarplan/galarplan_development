@@ -11,14 +11,16 @@ class DailyCollectionWizard(models.TransientModel):
         'wizard_id', 
         string='Líneas de Recaudación'
     )
+    company_id = fields.Many2One('res.company',default=lambda self : self.env.company.id)
 
-    @api.onchange('date', 'journal_ids')
+    @api.onchange('date', 'journal_ids','company_id')
     def _onchange_date_journals(self):
         """Traer los registros asociados a los diarios y la fecha."""
         if self.date and self.journal_ids:
             payments = self.env['account.payment'].search([
                 ('date', '=', self.date),
                 ('journal_id', 'in', self.journal_ids.ids),
+                ('company_id','=',self.company_id.id)
                 ('state', '=', 'posted') , # Solo los pagos validados
                 ('payment_type','=','inbound')#entrantes
             ])

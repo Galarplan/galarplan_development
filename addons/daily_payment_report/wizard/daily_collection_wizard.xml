@@ -9,6 +9,7 @@
                         <group colspan="4">
                             <field colspan="2" name="date" string="Fecha"/>
                             <field colspan="2" name="journal_ids" widget="many2many_tags" string="Diarios"/>
+                            <field colspan="2" name="date" string="Compañia"/>
                         </group>
 
 

@@ -11,7 +11,7 @@ class DailyCollectionWizard(models.TransientModel):
         'wizard_id', 
         string='Líneas de Recaudación'
     )
-    company_id = fields.Many2One('res.company',default=lambda self : self.env.company.id)
+    company_id = fields.Many2one('res.company',default=lambda self : self.env.company.id)
 
     @api.onchange('date', 'journal_ids','company_id')
     def _onchange_date_journals(self):

@@ -644,14 +644,14 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
                     "company_id": brw_each.company_id.id,
                     "state": "draft",
                     "template_id": self.env.ref('payroll_ec.email_template_hr_payslip').id,
-                    "report_name_ref": "payroll.action_report_payslip"
+                    "report_name_ref": "payroll_ec.action_report_payslip"
                 })
                 if internal_type == "process":
                     brw_mail.send_mail()
         return True
 
     def action_print_payslip(self):
-        action = self.env.ref('hr_payroll.action_report_payslip')
+        action = self.env.ref('payroll_ec.action_report_payslip')
         if not action:
             raise ValidationError("No se pudo encontrar el reporte.")
         # Retornamos la acción para imprimir el reporte
@@ -659,30 +659,32 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
 
     def _get_print_lines(self):
         self.ensure_one()
-            # Filtramos las líneas de ingresos y egresos
-        lines_out = self.line_ids.filtered(lambda x: x.category_id.code == 'OUT')
-        lines_in = self.line_ids.filtered(lambda x: x.category_id.code == 'IN')
+        # Filtramos las líneas de ingresos y egresos
+        lines_out_ids = self.line_ids.filtered(lambda x: x.category_id.code == 'OUT').ids
+        lines_in_ids = self.line_ids.filtered(lambda x: x.category_id.code == 'IN').ids
 
-            # Obtener la longitud máxima de las dos listas
+        lines_out = self.env["hr.payslip.line"].search([('id', 'in', lines_out_ids)], order="salary_rule_id asc")
+        lines_in = self.env["hr.payslip.line"].search([('id', 'in', lines_in_ids)], order="salary_rule_id asc")
+
+        # Obtener la longitud máxima de las dos listas
         max_len = max(len(lines_out), len(lines_in))
-        max_top=25
+        max_top = 0
         lines = []
         for each_index in range(max_len):
             # Usamos el índice directamente para acceder a cada línea, sin necesidad de inicializar en None
             income_dscr, income_value = (
-            lines_in[each_index].salary_rule_id.name, lines_in[each_index].abs_total) if each_index < len(
-                    lines_in) else (None, None)
+                lines_in[each_index].salary_rule_id.name, lines_in[each_index].abs_total) if each_index < len(
+                lines_in) else (None, None)
             expense_dscr, expense_value = (
-            lines_out[each_index].salary_rule_id.name, lines_out[each_index].abs_total) if each_index < len(
-                    lines_out) else (None, None)
+                lines_out[each_index].salary_rule_id.name, lines_out[each_index].abs_total) if each_index < len(
+                lines_out) else (None, None)
 
-                # Agregamos los valores a la lista
-            lines.append((0,income_dscr, income_value, expense_dscr, expense_value))
-        lines.append((0,None, None, None, None))
-        lines.append((1,"TOTAL INGRESOS", self.total_in, "TOTAL EGRESOS", self.total_out))
-        lines.append((1,None, None, "TOTAL A RECIBIR", self.total_payslip))
-        LINES_LEN= len(lines)
-        if LINES_LEN< max_top:
-            for each_index in range(max_top-LINES_LEN):
-                lines.append((0, None, None, None, None))
+            # Agregamos los valores a la lista
+            lines.append((0, income_dscr, income_value, expense_dscr, expense_value))
+        lines.append((1, "TOTAL INGRESOS", self.total_in, "TOTAL EGRESOS", abs(self.total_out)))
+        lines.append((1, None, None, "TOTAL A RECIBIR", self.total_payslip))
+        LINES_LEN = len(lines)
+        if LINES_LEN < max_top:
+            for each_index in range(max_top - LINES_LEN):
+                lines.append((2, None, None, None, None))
         return lines

@@ -89,12 +89,10 @@ class report_payslip_runs_xlsx(models.AbstractModel):
                 ORDER BY X.SEQUENCE ASC,X.RULE_ORDER ASC """ % (COLUMN_BASE_QUERY,)
             self._cr.execute(COLUMN_QUERY)
             result_columns = self._cr.fetchall()
-            print('============================',result_columns)
             if result_columns:
                 COLUMN_DATA_TYPE = ""
                 for rule_code, in result_columns:
                     COLUMN_DATA_TYPE += "," + rule_code + " float"
-            print('===================',COLUMN_DATA_TYPE)
             ####################################
 
             PAYSLIP_RUN_REPORT_QUERY = """
@@ -169,8 +167,9 @@ class report_payslip_runs_xlsx(models.AbstractModel):
                 ) 
             )
 
-            SELECT 1 SEQUENCE_FORMAT,RC.NAME AS COMPANY_NAME,HE.IDENTIFICATION_ID,
-            HE.NAME, hd.name AS DEPARTAMENTO,(Hj.NAME::JSON->'es_EC')::varchar AS CARGO,HC.DATE_START AS FECHA_CONTRATO,hct.name AS TIPO_CONTRATO,
+          SELECT 1 SEQUENCE_FORMAT,RC.NAME AS COMPANY_NAME,HE.IDENTIFICATION_ID,
+            HE.NAME, hd.name AS DEPARTAMENTO,COALESCE((Hj.NAME::JSON->>'es_EC')::varchar, '') AS CARGO,
+			HC.DATE_START AS FECHA_CONTRATO,COALESCE(( hct.name::JSON->>'es_EC')::varchar, '') AS TIPO_CONTRATO,
             HP.WAGE AS WAGE,
             HP.total_worked_days AS WORKED_DAYS,
             T.* 
@@ -185,7 +184,7 @@ class report_payslip_runs_xlsx(models.AbstractModel):
             inner join hr_contract_type hct on hct.id=hc.type_id
             UNION
             SELECT 2 SEQUENCE_FORMAT,'' as COMPANY_NAME,'' AS IDENTIFICATION_ID, 
-            '' AS NAME,'' AS DEPARTAMENTO,'' AS CARGO,NULL AS FECHA_CONTRATO,NULL AS TIPO_CONTRATO,
+            '' AS NAME,'' AS DEPARTAMENTO,'' AS CARGO,NULL AS FECHA_CONTRATO, NULL AS TIPO_CONTRATO,
             COALESCE((SELECT SUM(HP.WAGE) FROM TOTAL_PAYSLIP X 
             INNER JOIN HR_PAYSLIP HP ON HP.ID=X.PAYSLIP_ID
             WHERE X.PAYSLIP_ID!=0),0) AS WAGE,

@@ -135,8 +135,15 @@
 <xpath expr="//button[@name='compute_sheet']" position="replace">
                     <button string="Calcular Hoja" icon="fa-cogs" name="compute_sheet" type="object"
                             attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('credit_note', '=', True)]}"
-                            class="oe_highlight"
+
                             help="Recompute the payslip lines only, not the worked days / input lines"/>
+
+      <button string="Imprimir" icon="fa-print" name="action_print_payslip" type="object"
+                            attrs="{'invisible': [ ('state', '=', 'cancel')]}"
+                              />
+
+
+
                 </xpath>
 
 
@@ -287,6 +294,12 @@
                 <field name="state" position="after">
                     <field name="bank_account_id" invisible="1"
                            options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+
+                    <button help="Imprimir" icon="fa-print" name="action_print_payslip" type="object"
+                            attrs="{'invisible': [ ('state', '=', 'cancel')]}"
+
+                    />
+
                 </field>
 
                 <xpath expr="//tree" position="attributes">

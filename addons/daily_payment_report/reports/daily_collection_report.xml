@@ -1,0 +1,92 @@
+<odoo>
+  <template id="report_daily_collection">
+    <t t-call="web.basic_layout">
+      <t t-if="docs">
+        <!-- Iterar sobre `docs` si se permite múltiples documentos -->
+
+        <t t-foreach="docs" t-as="doc">
+
+          <t t-if="doc.id">
+            <div class="page"
+              style="font-size:18px; font-family: 'Noto Mono', 'Lucida Console', Courier, monospace;">
+              <h3>COOP DE TRANSPORTE CRISTAL CENTRO</h3>
+              <h4>RECAUDACIÓN DIARIA</h4>
+              <p>Emitido el <t t-esc="doc.date" /></p>
+              <table
+                style="width: 100%; border: 1px solid black;border-collapse: collapse; border: 1px solid black;">
+
+                <tr style="border: 1px solid black;">
+                  <th style="width: 15%;">Diario</th>
+                  <th style="width: 15%;">Emisión</th>
+                  <th style="width: 10%;">Fecha</th>
+                  <th style="width: 10%;">Recibo</th>
+                  <th style="width: 35%;">Socio</th>
+                  <th style="width: 15%;">Abono</th>
+                </tr>
+                <t t-foreach="doc.collection_lines" t-as="line">
+                  <tr
+                    style="font-size:15px; font-family: 'Noto Mono', 'Lucida Console', Courier, monospace;">
+
+                    <td style="width: 15%;text-align:left">
+                      <t t-esc="line.journal_id.name" />
+                    </td>
+                    <td style="width: 15%;text-align:center">Transferencia</td>
+                    <td style="width: 10%;text-align:center">
+                      <t t-esc="doc.date" />
+                    </td>
+                    <td style="width: 10%;text-align:center">
+                      <t t-esc="line.payment_name" />
+                    </td>
+                    <td style="width: 35%;text-align:center">
+                      <t t-esc="line.partner_id.name" />
+                    </td>
+                    <td style="width: 15%;" align="right">$<t t-esc="'{:.2f}'.format(line.amount)" /></td>
+                  </tr>
+                </t>
+                <tr>
+                  <td colspan="5" align="right">
+                    <b>Total Recaudado:</b>
+                  </td>
+                  <td align="right">$<t
+                      t-esc="'{:.2f}'.format(sum(line.amount for line in doc.collection_lines))" /></td>
+                </tr>
+              </table>
+              <br/>
+              <br/>
+              <br/>
+              <table
+                style="font-size:15px;width:100%; text-align: center;border: none;border-style : hidden;outline:none;">
+                <tr style="border: none;border-style : hidden;outline:none;">
+                  <td>______________________</td>
+                  <td>______________________</td>
+                  <td>______________________</td>
+                </tr>
+                <tr style="border: none;border-style : hidden;outline:none;">
+                  <td>
+                    <b>Elaborado Por: <br /><t t-esc="doc.create_uid.name" /></b>
+                  </td>
+                  <td>
+                    <b>Gerente<br />Magalí Rendom</b>
+                  </td>
+                  <td>
+                    <b>Pdte. Consejo Vigilancia<br />Alexander Muñoz</b>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+          </t>
+        </t>
+      </t>
+    </t>
+  </template>
+
+  <report
+    id="report_collection"
+    model="daily.collection.wizard"
+    string="Recaudación Diaria"
+    report_type="qweb-pdf"
+    name="daily_payment_report.report_daily_collection"
+    file="daily_payment_report.report_daily_collection"
+  />
+</odoo>

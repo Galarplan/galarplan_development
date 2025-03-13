@@ -1,0 +1,46 @@
+<odoo>
+    <record id="view_daily_collection_wizard" model="ir.ui.view">
+        <field name="name">daily.collection.wizard.form</field>
+        <field name="model">daily.collection.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Recaudación Diaria">
+                <sheet>
+
+                        <group colspan="4">
+                            <field colspan="2" name="date" string="Fecha"/>
+                            <field colspan="2" name="journal_ids" widget="many2many_tags" string="Diarios"/>
+                        </group>
+
+
+                        <field colspan="4" name="collection_lines" nolabel="1">
+                            <tree string="Líneas de Recaudación">
+                                <field name="journal_id" string="Diario"/>
+                                <field name="partner_id" string="Socio"/>
+                                <field name="payment_name" string="Recibo"/>
+                                <field name="amount" string="Monto" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </tree>
+                        </field>
+
+                    <footer>
+                        <button string="Imprimir" type="object" name="action_print_report" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_daily_collection_wizard" model="ir.actions.act_window">
+        <field name="name">Recaudación Diaria</field>
+        <field name="res_model">daily.collection.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_daily_collection_report" 
+              name="Reporte de Cobros"
+              parent="account_accountant.menu_accounting"
+              action="action_daily_collection_wizard"
+              sequence="10"
+              groups="account.group_account_user"/>
+</odoo>

@@ -44,6 +44,10 @@
                 <filter name="con_factura" string="Con Factura" domain="['|',('migrated_has_invoices','=',True),('invoice_id', '!=', False)]"/>
                 <filter name="sin_factura" string="Sin Factura" domain="[('invoice_id', '=', False),('migrated_has_invoices', '=', False)]"/>
 <separator/>
+  <filter name="enabled_for_invoice_yes" string="Habilitado Facturar" domain="[('enabled_for_invoice','=',True)]"/>
+     <filter name="enabled_for_invoice_no" string="Deshabilitado Factura" domain="[('enabled_for_invoice','!=',True)]"/>
+       <separator/>
+
 
 
                 <filter name="filter_today" string="Hoy" domain="[('days_difference', '=', 0)]"/>
@@ -109,14 +113,14 @@ widget="badge"
                       help="Facturar" icon="fa-money"
                      invisible="context.get('hide_invoice',False)"
 groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                       attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
                       />
 
 
                        <field name="migrated" optional="hide" />
                                     <field name="migrated_payment_amount" optional="hide" sum="total"/>
                         <field name="migrated_has_invoices" optional="hide" />
- <field name="enabled_for_invoice"   optional="hide" />
+ <field name="enabled_for_invoice"   optional="hide" widget="boolean_toggle" />
 
 <field name="last_payment_date" optional="hide" />
                                <field name="invoice_id" optional="hide"/>
@@ -137,7 +141,7 @@ groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
               limit="80"
         >
 
-<field name="saving_id" invisible="context.get('hide_saving',True)" />
+    <field name="saving_id" invisible="context.get('hide_saving',True)" />
             <field name="company_id" invisible="context.get('hide_saving',True)" />
         <field name="partner_id" invisible="context.get('hide_saving',True)" />
             <field name="sequence"  optional="hide"  invisible="1"/>
@@ -170,14 +174,14 @@ widget="badge"
                                 />
                            <button name="%(action_account_saving_line_wizard)d" type="action" invisible="context.get('hide_invoice',False)"
                       help="Facturar" icon="fa-money"  groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                       attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                       attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
                       />
 
 
                        <field name="migrated" optional="hide" />
                                     <field name="migrated_payment_amount" optional="hide" sum="total"/>
                         <field name="migrated_has_invoices" optional="hide" />
- <field name="enabled_for_invoice"   optional="hide" />
+ <field name="enabled_for_invoice" invisible="not context.get('hide_saving',True)"  optional="hide" widget="boolean_toggle"/>
 <field name="last_payment_date" optional="hide" />
 
                                <field name="invoice_id" optional="hide"/>
@@ -231,14 +235,14 @@ widget="badge"
                             <button name="%(action_account_saving_line_wizard)d" type="action"
                       help="Facturar" icon="fa-money" invisible="context.get('hide_invoice',False)"
                      groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                      attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                      attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
                       />
 
 
                        <field name="migrated" optional="hide" />
                                     <field name="migrated_payment_amount" optional="hide" sum="total"/>
                         <field name="migrated_has_invoices" optional="hide" />
- <field name="enabled_for_invoice"   optional="hide" />
+ <field name="enabled_for_invoice"  widget="boolean_toggle" optional="hide" invisible="not context.get('hide_saving',True)" />
 <field name="last_payment_date" optional="hide" />
 
                                <field name="invoice_id" optional="hide"/>
@@ -258,7 +262,7 @@ widget="badge"
                       help="Facturar" icon="fa-money" invisible="context.get('hide_invoice',False)"
                       string="Facturar"
                                     groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-                     attrs="{'invisible':['|','|',('parent_saving_state','in',('draft','cancel')),('invoice_id','!=',False),('enabled_for_invoice','!=',True)]}"
+                     attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
                       />
                             </header>
                         <sheet>
@@ -270,7 +274,7 @@ widget="badge"
                                                                 <field name="saving_id" invisible="context.get('hide_saving',True)" />
                                         <field name="partner_id" invisible="context.get('hide_saving',True)" />
 <field name="sequence" readonly="1"/>
-                                <field name="enabled_for_invoice" invisible="1" />
+                                <field name="enabled_for_invoice" invisible="not context.get('hide_saving',True)" widget="boolean_toggle" optional="hide" />
                                 <field name="last_payment_date" optional="hide" />
                                 <field name="parent_saving_state" invisible="1"/>
                  <field name="currency_id" invisible="1"/>
@@ -346,7 +350,7 @@ widget="badge"
       <field name="type">ir.actions.act_window</field>
       <field name="res_model">account.saving.lines</field>
       <field name="view_mode">tree,form</field>
-      <field name="context">{'search_default_estado_pago_pendiente':1,'search_default_sin_factura':1,'create':True,'delete':True,'edit':True,'hide_saving':False,'hide_invoice':False}</field>
+      <field name="context">{'search_default_estado_pago_pendiente':1,'search_default_enabled_for_invoice_yes':1,'create':True,'delete':True,'edit':True,'hide_saving':False,'hide_invoice':False}</field>
       <field name="domain">[('saving_id.state','in',('open','close'))]</field>
       <field name="help" type="html">
         <p class="oe_view_nocontent_create">

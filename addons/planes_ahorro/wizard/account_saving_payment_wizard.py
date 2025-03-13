@@ -153,7 +153,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
                 "payment_id":payment.id,
                 "reconciled":False
             }))
-            if brw_line.saving_line_id.invoice_id:
+            if brw_line.saving_line_id.invoice_id and payment:
                 self.env["account.saving.line.payment"].reconcile_invoice_with_payment(brw_line.saving_line_id.invoice_id.id,
                                                                                        payment.id)
                 if brw_line.saving_line_id.plan_ahorro_move_id:

@@ -22,7 +22,7 @@
 
                 </group>
                 <field name="saving_line_ids"
-                       context="{'hide_invoice':True}"
+                       context="{'hide_invoice':True,'tree_view_ref':'planes_ahorro.account_saving_lines_main_tree_view'}"
                        domain="[('saving_id','=',saving_id),('estado_pago','=','pendiente'),('pendiente','&gt;',0.00)]"/>
                 <newline/>
                 <field name="payment_ids">

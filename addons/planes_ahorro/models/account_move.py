@@ -43,13 +43,13 @@ class AccountMove(models.Model):
 
     @api.model
     def create(self, vals):
-        if 'saving_line_id' in vals and vals['saving_line_id']:
-            existing_move = self.env['account.move'].search([
-                ('saving_line_id', '=', vals['saving_line_id']),
-                ('move_type', '=', vals['move_type']),
-            ], limit=1)
-            if existing_move:
-                raise ValidationError("Ya existe un asiento contable con este valor de 'saving_line_id'.")
+        # if 'saving_line_id' in vals and vals['saving_line_id']:
+        #     existing_move = self.env['account.move'].search([
+        #         ('saving_line_id', '=', vals['saving_line_id']),
+        #         ('move_type', '=', vals['move_type']),
+        #     ], limit=1)
+        #     if existing_move:
+        #         raise ValidationError("Ya existe un asiento contable con este valor de 'saving_line_id'.")
 
         return super(AccountMove, self).create(vals)
 

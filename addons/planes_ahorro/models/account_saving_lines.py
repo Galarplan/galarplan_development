@@ -54,7 +54,7 @@ class AccountSavingLines(models.Model):
     migrated=fields.Boolean("Migrado",default=False,tracking=True)
     migrated_has_invoices=fields.Boolean("# Factura",default=False,tracking=True)
     migrated_payment_amount=fields.Float("Monto Pagado Migrado",default=0.00,tracking=True)
-    enabled_for_invoice=fields.Boolean(string='Habilitado para Facturar',compute="_compute_facturable",store=False,readonly=False,default=False)
+    enabled_for_invoice=fields.Boolean(string='Habilitado para Facturar',readonly=False,default=False)
 
     days_difference = fields.Integer(
         string="Diferencia en días",
@@ -65,9 +65,10 @@ class AccountSavingLines(models.Model):
 
     old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 
-    last_payment_date = fields.Date(string="Última Fecha de Pago", compute="_compute_last_payment_date", store=True)
+    last_payment_date = fields.Date(string="Última Fecha de Pago", compute="_compute_last_payment_date", store=False,readonly=True)
 
-    @api.depends('saving_id')
+    @api.depends('saving_id','payment_ids','payment_ids.state',
+                 'payment_ids.amount_residual')
     def _compute_last_payment_date(self):
         if not self:
             return
@@ -86,12 +87,13 @@ class AccountSavingLines(models.Model):
                         aslp.payment_id IS NOT NULL
                     )
                 GROUP BY aslp.saving_line_id
-            """, (tuple(self.mapped('saving_id.id')),))
+            """, (tuple(self._origin.mapped('saving_id.id')),))
 
         results = dict(self.env.cr.fetchall())  # Convierte resultados en un diccionario
-
+        #print(results)
         for record in self:
-            record.last_payment_date = results.get(record.id, False)
+            #print(record)
+            record.last_payment_date = results.get(record.id, None)
 
     @api.depends('date')
     def _compute_days_difference(self):
@@ -123,7 +125,7 @@ class AccountSavingLines(models.Model):
         for brw_each in self:
             brw_each.name="Plan %s ,cuota %s" % (brw_each.saving_id.id,brw_each.number)
 
-    @api.depends('saving_id.state', 'invoice_id' )
+    #@api.depends('saving_id.state', 'invoice_id' )
     def _compute_facturable(self):
         invoice_days_enable=int(self.env["ir.config_parameter"].get_param('days.invoice.enable', '120'))
         for brw_each in self:
@@ -152,9 +154,12 @@ class AccountSavingLines(models.Model):
                 por_pagar=total
                 if not brw_each.invoice_id or brw_each.invoice_id.state!='posted':
                     for brw_line_payment in brw_each.payment_line_ids:
-                        if brw_line_payment.type!='historic':
+                        #if brw_line_payment.type!='historic':
+                        if brw_line_payment.payment_id:
                             if brw_line_payment.payment_id.state=='posted':
                                 pagos+=brw_line_payment.aplicado
+                        else:
+                            pagos+=brw_line_payment.aplicado
                 else:##si estado es facturado
                     partner_account= brw_each.saving_id.property_account_receivable_id or brw_each.invoice_id.partner_id.property_account_receivable_id
                     total_invoices,total_payment=0.00,0.00
@@ -228,11 +233,12 @@ class AccountSavingLines(models.Model):
                 brw_each.saving_id._compute_receivable_account()
             if not brw_each.saving_id.property_account_receivable_id:
                 raise ValidationError(_("Debes definir la cuenta contable correspondiente para facturar en %s") % (brw_each.saving_id.name,) )
-            if not brw_each.invoice_id:
-                srch_invoice=self.env["account.move"].sudo().search([('saving_line_id','=',brw_each.id),
-                                                                     ('state','!=','cancel')
-                                                                     ])
-                if not srch_invoice:
+            if brw_each.enabled_for_invoice:
+                # srch_invoice=self.env["account.move"].sudo().search([('saving_line_id','=',brw_each.id),
+                #                                                      ('state','!=','cancel')
+                #                                                      ])
+                # if not srch_invoice:
+                if True:
                     detail_info_ids = [(5,)]
                     if not (brw_each.serv_inscription_amount > 0):
                         detail_info_ids += [(0, 0, {"campo": "Pago",
@@ -369,25 +375,33 @@ class AccountSavingLines(models.Model):
                         brw_process_doc.action_post()
                     if post:
                         for brw_payment in brw_each.payment_line_ids:
-                            self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
-                                    brw_process_doc.id, brw_payment.payment_id.id)
-                            if brw_process_doc.plan_ahorro_move_id:
-                                #####
+                            if brw_payment.type!='historic':
                                 self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
-                                    brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
-                    brw_each.write({"invoice_id": brw_process_doc.id,
-                                    "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False})
-                else:
-                    if len(srch_invoice)==1:
-                        if srch_invoice.state=='draft':
-                            srch_invoice.action_post()
-                            brw_each.write({"invoice_id": srch_invoice.id,"plan_ahorro_move_id": srch_invoice.plan_ahorro_move_id and srch_invoice.plan_ahorro_move_id.id or False})
-                        else:#posted
-                            brw_each.write({"invoice_id": srch_invoice.id,"plan_ahorro_move_id": srch_invoice.plan_ahorro_move_id and srch_invoice.plan_ahorro_move_id.id or False})
+                                        brw_process_doc.id, brw_payment.payment_id.id)
+                                if brw_process_doc.plan_ahorro_move_id:
+                                    #####
+                                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
+                                        brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
+                        brw_each.write({"invoice_id": brw_process_doc.id,
+                                        "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False,
+                                        'enabled_for_invoice': False
+                                        })
+                # else:
+                #     if len(srch_invoice)==1:
+                #         if srch_invoice.state=='draft':
+                #             srch_invoice.action_post()
+                #             brw_each.write({"invoice_id": srch_invoice.id,
+                #                             "plan_ahorro_move_id": srch_invoice.plan_ahorro_move_id and srch_invoice.plan_ahorro_move_id.id or False,
+                #                             'enabled_for_invoice':False
+                #                             })
+                #         else:#posted
+                #             brw_each.write({"invoice_id": srch_invoice.id,
+                #                             "plan_ahorro_move_id": srch_invoice.plan_ahorro_move_id and srch_invoice.plan_ahorro_move_id.id or False,
+                #                             'enabled_for_invoice':False})
             else:
                 if self._context.get("raise_error",False):
-                    raise ValidationError(_("La cuota %s ya esta facturada del plan de ahorro %s") % (brw_each.sequence,brw_each.saving_id.name))
-        return True
+                    raise ValidationError(_("La cuota %s no esta habilitada para facturar del plan de ahorro %s") % (brw_each.sequence,brw_each.saving_id.name))
+            return True
 
     def action_do_invoices(self):
         if not self:

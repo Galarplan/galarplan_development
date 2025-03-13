@@ -264,18 +264,21 @@ class AccountSaving(models.Model):
                 brw_each.compute_lines()
             brw_each.validate()
             brw_each.write({"state":"open"})
+            brw_each.line_ids.write({"enabled_for_invoice":True})
         return True
 
     def action_close(self):
         for brw_each in self:
             brw_each.validate()
             brw_each.write({"state":"close"})
+            brw_each.line_ids.write({"enabled_for_invoice": False})
         return True
 
     def action_cancel(self):
         for brw_each in self:
             brw_each.validate_reverse()
             brw_each.write({"state":"cancel"})
+            brw_each.line_ids.write({"enabled_for_invoice": False})
         return True
 
     _check_company_auto = True
@@ -474,7 +477,7 @@ class AccountSaving(models.Model):
         record = self
         if record.state != 'open':  # Si no está confirmado, no cumple
             raise ValidationError("Solo puedes facturar una cuota en estado abierto.Revisa %s" % (record.name,))
-        lines=record.line_ids.filtered(lambda line: not line.invoice_id and not line.migrated_has_invoices)
+        lines=record.line_ids.filtered(lambda line: line.enabled_for_invoice)
         if not lines:
             raise ValidationError("Solo puedes facturar una cuota sin facturar .Revisa %s" % (record.name,))
 

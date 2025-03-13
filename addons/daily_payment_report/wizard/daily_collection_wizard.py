@@ -20,7 +20,7 @@ class DailyCollectionWizard(models.TransientModel):
             payments = self.env['account.payment'].search([
                 ('date', '=', self.date),
                 ('journal_id', 'in', self.journal_ids.ids),
-                ('company_id','=',self.company_id.id)
+                ('company_id','=',self.company_id.id),
                 ('state', '=', 'posted') , # Solo los pagos validados
                 ('payment_type','=','inbound')#entrantes
             ])

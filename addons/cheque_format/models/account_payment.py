@@ -8,6 +8,8 @@ class AccountPayment(models.Model):
 
     beneficiario_id = fields.Many2one('res.partner',string='Beneficiario')
 
+    nombre_cheque = fields.Char(string="Nombre Corto")
+
     def convertir_monto_a_palabras(self, monto):
         # Ensure monto is a string
         monto_str = str(monto)

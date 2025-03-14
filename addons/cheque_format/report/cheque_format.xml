@@ -11,11 +11,14 @@
                             <!-- Beneficiario -->
                             <div class="row"
                                 t-att-style="'font-family:' + str(cheque_format.type_letter) + ';font-weight: bold;'+ 'position:absolute; float:'+ str(cheque_format.bf_float) + ';font-size:' + str(cheque_format.bf_font_size) + 'px;'+'margin-top:' + str(cheque_format.bf_top_margin) + 'px;'+'margin-left:' + str(cheque_format.bf_left_margin) + 'px;'+'width:' + str(cheque_format.bf_width) + 'px;'">
-                                <t t-if="not payment.beneficiario_id">
+                                <t t-if="not payment.beneficiario_id and not payment.nombre_cheque ">
                                     <span t-raw="payment.partner_id.display_name" />
                                 </t>
                                 <t t-if="payment.beneficiario_id">
                                     <span t-raw="payment.beneficiario_id.display_name" />
+                                </t>
+                                <t t-if="payment.nombre_cheque">
+                                    <span t-raw="payment.nombre_cheque" />
                                 </t>
                             </div>
 

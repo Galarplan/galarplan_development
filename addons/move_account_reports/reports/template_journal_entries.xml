@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_journal_entries_pdf">
+        <t t-call="web.external_layout">
+            <main>
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="data" t-value="doc.get_journal_entries_data()" />
+                    <t t-set="currency" t-value="doc.company_id.currency_id" />
+
+                    <div class="page">
+                        <p style="font-weight: bold; text-align: center;font-size:32px;">
+                            <t t-esc="docs.journal_id.name" />
+                        </p>
+                        <h2 style="font-weight: bold; text-align: center;">Reporte de Asientos
+                            Contables </h2>
+                        <h3>Asiento: <t t-esc="data.get('move_name', 'Sin Nombre')" /></h3>
+                        <!-- <t t-if="data.get('withold_name','')!=''">
+                            <h3>Retención: <t t-esc="data.get('withold_name','')" /></h3>
+                        </t> -->
+                        <!-- <t t-if="docs.compromiso">
+                            <h3>Compromiso: <t t-esc="docs.compromiso.sequence_comp" /> <t
+                                    t-esc="docs.compromiso.partner_id.name" /></h3>
+
+                        </t> -->
+
+                        <!-- <t t-if="docs.devengado">
+                            <h3>Devengado: <t t-esc="docs.devengado.sequence_comp" /> <t
+                                    t-esc="docs.devengado.partner_id.name" /></h3>
+                        </t> -->
+
+                        <p>Detalle del comprobante: <t t-esc="docs.payment_reference" />
+                        </p>
+
+                        <h4>Fecha: <t t-esc="data.get('move_date', '')" /></h4>
+
+                        <!-- Tabla de Apuntes Contables -->
+                        <h3 style="font-weight: bold; text-align: center;">Aplicación Contables</h3>
+                        <table class="table table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>Cuenta</th>
+                                    <th>Nombre Cuenta</th>
+                                    <th>Débito</th>
+                                    <th>Crédito</th>
+                                    <th>Balance</th>
+                                    <th>Diario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="data.get('lines')">
+                                    <t t-set="total_debit" t-value="0.0" />
+                                    <t t-set="total_credit" t-value="0.0" />
+                                    <t t-set="total_balance" t-value="0.0" />
+                                    <t t-foreach="data['lines']" t-as="line">
+                                        <t t-set="total_debit"
+                                            t-value="total_debit + line.get('debit', 0)" />
+                                        <t t-set="total_credit"
+                                            t-value="total_credit + line.get('credit', 0)" />
+                                        <t t-set="total_balance"
+                                            t-value="total_balance + line.get('balance', 0)" />
+                                        <tr>
+                                            <td>
+                                                <t t-esc="line.get('account_code', '')" />
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.get('account_name', '')" />
+                                            </td>
+                                            <td>
+                                                <span t-esc="line.get('debit', 0)"
+                                                    t-options="{'widget': 'monetary', 'display_currency': currency}" />
+                                            </td>
+                                            <td>
+                                                <span t-esc="line.get('credit', 0)"
+                                                    t-options="{'widget': 'monetary', 'display_currency': currency}" />
+                                            </td>
+                                            <td>
+                                                <span t-esc="line.get('balance', 0)"
+                                                    t-options="{'widget': 'monetary', 'display_currency': currency}" />
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.get('journal_name', '')" />
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Fila de totales -->
+                                    <tr style="font-weight: bold;">
+                                        <td colspan="2" style="text-align: right;">Totales:</td>
+                                        <td>
+                                            <span t-esc="total_debit"
+                                                t-options="{'widget': 'monetary', 'display_currency': currency}" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="total_credit"
+                                                t-options="{'widget': 'monetary', 'display_currency': currency}" />
+                                        </td>
+                                        <td>
+                                            <span t-esc="total_balance"
+                                                t-options="{'widget': 'monetary', 'display_currency': currency}" />
+                                        </td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </t>
+                                <t t-else="">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center;">No hay apuntes
+                                            contables disponibles</td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <!-- Tabla de Ítems Presupuestarios -->
+                        <!-- <table
+                            style="font-size:12px; width:100%; text-align: center; border: none !important; position: relative; bottom: -100px;border-style : hidden !important;outline:none !important;border-collapse: collapse">
+                            <tr style="border:none !important">
+                                <td style="border:none !important">____________________________</td>
+                                <td style="border:none !important">____________________________</td>
+                            </tr>
+                            <tr style="border:none !important">
+                                <td style="border:none !important">
+                                    <b>CONTADOR</b>
+                                </td>
+                                <td style="border:none !important">
+                                    <b>JEFATURA FINANCIERA</b>
+                                </td>
+                            </tr>
+                        </table> -->
+                    </div>
+                </t>
+            </main>
+        </t>
+    </template>
+</odoo>

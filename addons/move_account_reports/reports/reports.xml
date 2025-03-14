@@ -1,0 +1,11 @@
+<odoo>
+    <record id="action_journal_entries_pdf" model="ir.actions.report">
+        <field name="name">Reporte de Apuntes Contables</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">move_account_reports.report_journal_entries_pdf</field>
+        <field name="print_report_name">'Apuntes Contables - ' + object.name</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

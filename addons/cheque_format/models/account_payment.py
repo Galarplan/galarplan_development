@@ -12,10 +12,11 @@ class AccountPayment(models.Model):
 
     def convertir_monto_a_palabras(self, monto):
         # Ensure monto is a string
-        monto_str = str(monto)
+        monto_str = "{:.2f}".format(monto)
         
         # Replace a period (.) with a comma (,) if present
         monto_str = monto_str.replace('.', ',')
+        print('=======================',monto_str)
         
         # Split the monto into integer and decimal parts
         if ',' in monto_str:
@@ -24,6 +25,8 @@ class AccountPayment(models.Model):
             parte_entera = monto_str
             parte_decimal = '00'  # Default to '00' if no decimal part exists
         
+        print('====================',parte_entera,parte_decimal)
+
         # Convert the integer part to words
         palabras_enteras = num2words(int(parte_entera), lang='es')
         

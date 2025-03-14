@@ -160,6 +160,7 @@ class AccountSavingLines(models.Model):
                                 pagos+=brw_line_payment.aplicado
                         else:
                             pagos+=brw_line_payment.aplicado
+                    pagos += brw_each.migrated_payment_amount
                 else:##si estado es facturado
                     partner_account= brw_each.saving_id.property_account_receivable_id or brw_each.invoice_id.partner_id.property_account_receivable_id
                     total_invoices,total_payment=0.00,0.00
@@ -173,7 +174,6 @@ class AccountSavingLines(models.Model):
                                 total_invoices += line.debit
                                 total_payment += line.amount_residual
                     pagos=round(total_invoices-total_payment,DEC)
-                pagos+=brw_each.migrated_payment_amount
                 pendiente=round(por_pagar-pagos,DEC)
             if brw_each.saving_id.state in ('close',):
                 estado_pago = "pagado"

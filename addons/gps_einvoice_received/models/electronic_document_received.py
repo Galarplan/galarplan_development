@@ -1161,7 +1161,7 @@ group by partner_group_id
                     taxes_id=[(6,0,[])]
                     if codigoPorcentaje:
                         if not dct_taxes.get(codigoPorcentaje,False):
-                            srch=self.env["account.tax"].sudo().search([('type_tax_use','=','purchase'),('l10n_ec_code_ats','=',codigoPorcentaje)])
+                            srch=self.env["account.tax"].sudo().search([('type_tax_use','=','purchase'),('l10n_ec_code_ats','=',codigoPorcentaje),('company_id','=',self.env.company.id)])
                             if srch:
                                 dct_taxes[codigoPorcentaje]=srch[0].id
                         taxes_id=[(6,0,dct_taxes.get(codigoPorcentaje,False) and [dct_taxes.get(codigoPorcentaje,False)] or [])] 

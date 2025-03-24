@@ -21,6 +21,7 @@ class HrContract(models.Model):
     pay_thirteenth_salary = fields.Boolean('Pay Thirteenth Salary', default=True,tracking=True)
     pay_fourteenth_salary = fields.Boolean('Pay Fourteenth Salary', default=True,tracking=True)
     add_iees = fields.Boolean('Add IESS', default=True,tracking=True)
+    add_partial = fields.Boolean('Seguro Parcial',default=False,tracking=True)
     add_judicial_reten = fields.Boolean('Add Judicial Retention', default=True)
     aditional_hold = fields.Boolean('Retencion', help="activa esta casilla si el empleado tiene retenciones")
     number_of_payments = fields.Integer('Number of Payments', default=12)

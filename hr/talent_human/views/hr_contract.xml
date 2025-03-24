@@ -36,6 +36,7 @@
 						<field name="pay_thirteenth_salary" string="Pagar Décimo Tercer sueldo?" />
 						<field name="pay_fourteenth_salary" string="Pagar Décimo Cuarto sueldo?" />
 						<field name="add_iees" string="Extender IESS esposa/o?" />
+						<field name="add_partial" string="Seguro Parcial"/>
 					</group>
 
 					<group name="lugar_inicio_contrato" string="Lugar Inicio Contrato">

@@ -10,6 +10,29 @@ class AccountPayment(models.Model):
 
     nombre_cheque = fields.Char(string="Nombre Corto")
 
+    def normalize_text(self, text):
+        """
+        Reemplaza caracteres especiales en el texto.
+        """
+        if not text:
+            return text
+        
+        # Diccionario de reemplazos
+        replacements = {
+            'Ã‘': 'Ñ',  # Corrige el encoding incorrecto
+            'Ã±': 'ñ',  # Corrige el encoding incorrecto
+            'Ã': 'Á',   # Corrige el encoding incorrecto
+            'Ã©': 'é',  # Corrige el encoding incorrecto
+            'Ã³': 'ó',  # Corrige el encoding incorrecto
+            # Agrega más reemplazos si es necesario
+        }
+        
+        # Aplicar reemplazos
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        
+        return text
+
     def convertir_monto_a_palabras(self, monto):
         # Ensure monto is a string
         monto_str = "{:.2f}".format(monto)

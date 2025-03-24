@@ -301,6 +301,7 @@ GROUP BY L.COMPANY_ID,AC.ACCOUNT_TYPE,AC.ACCOUNT_ID,
                             'account_id': account_debits["account_id"],
                             'partner_id': brw_line.employee_id.partner_id.id,
                             'date': brw_line.date_process,
+                            'date_maturity': brw_line.date_process,
                             "movement_line_id": brw_line.id,
                             "rule_id":brw_line.rule_id.id
                         })]

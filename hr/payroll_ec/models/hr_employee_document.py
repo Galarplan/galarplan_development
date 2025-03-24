@@ -83,7 +83,7 @@ class HrEmployeeDocument(models.AbstractModel):
                                ('manual', 'Ingreso Manual')], string="Origen", default="manual")
 
 
-    move_id=fields.Many2one("account.move",string="# Asiento")
+    move_id=fields.Many2one("account.move",string="# Asiento",copy=False)
 
     _rec_name = "name"
     _order = "id desc"

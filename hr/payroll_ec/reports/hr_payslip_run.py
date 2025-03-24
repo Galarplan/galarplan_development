@@ -184,7 +184,7 @@ class report_payslip_runs_xlsx(models.AbstractModel):
             inner join hr_contract_type hct on hct.id=hc.type_id
             UNION
             SELECT 2 SEQUENCE_FORMAT,'' as COMPANY_NAME,'' AS IDENTIFICATION_ID, 
-            '' AS NAME,'' AS DEPARTAMENTO,'' AS CARGO,NULL AS FECHA_CONTRATO, NULL AS TIPO_CONTRATO,
+            '' AS NAME,'' AS DEPARTAMENTO,'' AS CARGO,NULL AS FECHA_CONTRATO,NULL AS TIPO_CONTRATO,
             COALESCE((SELECT SUM(HP.WAGE) FROM TOTAL_PAYSLIP X 
             INNER JOIN HR_PAYSLIP HP ON HP.ID=X.PAYSLIP_ID
             WHERE X.PAYSLIP_ID!=0),0) AS WAGE,

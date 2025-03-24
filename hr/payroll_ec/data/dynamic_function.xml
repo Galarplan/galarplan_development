@@ -59,7 +59,7 @@ result={"total":total}</field>
 			<field name='arguments'>brw_payslip</field>
 			<field name='active' eval="True" />
 			<field name='programming_code'>DEC = 2
-total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids if line.is_worked_days )
+total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids)# if line.is_worked_days
 result = round(((brw_payslip.wage / 30.00) * total_days), DEC)</field>
 		</record>
 

@@ -202,18 +202,18 @@ class HrVacationPeriod(models.Model):
 
     def synchronize_periods(self, contract_id=0):
         # Obteniendo las compañías
-        company_result = self.env.cr.fetchall("""SELECT RC.ID, RC.NAME
+        company_result = self._cr.execute("""SELECT RC.ID, RC.NAME
                                                   FROM RES_COMPANY RC
                                                   ORDER BY RC.ID ASC""")
 
         if company_result:
             for company_id, DB in company_result:
-                nowDate = dtObj.datetime.now()
+                nowDate = dtObj.now()
                 start_year = nowDate.year
                 end_year = nowDate.year + 1
 
                 # Obteniendo empleados para el año correspondiente
-                self.env.cr.execute("""SELECT HE.ID, HE.NAME AS NAME_RELATED 
+                self._cr.execute("""SELECT HE.ID, HE.NAME AS NAME_RELATED 
                                        FROM HR_EMPLOYEE HE
                                        INNER JOIN HR_CONTRACT HC ON HC.EMPLOYEE_ID=HE.ID
                                        LEFT JOIN HR_VACATION_PERIOD VP ON VP.CONTRACT_ID=HC.ID 
@@ -226,12 +226,12 @@ class HrVacationPeriod(models.Model):
                                        AND HC.COMPANY_ID = %s
                                        ORDER BY HE.NAME  ASC""",
                                     (start_year, end_year, start_year, end_year, contract_id, contract_id, company_id))
-                employee_list_ids = self.env.cr.fetchall()
+                employee_list_ids = self._cr.fetchall()
                 employee_list_ids = employee_list_ids and dict(employee_list_ids).keys() or []
                 self.create_periods(company_id, start_year, end_year, employee_list_ids)
 
                 # Actualizar periodos activos anteriores
-                self.env.cr.execute("""SELECT VP.YEAR_START, VP.YEAR_END 
+                self._cr.execute("""SELECT VP.YEAR_START, VP.YEAR_END 
                                        FROM HR_EMPLOYEE HE
                                        INNER JOIN HR_CONTRACT HC ON HC.EMPLOYEE_ID=HE.ID
                                        INNER JOIN HR_VACATION_PERIOD VP ON VP.CONTRACT_ID=HC.ID 
@@ -242,11 +242,11 @@ class HrVacationPeriod(models.Model):
                                        AND HC.COMPANY_ID = %s 
                                        GROUP BY VP.YEAR_START, VP.YEAR_END""",
                                     (start_year, end_year, contract_id, contract_id, company_id))
-                result = self.env.cr.fetchall()
+                result = self._cr.fetchall()
 
                 if result:
                     for old_start_year, old_end_year in result:
-                        self.env.cr.execute("""SELECT VP.EMPLOYEE_ID, VP.EMPLOYEE_ID
+                        self._cr.execute("""SELECT VP.EMPLOYEE_ID, VP.EMPLOYEE_ID
                                                FROM HR_VACATION_PERIOD VP
                                                WHERE VP.YEAR_START = %s AND VP.YEAR_END = %s 
                                                AND COALESCE(VP.LOCKED, FALSE) = FALSE 
@@ -260,7 +260,7 @@ class HrVacationPeriod(models.Model):
                             self.create_periods(company_id, old_start_year, old_end_year, employee_list_ids)
 
                             # Actualizar periodos de empleados inactivos
-                self.env.cr.execute("""SELECT VP.ID, VP.STATE, HC.date_end as SETTLEMENT_DATE 
+                self._cr.execute("""SELECT VP.ID, VP.STATE, HC.date_end as SETTLEMENT_DATE 
                                        FROM HR_VACATION_PERIOD VP 
                                        INNER JOIN HR_CONTRACT HC ON HC.ID=VP.CONTRACT_ID
                                        WHERE COALESCE(VP.LOCKED, FALSE) = FALSE  
@@ -269,7 +269,7 @@ class HrVacationPeriod(models.Model):
                                        AND VP.COMPANY_ID = %s  
                                        ORDER BY VP.EMPLOYEE_ID ASC""",
                                     (contract_id, contract_id, company_id))
-                result = self.env.cr.fetchall()
+                result = self._cr.fetchall()
 
                 if result:
                     for period_id, state, settlement_date in result:
@@ -279,7 +279,7 @@ class HrVacationPeriod(models.Model):
                         if brw_period.state in ("draft",):
                             brw_period.update_workflow(_("FINALIZACION DE CONTRATO"), "confirmed")
 
-                        self.env.cr.execute("""SELECT (P.DATE_END - P.DATE_START) AS PERIOD_DAYS,
+                        self._cr.execute("""SELECT (P.DATE_END - P.DATE_START) AS PERIOD_DAYS,
                                                        (P.DATE_END_CONTRACT - P.DATE_START) AS PASSED_DAYS,
                                                        ((15 + P.ADD_YEAR_DAYS)::FLOAT * 
                                                        (CASE WHEN ((P.DATE_END_CONTRACT - P.DATE_START)::FLOAT) <= 0 
@@ -290,7 +290,7 @@ class HrVacationPeriod(models.Model):
                                                WHERE P.ID = %s AND P.DATE_END_CONTRACT IS NOT NULL 
                                                ORDER BY P.DATE_START ASC""",
                                             (period_id,))
-                        result = self.env.cr.fetchall()
+                        result = self._cr.fetchall()
 
                         if result:
                             for period_days, passed_days, attempt_days in result:

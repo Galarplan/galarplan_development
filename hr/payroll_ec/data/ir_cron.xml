@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding='UTF-8'?>
 <odoo>
- <data noupdate="0">
+ <data noupdate="1">
 
 	<record model="ir.cron" id="send_mails_queue">
         <field name="name">Enviar Notificaciones RRHH</field>

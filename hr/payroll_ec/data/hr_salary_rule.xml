@@ -296,14 +296,14 @@ result=amount>0.00</field>
 			<field name='code'>MATERNIDAD</field>
 			<field name='active' eval="True" />
 		<field name='force_payslip' eval="0" />
-			<field name='category_id' ref='payroll_ec.type_informativo' />
+			<field name='category_id' ref='payroll_ec.type_expense' />
             <field name='sequence'>1</field>
 			<field name='type'>payslip</field>
 			<field name='condition_python'>DEC = 2
 total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids if line.code==brw_rule.code )
-amount = round(((brw_payslip.wage / 30.00) * total_days*0.00), DEC)
-amount_factor=amount
-result=amount>0.00</field>
+amount = round(((brw_payslip.wage / 30.00) * total_days), DEC)
+amount_factor=-amount
+result=amount&gt;0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>
 			<field name="add_iess" eval="True" />
 			<field name="legal_iess" eval="True" />
@@ -314,14 +314,14 @@ result=amount>0.00</field>
 			<field name='code'>PERMISO_IESS</field>
 			<field name='active' eval="True" />
 		<field name='force_payslip' eval="0" />
-			<field name='category_id' ref='payroll_ec.type_informativo' />
+			<field name='category_id' ref='payroll_ec.type_expense' />
             <field name='sequence'>1</field>
 			<field name='type'>payslip</field>
 			<field name='condition_python'>DEC = 2
 total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids if line.code==brw_rule.code )
-amount = round(((brw_payslip.wage / 30.00) * total_days*0.00), DEC)
-amount_factor=amount
-result=amount>0.00</field>
+amount = round(((brw_payslip.wage / 30.00) * total_days), DEC)
+amount_factor=-amount
+result=amount&gt;0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>
 			<field name="add_iess" eval="True" />
 			<field name="legal_iess" eval="True" />
@@ -495,6 +495,40 @@ result=amount>0.00</field>
 			<field name="legal_iess" eval="True" />
 		</record>
 
+<!--
+	<record model='hr.salary.rule' id='rule_PROV_IESS_1115'>
+			<field name='name'>PROV. IESS 11.15%</field>
+			<field name='code'>PROV_IESS</field>
+			<field name='active' eval="True" />
+		<field name='force_payslip' eval="0" />
+			<field name='category_id' ref='payroll_ec.type_provision' />
+            <field name='sequence'>1</field>
+			<field name='type'>payslip</field>
+			<field name='condition_python'>amount=compute_iess(brw_payslip,11.15)
+amount_factor=amount
+result=amount>0.00</field>
+			<field name='amount_python_compute'>result=amount_factor</field>
+			<field name="add_iess" eval="False" />
+			<field name="legal_iess" eval="True" />
+		</record>
+
+	<record model='hr.salary.rule' id='rule_SECAP'>
+			<field name='name'>PROV. SECAP - IECE</field>
+			<field name='code'>PROV_SECAP</field>
+			<field name='active' eval="True" />
+		<field name='force_payslip' eval="0" />
+			<field name='category_id' ref='payroll_ec.type_provision' />
+            <field name='sequence'>1</field>
+			<field name='type'>payslip</field>
+			<field name='condition_python'>amount=compute_iess(brw_payslip,1.00)
+amount_factor=amount
+result=amount>0.00</field>
+			<field name='amount_python_compute'>result=amount_factor</field>
+			<field name="add_iess" eval="False" />
+			<field name="legal_iess" eval="True" />
+		</record>
+
+-->
 
 	<record model='hr.salary.rule' id='rule_EXT_CONYUGUE'>
 			<field name='name'>EXTENSION CONYUGUE</field>

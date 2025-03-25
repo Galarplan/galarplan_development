@@ -1,0 +1,62 @@
+<odoo>
+    <data>
+
+        <!-- Vista de Lista (Tree) para ticket.service -->
+        <record id="view_ticket_service_tree" model="ir.ui.view">
+            <field name="name">ticket.service.tree</field>
+            <field name="model">ticket.service</field>
+            <field name="arch" type="xml">
+                <tree string="Servicios">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="type_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista de Búsqueda (Search) para ticket.service -->
+        <record id="view_ticket_service_search" model="ir.ui.view">
+            <field name="name">ticket.service.search</field>
+            <field name="model">ticket.service</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Servicios">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="type_id"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista de Formulario (Form) para ticket.service -->
+        <record id="view_ticket_service_form" model="ir.ui.view">
+            <field name="name">ticket.service.form</field>
+            <field name="model">ticket.service</field>
+            <field name="arch" type="xml">
+                <form string="Servicio">
+                    <sheet>
+                        <group>
+                            <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            </group>
+                            <group>
+                            <field name="type_id" options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Acción para abrir las vistas de Tree y Form -->
+        <record id="action_ticket_service" model="ir.actions.act_window">
+            <field name="name">Servicios</field>
+            <field name="res_model">ticket.service</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_ticket_service_tree"/>
+            <field name="search_view_id" ref="view_ticket_service_search"/>
+        </record>
+
+
+    </data>
+</odoo>

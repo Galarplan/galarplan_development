@@ -1,0 +1,10 @@
+<odoo>
+    <record id="seq_turno" model="ir.sequence">
+        <field name="name">Secuencia de Turnos</field>
+        <field name="code">generador_turnos.turno.sequence</field>
+        <field name="prefix">TURNO-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+</odoo>

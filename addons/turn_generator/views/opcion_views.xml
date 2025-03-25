@@ -1,0 +1,42 @@
+<odoo>
+    <!-- Vista de lista (tree) para Opcion -->
+    <record id="view_opcion_tree" model="ir.ui.view">
+        <field name="name">generador_turnos.opcion.tree</field>
+        <field name="model">generador_turnos.opcion</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="nombre"/>
+                <field name="descripcion"/>
+                <field name="imagen" widget="image"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de formulario (form) para Opcion -->
+    <record id="view_opcion_form" model="ir.ui.view">
+        <field name="name">generador_turnos.opcion.form</field>
+        <field name="model">generador_turnos.opcion</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="nombre"/>
+                        <field name="descripcion"/>
+                        <field name="imagen" widget="image"/>
+                        <field name="slug"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para abrir la vista de Opcion -->
+    <record id="action_opcion" model="ir.actions.act_window">
+        <field name="name">Opciones</field>
+        <field name="res_model">generador_turnos.opcion</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menú para Opcion -->
+    <menuitem id="menu_generador_turnos_opcion" name="Opciones" parent="menu_generador_turnos_root" action="action_opcion"/>
+</odoo>

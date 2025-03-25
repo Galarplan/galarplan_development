@@ -1,0 +1,43 @@
+<odoo>
+    <record id="view_vehiculo_tree" model="ir.ui.view">
+        <field name="name">generador_turnos.vehiculo.tree</field>
+        <field name="model">generador_turnos.vehiculo</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="placa"/>
+                <field name="fecha_creacion"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_vehiculo_form" model="ir.ui.view">
+        <field name="name">generador_turnos.vehiculo.form</field>
+        <field name="model">generador_turnos.vehiculo</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="placa"/>
+                        <field name="nombre"/>
+                        <field name="correo"/>
+                        <field name="identificacion"/>
+                        <field name="modelo"/>
+                        <field name="marca"/>
+                        <field name="anio"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_vehiculo" model="ir.actions.act_window">
+        <field name="name">Vehículos</field>
+        <field name="res_model">generador_turnos.vehiculo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_generador_turnos_root" name="Generador de Turnos"/>
+    <menuitem id="menu_generador_turnos_vehiculo" name="Vehículos" parent="menu_generador_turnos_root" action="action_vehiculo"/>
+
+</odoo>

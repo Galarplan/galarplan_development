@@ -1,0 +1,75 @@
+<odoo>
+    <data>
+
+        <!-- Vista de Lista (Tree) para turn.establishment -->
+        <record id="view_turn_establishment_tree" model="ir.ui.view">
+            <field name="name">turn.establishment.tree</field>
+            <field name="model">turn.establishment</field>
+            <field name="arch" type="xml">
+                <tree string="Establecimientos">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista de búsqueda (Search) para turn.establishment -->
+        <record id="view_turn_establishment_search" model="ir.ui.view">
+            <field name="name">turn.establishment.search</field>
+            <field name="model">turn.establishment</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Establecimientos">
+                      <filter string="Activos" name="filter_active" domain="[('active','=',True)]"/>
+                    <separator/>
+                    <filter string="Inactivos" name="filter_inactive" domain="[('active','=',False)]"/>
+                    <group>
+                        <filter string="Compañia" name="grp_company" context="{'group_by':'company_id'}"/>
+                    </group>
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista de formulario (Form) para turn.establishment -->
+        <record id="view_turn_establishment_form" model="ir.ui.view">
+            <field name="name">turn.establishment.form</field>
+            <field name="model">turn.establishment</field>
+            <field name="arch" type="xml">
+                <form string="Establecimiento">
+                    <sheet>
+                        <group>
+                            <group>
+                                 <field name="name" colspan="2"/>
+                            <field name="active" colspan="2"/>
+                            </group>
+                            <group>
+                                <field name="company_id" colspan="2" options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                            </group>
+
+                        </group>
+                        <newline/>
+                        <field name="module_ids">
+                            <tree string="Modulos" editable="bottom">
+                                <field name="name" />
+                                <field name="location" widget="radio"/>
+                            </tree>
+                        </field>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Acción que abre las vistas de Tree y Form -->
+        <record id="action_turn_establishment" model="ir.actions.act_window">
+            <field name="name">Establecimientos</field>
+            <field name="res_model">turn.establishment</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_turn_establishment_tree"/>
+            <field name="search_view_id" ref="view_turn_establishment_search"/>
+        </record>
+
+
+    </data>
+</odoo>

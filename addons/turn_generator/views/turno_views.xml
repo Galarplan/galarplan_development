@@ -1,0 +1,39 @@
+<odoo>
+    <record id="view_turno_tree" model="ir.ui.view">
+        <field name="name">generador_turnos.turno.tree</field>
+        <field name="model">generador_turnos.turno</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="numero_turno"/>
+                <field name="vehiculo_id"/>
+                <field name="fecha_creacion"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_turno_form" model="ir.ui.view">
+        <field name="name">generador_turnos.turno.form</field>
+        <field name="model">generador_turnos.turno</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="numero_turno"/>
+                        <field name="vehiculo_id"/>
+                        <field name="fecha_creacion"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+
+    <record id="action_turno" model="ir.actions.act_window">
+        <field name="name">Turnos</field>
+        <field name="res_model">generador_turnos.turno</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_generador_turnos_turno" name="Turnos" parent="menu_generador_turnos_root" action="action_turno"/>
+</odoo>

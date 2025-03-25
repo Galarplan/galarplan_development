@@ -1,0 +1,31 @@
+<odoo>
+    <data>
+
+        <!-- Menú Raíz -->
+        <menuitem id="menu_root_turn_system" name="Gestión de Turnos" sequence="10" groups="grp_lectura,grp_usuario,grp_administrador"/>
+
+        <!-- Menú Proceso -->
+        <menuitem id="menu_process" name="Proceso" parent="menu_root_turn_system" sequence="20" groups="grp_lectura,grp_usuario,grp_administrador"/>
+
+        <!-- Acciones dentro de Proceso -->
+        <menuitem id="menu_daily_session" sequence="1" name="Sesiones Diarias" parent="menu_process" action="action_daily_session" groups="grp_lectura,grp_administrador"/>
+
+        <menuitem id="menu_daily_session_module" name="Sesiones por Modulo"
+                  parent="menu_process" sequence="2"
+                  action="action_daily_session_module" groups="grp_lectura,grp_administrador"/>
+
+        <menuitem id="menu_turn_ticket" name="Turnos" sequence="3" parent="menu_process" action="action_turn_ticket" groups="grp_lectura,grp_usuario,grp_administrador"/>
+
+        <!-- Menú Configuración -->
+        <menuitem id="menu_config" name="Configuración" parent="menu_root_turn_system" sequence="30" groups="grp_administrador"/>
+
+        <!-- Acciones dentro de Configuración -->
+        <menuitem id="menu_ticket_type_service" sequence="1" name="Tipos de Servicio" parent="menu_config" action="action_ticket_type_service" groups="grp_administrador"/>
+         <menuitem id="menu_ticket_service" sequence="2" name="Servicios" parent="menu_config" action="action_ticket_service" groups="grp_administrador"/>
+       <menuitem id="menu_turn_establishment" sequence="3" name="Establecimientos" parent="menu_config" action="action_turn_establishment" groups="grp_administrador"/>
+        <menuitem id="menu_turn_establishment_module" sequence="4" name="Módulos de Establecimiento" parent="menu_config" action="action_turn_establishment_module" groups="grp_administrador"/>
+
+    </data>
+</odoo>
+
+

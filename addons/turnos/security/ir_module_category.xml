@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+
+
+     <record id="grp_category_turno" model="ir.module.category">
+        <field name="name">Turnos</field>
+    </record>
+
+
+
+
+
+
+
+    </data>
+
+</odoo>

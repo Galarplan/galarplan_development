@@ -1,0 +1,169 @@
+<odoo>
+    <data>
+
+        <!-- Vista de Lista (Tree) para daily.session -->
+        <record id="view_daily_session_tree" model="ir.ui.view">
+            <field name="name">daily.session.tree</field>
+            <field name="model">daily.session</field>
+            <field name="arch" type="xml">
+                <tree string="Sesiones Diarias">
+                    <field name="id" string="# ID" readonly="1"
+                                       attrs="{'invisible':[('id','&lt;=',0)]}"
+                                       />
+                      <field name="company_id" optional="hide"/>
+                    <field name="turn_establishment_id"/>
+                    <field name="date"/>
+                    <field name="date_start"/>
+                    <field name="date_end"/>
+                        <field name="state" widget="badge"
+                        decoration-muted="state=='cancelled'"
+                               decoration-danger="state=='draft'"
+
+                               decoration-warning="state=='started'"
+                               decoration-success="state=='ended'"
+
+                        />
+                 <field name="counter_tickets" sum="total" optional="hide"/>
+                                                    <field name="counter_draft" sum="total" optional="hide" />
+                                <field name="counter_started" sum="total" optional="hide"/>
+                                <field name="counter_ended" sum="total" optional="hide"/>
+                                <field name="counter_cancelled" sum="total" optional="hide"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista de Búsqueda (Search) para daily.session -->
+        <record id="view_daily_session_search" model="ir.ui.view">
+            <field name="name">daily.session.search</field>
+            <field name="model">daily.session</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Sesiones Diarias">
+                    <filter string="Preliminares" name="filter_draft" domain="[('state','=','draft')]"/>
+                    <filter string="Iniciadas" name="filter_started" domain="[('state','=','started')]"/>
+                    <filter string="Finalizadas" name="filter_ended" domain="[('state','=','ended')]"/>
+
+                      <group>
+                        <filter string="Compañia" name="grp_company" context="{'group_by':'company_id'}"/>
+                        <filter string="Establecimiento" name="grp_turn_establishment_id" context="{'group_by':'turn_establishment_id'}"/>
+                         <filter string="Fecha" name="grp_date" context="{'group_by':'date'}"/>
+
+                     </group>
+                    <field name="id" string="# ID"
+                                       />
+                    <field name="company_id"/>
+                    <field name="turn_establishment_id"/>
+                    <field name="date"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista de Formulario (Form) para daily.session -->
+        <record id="view_daily_session_form" model="ir.ui.view">
+            <field name="name">daily.session.form</field>
+            <field name="model">daily.session</field>
+            <field name="arch" type="xml">
+                <form string="Sesión Diaria" >
+                    <header>
+
+                           <button name="action_draft" icon="fa-rotate-left" type="object" string="Reversar"  attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                            <button name="action_started" icon="fa-play" type="object" string="Iniciar"
+                                    attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                            <button name="action_ended" icon="fa-stop" type="object" string="Finalizar"  attrs="{'invisible': [('state', '!=', 'started')]}"/>
+<button string="Ver tickets" name="action_call_ticket"
+        type="object" icon="fa-calendar"
+          attrs="{'invisible': [('state', '=', 'draft')]}"/>
+
+ <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="id" string="# ID" readonly="1"
+                                       attrs="{'invisible':[('id','&lt;=',0)]}"
+                                       />
+                           <field name="company_id" options="{'no_create':True,'no_open':True,'no_edit':True}"
+                           attrs="{'readonly': [('state', '!=', 'draft')]}"
+                           />
+    <field name="turn_establishment_id" options="{'no_create':True,'no_open':True,'no_edit':True}"
+    domain="[('company_id','=',company_id)]" attrs="{'readonly': [('state', '!=', 'draft')]}"
+    />        <field name="date" required="1" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                            </group>
+                            <group>
+                                 <field name="date_start" readonly="1" attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                            <field name="date_end" readonly="1" attrs="{'invisible': [('state', '!=', 'ended')]}"/>
+
+
+                            </group>
+
+
+                        </group>
+                        <newline/>
+                        <field name="module_ids" attrs="{'readonly': [('state', '=', 'ended')]}">
+                            <tree string="Detalle" editable="bottom" >
+                                <field name="sequence" widget="handle" />
+                                 <field name="turn_establishment_module_id"  required="1" options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                                <field name="user_id"  widget="many2one_avatar_user" required="1" options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                                <field name="location" widget="radio" />
+                                <field name="type_service_ids" required="1" widget="many2many_tags" options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                                           <field name="counter_tickets" sum="total" optional="hide"/>
+                                                    <field name="counter_draft" sum="total" optional="hide" />
+                                <field name="counter_started" sum="total" optional="hide"/>
+                                <field name="counter_ended" sum="total" optional="hide"/>
+                                <field name="counter_cancelled" sum="total" optional="hide"/>
+
+                            </tree>
+                        </field>
+                    </sheet>
+                    <!-- Chatter -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" groups="base.group_user"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_daily_session_pivot" model="ir.ui.view">
+    <field name="name">daily.session.pivot</field>
+    <field name="model">daily.session</field>
+    <field name="arch" type="xml">
+        <pivot string="Sesiones Diarias por Módulo">
+           <field name="date" type="row"/>
+            <field name="counter_tickets" type="measure"/>
+        </pivot>
+    </field>
+</record>
+
+    <record id="view_daily_session_graph" model="ir.ui.view">
+    <field name="name">daily.session.graph</field>
+    <field name="model">daily.session</field>
+    <field name="arch" type="xml">
+        <graph string="Sesiones Diarias por Módulo" type="bar">
+            <field name="date" type="row"/>
+            <field name="state" widget="badge"
+                   decoration-muted="state=='cancelled'"
+                   decoration-danger="state=='draft'"
+                   decoration-warning="state=='started'"
+                   decoration-success="state=='ended'"/>
+            <field name="counter_tickets" type="measure"/>
+            <field name="counter_draft" type="measure"/>
+            <field name="counter_started" type="measure"/>
+            <field name="counter_ended" type="measure"/>
+            <field name="counter_cancelled" type="measure"/>
+        </graph>
+    </field>
+</record>
+
+
+        <!-- Acción para abrir las vistas de Tree y Form -->
+        <record id="action_daily_session" model="ir.actions.act_window">
+            <field name="name">Sesiones Diarias</field>
+            <field name="res_model">daily.session</field>
+            <field name="view_mode">tree,form,pivot,graph</field>
+            <field name="view_id" ref="view_daily_session_tree"/>
+            <field name="search_view_id" ref="view_daily_session_search"/>
+        </record>
+
+
+    </data>
+</odoo>

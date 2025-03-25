@@ -1,0 +1,27 @@
+# -*- coding: utf-8 -*-
+{
+    "name": "Gestions de Turnos",
+    "version": "16.0.0.0.1",
+    "category": "Turnos",
+    "license": "AGPL-3",
+    "summary": "Gestion de Turnos",
+    "author": "Lajonner Crespin,David Crespin",
+    "depends": ["base", "mail"],
+    "data": [
+        "security/ir_module_category.xml",
+        "security/res_groups.xml",
+        "security/ir.model.access.csv",
+        "security/ir_rule.xml",
+        "data/ir_sequence.xml",
+        "views/daily_session.xml",
+        "views/daily_session_module.xml",
+        "views/ticket_service.xml",
+        "views/ticket_type_service.xml",
+        "views/turn_establishment.xml",
+        "views/turn_establishment_module.xml",
+        "views/turn_ticket.xml",
+        "views/ir_ui_menu.xml",
+    ],
+    "demo": [],
+    "installable": True,
+}

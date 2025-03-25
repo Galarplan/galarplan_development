@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Vista árbol para tramite.root -->
+    <record id="view_tramite_root_tree" model="ir.ui.view">
+        <field name="name">tramite.root.tree</field>
+        <field name="model">tramite.root</field>
+        <field name="arch" type="xml">
+            <tree string="Trámites">
+                <!-- Campos a mostrar en la vista árbol -->
+                <field name="opcion_id" />
+                <field name="service_name" />
+                <field name="asociated_service"/>
+                <field name="have_services" />
+                <field name="have_requeriments" />
+                <field name="have_payments" />
+            </tree>
+        </field>
+    </record>
+    <!-- Vista formulario para tramite.root -->
+    <record id="view_tramite_root_form" model="ir.ui.view">
+        <field name="name">tramite.root.form</field>
+        <field name="model">tramite.root</field>
+        <field name="arch" type="xml">
+            <form string="Trámite Principal">
+                <sheet>
+                    <group>
+                        <field name="opcion_id" widget="many2one" options="{'no_create': True}" />
+                        <field name="service_name" />
+                        <field name="asociated_service"/>
+                        <field name="have_services" />
+                        <field name="have_requeriments" />
+                        <field name="have_payments" />
+                    </group>
+
+                    <!-- Pestaña de Servicios -->
+                    <notebook>
+                        <page string="Servicios"
+                            attrs="{'invisible': [('have_services', '=', False)]}">
+                            <field name="tramite_lines">
+                                <tree editable="bottom">
+                                    <field name="name" />
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="name" />
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+
+                        <!-- Pestaña de Requisitos -->
+                        <page string="Requisitos"
+                            attrs="{'invisible': [('have_requeriments', '=', False)]}">
+                            <field name="tramite_requeriment_lines">
+                                <tree editable="bottom">
+                                    <field name="name" />
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="name" />
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+
+                        <!-- Pestaña de Orden de Pago -->
+                        <page string="Orden de Pago"
+                            attrs="{'invisible': [('have_payments', '=', False)]}">
+                            <field name="tramite_produt_lines">
+                                <tree editable="bottom">
+                                    <field name="product_id" />
+                                    <field name="costo" />
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="product_id" />
+                                        <field name="costo" />
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para abrir la vista de tramite.root -->
+    <record id="action_tramite_root" model="ir.actions.act_window">
+        <field name="name">Trámite Principal</field>
+        <field name="res_model">tramite.root</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+    <!-- Menú para acceder a la vista de tramite.root -->
+    <menuitem id="menu_generador_turnos_turno" name="Detaller Servicios"
+        parent="menu_generador_turnos_root" action="action_tramite_root" />
+</odoo>

@@ -1,0 +1,119 @@
+<odoo>
+    <data>
+
+        <!-- Vista de Lista (Tree) para daily.session.module -->
+        <record id="view_daily_session_module_tree" model="ir.ui.view">
+            <field name="name">daily.session.module.tree</field>
+            <field name="model">daily.session.module</field>
+            <field name="arch" type="xml">
+                <tree string="Sesiones Diarias por Módulo"  create="false" delete="false" edit="false">
+                    <field name="turn_establishment_module_id"/>
+                    <field name="daily_session_id"/>
+                    <field name="location" widget="radio"/>
+                    <field name="user_id"  widget="many2one_avatar_user"/>
+                    <field name="type_service_ids" widget="many2many_tags"/>
+                    <field name="state" invisible="1"/>
+
+                                <field name="counter_tickets" sum="total" optional="hide"/>
+                                                    <field name="counter_draft" sum="total" optional="hide" />
+                                <field name="counter_started" sum="total" optional="hide"/>
+                                <field name="counter_ended" sum="total" optional="hide"/>
+                                <field name="counter_cancelled" sum="total" optional="hide"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista de Búsqueda (Search) para daily.session.module -->
+        <record id="view_daily_session_module_search" model="ir.ui.view">
+            <field name="name">daily.session.module.search</field>
+            <field name="model">daily.session.module</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Sesiones Diarias por Módulo">
+                    <field name="daily_session_id"/>
+                    <field name="turn_establishment_module_id"/>
+
+
+                    <field name="user_id" />
+                    <field name="type_service_ids"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista de Formulario (Form) para daily.session.module -->
+        <record id="view_daily_session_module_form" model="ir.ui.view">
+            <field name="name">daily.session.module.form</field>
+            <field name="model">daily.session.module</field>
+            <field name="arch" type="xml">
+                <form string="Sesión Diaria por Módulo"  create="false" delete="false" edit="false">
+                    <header>
+                        <button string="Ver tickets" name="action_call_ticket"
+        type="object" icon="fa-calendar"
+        />
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                 <field name="daily_session_id"/>
+                            <field name="turn_establishment_module_id"/>
+                             <field name="location" widget="radio"/>
+    <field name="date"/>
+
+                            </group>
+                            <group>
+    <field name="user_id"  widget="many2one_avatar_user" />
+                            <field name="type_service_ids" widget="many2many_tags"/>
+                                     <field name="counter_tickets" />
+                                <field name="counter_draft" />
+                                <field name="counter_started" />
+                                <field name="counter_ended" />
+                                <field name="counter_cancelled" />
+
+
+                            </group>
+
+
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+            <record id="view_daily_session_module_pivot" model="ir.ui.view">
+    <field name="name">daily.session.module.pivot</field>
+    <field name="model">daily.session.module</field>
+    <field name="arch" type="xml">
+        <pivot string="Sesiones Diarias por Módulo">
+           <field name="date" type="row"/>
+            <field name="counter_tickets" type="measure"/>
+            <field name="counter_draft" type="measure"/>
+            <field name="counter_started" type="measure"/>
+            <field name="counter_ended" type="measure"/>
+            <field name="counter_cancelled" type="measure"/>
+        </pivot>
+    </field>
+</record>
+
+    <record id="view_daily_session_module_graph" model="ir.ui.view">
+    <field name="name">daily.session.module.graph</field>
+    <field name="model">daily.session.module</field>
+    <field name="arch" type="xml">
+        <graph string="Sesiones Diarias por Módulo" type="bar">
+            <field name="date" type="row"/>
+            <field name="counter_tickets" type="measure"/>
+        </graph>
+    </field>
+</record>
+
+        <!-- Acción para abrir las vistas de Tree y Form -->
+        <record id="action_daily_session_module" model="ir.actions.act_window">
+            <field name="name">Sesiones Diarias por Módulo</field>
+            <field name="res_model">daily.session.module</field>
+            <field name="view_mode">tree,form,graph,pivot</field>
+            <field name="view_id" ref="view_daily_session_module_tree"/>
+            <field name="search_view_id" ref="view_daily_session_module_search"/>
+        </record>
+
+
+    </data>
+</odoo>

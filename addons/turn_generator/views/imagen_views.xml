@@ -1,0 +1,41 @@
+<odoo>
+    <!-- Vista de lista (tree) para Imagen -->
+    <record id="view_imagen_tree" model="ir.ui.view">
+        <field name="name">generador_turnos.imagen.tree</field>
+        <field name="model">generador_turnos.imagen</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="nombre"/>
+                <field name="descripcion"/>
+                <field name="imagen" widget="image"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de formulario (form) para Imagen -->
+    <record id="view_imagen_form" model="ir.ui.view">
+        <field name="name">generador_turnos.imagen.form</field>
+        <field name="model">generador_turnos.imagen</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="nombre"/>
+                        <field name="descripcion"/>
+                        <field name="imagen" widget="image"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para abrir la vista de Imagen -->
+    <record id="action_imagen" model="ir.actions.act_window">
+        <field name="name">Imágenes</field>
+        <field name="res_model">generador_turnos.imagen</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menú para Imagen -->
+    <menuitem id="menu_generador_turnos_imagen" name="Imágenes" parent="menu_generador_turnos_root" action="action_imagen"/>
+</odoo>

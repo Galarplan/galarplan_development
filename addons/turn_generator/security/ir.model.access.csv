@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_generador_turnos_vehiculo,access_generador_turnos.vehiculo,model_generador_turnos_vehiculo,,1,1,1,1
+access_generador_turnos_turno,access_generador_turnos.turno,model_generador_turnos_turno,,1,1,1,1
+access_generador_turnos_imagen,access_generador_turnos.imagen,model_generador_turnos_imagen,,1,1,1,1
+access_generador_turnos_opcion,access_generador_turnos.opcion,model_generador_turnos_opcion,,1,1,1,1
+access_tramite_root,access_tramite_root,model_tramite_root,base.group_user,1,1,1,1
+access_tramite_service_line,access_tramite_service_line,model_tramite_service_line,base.group_user,1,1,1,1
+access_tramite_requeriments_line,access_tramite_requeriments_line,model_tramite_requeriments_line,base.group_user,1,1,1,1
+access_tramite_products,access_tramite_products,model_tramite_products,base.group_user,1,1,1,1

@@ -1,0 +1,203 @@
+<odoo>
+    <data>
+
+        <!-- Vista de Lista (Tree) para turn.ticket -->
+        <record id="view_turn_ticket_tree" model="ir.ui.view">
+            <field name="name">turn.ticket.tree</field>
+            <field name="model">turn.ticket</field>
+            <field name="arch" type="xml">
+                <tree string="Turnos">
+                    <field name="company_id" optional="hide" />
+                    <field name="turn_establishment_id" optional="hide" />
+                    <field name="location" widget="radio" optional="hide"
+                                       />
+                    <field name="daily_session_id"/>
+                    <field name="id"/>
+                    <field name="ticket_service_id"/>
+                    <field name="user_id"  widget="many2one_avatar_user"/>
+                    <field name="car_plate"/>
+                    <field name="partner_id" widget="res_partner_many2one"/>
+                    <field name="date_start"/>
+                    <field name="date_end"/>
+
+                        <field name="state" widget="badge"
+                        decoration-muted="state=='cancelled'"
+                               decoration-danger="state=='draft'"
+
+                               decoration-warning="state=='started'"
+                               decoration-success="state=='ended'"
+
+                        />
+
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista de Búsqueda (Search) para turn.ticket -->
+        <record id="view_turn_ticket_search" model="ir.ui.view">
+            <field name="name">turn.ticket.search</field>
+            <field name="model">turn.ticket</field>
+            <field name="arch" type="xml">
+
+                <search string="Buscar Sesiones Diarias">
+                                <filter name="state_draft" string="Preliminar" domain="[('state','=','draft')]"/>
+                   <filter name="state_started" string="Iniciado" domain="[('state','=','started')]"/>
+                    <filter name="state_ended" string="Finalizado" domain="[('state','=','ended')]"/>
+                    <filter name="state_cancelled" string="Anulado" domain="[('state','=','cancelled')]"/>
+                      <group>
+                        <filter string="Compañia" name="grp_company" context="{'group_by':'company_id'}"/>
+                        <filter string="Establecimiento" name="grp_turn_establishment_id" context="{'group_by':'turn_establishment_id'}"/>
+                         <filter string="Fecha" name="grp_date" context="{'group_by':'date'}"/>
+                    <filter string="Servicio" name="grp_ticket_service_id" context="{'group_by':'ticket_service_id'}"/>
+
+                          <filter string="# de Placa" name="grp_car_plate" context="{'group_by':'car_plate'}"/>
+<filter string="Cliente" name="grp_partner_id" context="{'group_by':'partner_id'}"/>
+<filter string="Usuario" name="grp_user_id" context="{'group_by':'user_id'}"/>
+
+
+                     </group>
+                    <field name="company_id"/>
+                    <field name="turn_establishment_id"/>
+                    <field name="date"/>
+                    <field name="daily_session_id"/>
+                    <field name="ticket_service_id"/>
+                    <field name="user_id"   />
+
+                    <field name="car_plate"/>
+                    <field name="partner_id" />
+    <field name="date"/>
+                    <field name="state"/>
+
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista de Formulario (Form) para turn.ticket -->
+        <record id="view_turn_ticket_form" model="ir.ui.view">
+            <field name="name">turn.ticket.form</field>
+            <field name="model">turn.ticket</field>
+            <field name="arch" type="xml">
+                <form string="Turno">
+                    <header>
+                      <button name="action_draft" type="object" string="Llamar"
+                              icon="fa-ticket"
+                            attrs="{'invisible': [('state', 'not in', ('draft'))]}"
+                    groups="turnos.grp_usuario,turnos.grp_administrador"
+                      />
+
+                      <button name="action_draft" type="object" string="Reversar"
+                            attrs="{'invisible': [('state', '=', 'draft')]}" icon="fa-rotate-left"
+                      groups="turnos.grp_administrador"
+                      />
+                        <button name="action_started" type="object" string="Iniciar"
+                            attrs="{'invisible': [('state', '!=', 'draft')]}" icon="fa-play"
+                        groups="turnos.grp_usuario,turnos.grp_administrador"
+                        />
+                        <button name="action_ended" type="object" string="Finalizar"
+                            attrs="{'invisible': [('state', '!=', 'started')]}" icon="fa-stop"
+                        groups="turnos.grp_usuario,turnos.grp_administrador"
+                        />
+                        <button name="action_cancelled" type="object" string="Anular"
+                            attrs="{'invisible': [('state', '=', 'cancelled')]}" icon="fa-times"
+                        groups="turnos.grp_usuario,turnos.grp_administrador"
+                        />
+                        <field name="state" widget="statusbar" statusbar_visible="draft,started,ended,cancelled"/>
+                    </header>
+                    <sheet>
+                        <group name="grp0">
+                            <group name="grp1">
+                                <field name="partner_id" attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       options="{'no_create':True,'no_open':True,'no_edit':True}" widget="res_partner_many2one"/>
+                                <field name="car_plate" attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                <field name="ticket_service_id" attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                                <field name="date" readonly="1" />
+                                <field name="location" widget="radio" attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       />
+                            </group>
+                            <group name="grp2">
+
+                                <field name="turn_establishment_id" attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                <field name="daily_session_id" attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       domain="[('state','=','started')]" required="0" force_save="1"
+                                       options="{'no_create':True,'no_open':True,'no_edit':True}"/>
+                                <field name="daily_session_module_id" options="{'no_create':True,'no_open':True,'no_edit':True}"
+                                domain="[('daily_session_id','=',daily_session_id)]"
+                                       invisible="1" force_save="1"
+                                />
+                                <field name="user_id" readonly="1" options="{'no_create':True,'no_open':True,'no_edit':True}"
+                                force_save="1"  widget="many2one_avatar_user"
+                                />
+                                <field name="call_count" readonly="1" />
+                         <field name="date_start" readonly="1" attrs="{'invisible': [('state', 'not in', ('started','ended'))]}"/>
+                                      <field name="date_end" readonly="1" attrs="{'invisible': [('state', '!=', 'ended')]}"/>
+
+                            </group>
+                        </group>
+
+                        <field name="html_detail" nolabel="1" placeholder="Detalle" attrs="{'readonly': [('state', '!=', 'draft')]}" />
+
+                    </sheet>
+                    <!-- Chatter -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" groups="base.group_user"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_turn_ticket_calendar" model="ir.ui.view">
+    <field name="name">turn.ticket.calendar</field>
+    <field name="model">turn.ticket</field>
+    <field name="arch" type="xml">
+        <calendar string="Turnos" date_start="create_date" date_stop="computed_date">
+            <field name="id"/>
+            <field name="user_id"/>
+            <field name="partner_id"/>
+            <field name="state" widget="badge"
+                decoration-muted="state=='cancelled'"
+                decoration-danger="state=='draft'"
+                decoration-warning="state=='started'"
+                decoration-success="state=='ended'"
+            />
+        </calendar>
+    </field>
+</record>
+
+        <record id="view_turn_ticket_pivot" model="ir.ui.view">
+    <field name="name">turn.ticket.pivot</field>
+    <field name="model">turn.ticket</field>
+    <field name="arch" type="xml">
+        <pivot string="Turnos">
+            <field name="user_id" type="row"/>
+            <field name="state" type="col"/>
+        </pivot>
+    </field>
+</record>
+
+
+        <record id="view_turn_ticket_graph" model="ir.ui.view">
+    <field name="name">turn.ticket.graph</field>
+    <field name="model">turn.ticket</field>
+    <field name="arch" type="xml">
+        <graph string="Turnos por Estado" type="bar">
+            <field name="state" type="row"/>
+            <field name="id" type="measure"/>
+        </graph>
+    </field>
+</record>
+
+        <!-- Acción para abrir las vistas de Tree y Form -->
+        <record id="action_turn_ticket" model="ir.actions.act_window">
+            <field name="name">Turnos</field>
+            <field name="res_model">turn.ticket</field>
+            <field name="view_mode">tree,form,calendar,pivot,graph</field>
+            <field name="view_id" ref="view_turn_ticket_tree"/>
+            <field name="context">{'search_default_state_draft':1,'search_default_state_started':1}</field>
+            <field name="search_view_id" ref="view_turn_ticket_search"/>
+        </record>
+
+
+    </data>
+</odoo>

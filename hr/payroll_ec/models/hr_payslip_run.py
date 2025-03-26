@@ -298,9 +298,10 @@ class HrPayslipRun(models.Model):
                                  ]
                             )
                             if department_srch:
+                                brw_rule=self.env["hr.salary.rule"].sudo().browse(vals["rule_id"])
                                 if len(department_srch) > 1:
                                     raise ValidationError(
-                                        _("Existe mas de un departamento para la configuracion de cuentas analiticas"))
+                                        _("Existe mas de un departamento para la configuracion de cuentas analiticas para regla %s") % (brw_rule.name,))
                                 if department_srch[0].analytic_account_id:
                                     rule_vals["analytic_account_id"] = department_srch[0].analytic_account_id.id
                                 if department_srch[0].account_id:

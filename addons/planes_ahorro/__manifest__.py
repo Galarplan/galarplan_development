@@ -21,7 +21,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'l10n_ec','ventas_credito_cliente'],
+    'depends': ['base', 'l10n_ec','ventas_credito_cliente','report_financial_view_accountant'],
 
     # always loaded
     'data': [

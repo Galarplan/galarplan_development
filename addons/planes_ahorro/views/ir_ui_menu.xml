@@ -34,12 +34,25 @@
                   groups="planes_ahorro.grp_administrador"
     />
 
+  <menuitem id="plan_ahorro_infores"
+                name="Reportes" sequence="10"
+  parent="planes_ahorro_root"
+
+             groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+  />
+
+        <!-- Acciones dentro de Proceso -->
+        <menuitem id="menu_action_report_view_general_ledger_id"
+                  sequence="1" name="Mayor por Empresa" parent="plan_ahorro_infores"
+                   groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                  action="report_financial_view_accountant.action_report_view_general_ledger"/>
+
 
 
          <menuitem id="plan_ahorro_conf_parent"
               name="Configuración"
               parent="planes_ahorro_root"
-              sequence="2"
+              sequence="9999"
                    groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
     />
 

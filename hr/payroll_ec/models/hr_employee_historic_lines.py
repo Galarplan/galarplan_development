@@ -23,7 +23,7 @@ class HrEmployeeHistoricLines(models.Model):
     currency_id = fields.Many2one(related="company_id.currency_id",store=False,readonly=True )
 
     employee_id = fields.Many2one("hr.employee", "Empleado", required=True)
-    contract_id = fields.Many2one("hr.employee", "Contrato", required=False)
+    contract_id = fields.Many2one("hr.contract", "Contrato", required=False)
     payslip_id = fields.Many2one("hr.payslip", "Rol", required=False)
 
     name=fields.Char("Periodo",required=False,compute="_get_dates",store=True,readonly=True)

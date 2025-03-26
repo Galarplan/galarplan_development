@@ -1,8 +1,8 @@
 <odoo>
     <data>
 
-        <menuitem id="menu_report_partner_ledger" 
-              name="Reporte Mayores Contable"
+             <menuitem id="menu_report_financial" 
+              name="Reporte de Mayores"
               parent="account_accountant.menu_accounting"
               action="action_report_view_general_ledger"
               sequence="11"

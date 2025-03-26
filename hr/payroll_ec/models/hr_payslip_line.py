@@ -36,6 +36,7 @@ class HrPayslipLine(models.Model):
                 "payslip_line_id": brw_each.id,
                 "payslip_id": brw_each.slip_id.id,
                 "employee_id": brw_each.slip_id.employee_id.id,
+                "contract_id": brw_each.slip_id.contract_id.id,
                 "company_id": brw_each.slip_id.company_id.id,
                 "grouped": False,
                 "month_id": brw_each.slip_id.payslip_run_id.month_id.id,

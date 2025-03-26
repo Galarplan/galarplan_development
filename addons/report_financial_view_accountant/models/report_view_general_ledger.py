@@ -59,7 +59,7 @@ class report_view_general_ledger(models.Model):
             date_end = each.date_to
             filter_state=each.target_move
 
-            sort_By = (each.sortby=="sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " aj.name asc ")
+            sort_By = (each.sortby=="sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
             self._cr.execute(f"""WITH variables AS (
     SELECT 
         {company_id}::int AS company_id,
@@ -101,6 +101,7 @@ WHERE
             print(accounts_res)
             lines_move = [(5,)]
             balance=0.00
+            DEC=2
             for move in accounts_res:
                 # Iterar sobre la lista de 'move_lines'
                 balance+=move.get('balance')
@@ -110,11 +111,14 @@ WHERE
                                                 'journal_id': move.get('journal_id', None),
                                               'debit': move.get('debit'),
                                               'credit': move.get('credit'),
-                                              'amount_accumulated': balance
+                                              'amount_accumulated': round(balance,DEC)
                                               }))
                 each.write({'line_ids': lines_move})
         return True
 
     def print_general_ledger(self):
         return self.env.ref('report_financial_view_accountant.report_general_ledger').report_action(self)
+
+    def action_export_excel(self):
+        return self.env.ref('report_financial_view_accountant.action_general_ledger_xlsx').report_action(self)
 

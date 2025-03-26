@@ -29,6 +29,22 @@ class AccountMove(models.Model):
                             })
                 except json.JSONDecodeError:
                     raise UserError("El formato del JSON en 'Pagos Json' no es válido.")
+            else:
+                try:
+                    data_factura = self.env['invoice.history'].search([('document_number','=',self.l10n_latam_document_number)])
+                    datos_pagos = json.loads(data_factura.payment_history)
+                    for pago in datos_pagos.get('content', []):
+                        ref = pago.get('ref', '')
+                        amount = pago.get('amount', 0.0)
+                        if ref and amount:
+                            record.details_ids.create({
+                                'move_id': record.id,
+                                'name': ref,
+                                'amount': amount,
+                            })
+                except json.JSONDecodeError:
+                    raise UserError("El formato del JSON en 'Pagos Json' no es válido.")
+
 
 
 

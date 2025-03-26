@@ -12,6 +12,7 @@
         "security/ir.model.access.csv",
         #
         'reports/report_view_general_ledger.xml',
+        'reports/ir_actions_report_xml.xml',
         ####
         "views/report_view_general_ledger_line.xml",
         "views/report_view_general_ledger.xml",

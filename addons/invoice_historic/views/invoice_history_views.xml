@@ -1,0 +1,61 @@
+<odoo>
+    <record id="view_invoice_history_tree" model="ir.ui.view">
+        <field name="name">invoice.history.tree</field>
+        <field name="model">invoice.history</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="invoice_date"/>
+                <field name="invoice_due_date"/>
+                <field name="reference"/>
+                <field name="document_number"/>
+                <field name="total_invoice"/>
+                <field name="total_forpayment"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_invoice_history_form" model="ir.ui.view">
+        <field name="name">invoice.history.form</field>
+        <field name="model">invoice.history</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="name"/>
+                    <field name="invoice_date"/>
+                    <field name="invoice_due_date"/>
+                    <field name="reference"/>
+                    <field name="document_number"/>
+                    <field name="total_invoice"/>
+                    <field name="total_forpayment"/>
+                    <field name="payment_history"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_invoice_history_search" model="ir.ui.view">
+        <field name="name">invoice.history.search</field>
+        <field name="model">invoice.history</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Cliente"/>
+                <field name="document_number" string="Número de Documento"/>
+                <group expand="0" string="Filtros">
+                    <filter name="open" string="Adeudado" domain="[('total_forpayment', '>', 0)]"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_invoice_history" model="ir.actions.act_window">
+        <field name="name">Histórico de Facturas</field>
+        <field name="res_model">invoice.history</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_invoice_history_search"/>
+    </record>
+
+    <menuitem id="menu_invoice_history_root" name="Facturación" sequence="10"/>
+    <menuitem id="menu_invoice_history" name="Histórico de Facturas"
+              parent="menu_invoice_history_root" action="action_invoice_history"/>
+</odoo>

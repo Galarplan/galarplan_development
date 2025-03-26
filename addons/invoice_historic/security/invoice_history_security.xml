@@ -1,0 +1,6 @@
+<odoo>
+    <record id="group_invoice_history_user" model="res.groups">
+        <field name="name">Usuario de Histórico de Facturas</field>
+        <field name="category_id" ref="base.module_category_accounting"/>
+    </record>
+</odoo>

@@ -1,0 +1,10 @@
+<odoo>
+    <data noupdate="0">
+
+        <record id="group_payment_checkbook_manager" model="res.groups">
+            <field name="name">Checkbook Manager</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+        </record>
+
+    </data>
+</odoo>

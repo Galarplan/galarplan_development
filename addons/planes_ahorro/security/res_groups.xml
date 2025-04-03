@@ -12,9 +12,14 @@
             <field name="name">Usuario</field>
         </record>
 
-        <record id="grp_administrador" model="res.groups">
+         <record id="grp_administrador" model="res.groups">
             <field name="category_id" ref="grp_category_plan_ahorro"/>
             <field name="name">Administrador</field>
+        </record>
+
+        <record id="grp_cambiar_estados_planes" model="res.groups">
+            <field name="category_id" ref="grp_category_plan_ahorro"/>
+            <field name="name">Cambiar Estados de Planes de Ahorro</field>
         </record>
 
     </data>

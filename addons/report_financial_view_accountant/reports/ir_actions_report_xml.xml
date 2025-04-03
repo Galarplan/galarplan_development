@@ -5,6 +5,6 @@
         <field name="model">report.view.general.ledger</field>
         <field name="report_type">xlsx</field>
          <field name="report_name">report_financial_view_accountant.ledger_report.xlsx</field>
-        <field name="print_report_name">'Reporte_Mayor_' + object.partner_id.name</field>
+        <field name="print_report_name">'Reporte_Mayor'</field>
     </record>
 </odoo>

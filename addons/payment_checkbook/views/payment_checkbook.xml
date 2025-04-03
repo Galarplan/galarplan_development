@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_payment_checkbook_tree" model="ir.ui.view">
+        <field name="name">payment.checkbook.tree</field>
+        <field name="model">payment.checkbook</field>
+        <field name="arch" type="xml">
+            <tree string="Checkbooks">
+                <field name="journal_id" />
+                <field name="bank_account_id" />
+                <field name="reference" />
+                <field name="date" />
+                <field name="return_date" />
+                <field name="from_seq" />
+                <field name="to_seq" />
+                <field name="user_id" />
+                <field name="company_id" groups="base.group_multi_company" />
+                <field name="state" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_payment_checkbook_form" model="ir.ui.view">
+        <field name="name">payment.checkbook.form</field>
+        <field name="model">payment.checkbook</field>
+        <field name="arch" type="xml">
+            <form string="Checkbook">
+                <header>
+                    <button name="action_draft" string="Set To Draft" type="object"
+                        class="oe_highlight" states="cancelled" />
+                    <button name="action_open" string="Confirm" type="object" class="oe_highlight"
+                        states="draft" />
+                    <button name="action_process" string="Set To Process" type="object"
+                        class="oe_highlight" states="open" />
+                    <button name="action_missing" string="Set To Missing" type="object"
+                        class="oe_highlight" states="open" />
+                    <button name="action_cancelled" string="Cancel" type="object"
+                        class="oe_highlight" states="draft,open" />
+                    <field name="state" widget="statusbar" statusbar_visible="draft,open,cancelled" />
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="journal_id" required="1" />
+                            <field name="date" />
+                            <field name="return_date"
+                                attrs="{'invisible':[('return_date','=',False)]}" />
+                            <field name="user_id" readonly="1" />
+                            <field name="from_seq" required="1" />
+                            <field name="to_seq" required="1" />
+                        </group>
+                        <group>
+                            <field name="bank_account_id" readonly="1" />
+                            <field name="deferred_account_id" />
+                            <field name="company_id" groups="base.group_multi_company"
+                                options="{'no_create': True}" />
+                            <field name="currency_id" readonly="1" />
+                            <field name="padding" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reference" />
+                    </group>
+                    <notebook>
+                        <page string="Checks">
+                            <field name="checks_ids" readonly="1" options="{'no_create': True}"
+                                context="{'default_checkbook_id': active_id}">
+                                <tree editable="bottom">
+                                    <field name="check_number" />
+                                    <field name="is_used" />
+                                    <field name="payment_id" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" groups="base.group_user" />
+                    <field name="activity_ids" />
+                    <field name="message_ids" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_payment_checkbook" model="ir.actions.act_window">
+        <field name="name">Checkbooks</field>
+        <field name="res_model">payment.checkbook</field>
+        <field name="view_mode">tree,form</field>
+        <field name="groups_id" eval="[(4, ref('payment_checkbook.group_payment_checkbook_manager'))]" />
+    </record>
+
+    <!-- <menuitem id="menu_checkbook_root" name="Checkbooks"
+        parent="account.menu_finance"
+        groups="payment_checkbook.group_payment_checkbook_manager" /> -->
+
+    <menuitem id="menu_report_financial" 
+              name="Talonario de Cheques"
+              parent="account_accountant.menu_accounting"
+              action="action_payment_checkbook"
+              sequence="12"
+              groups="payment_checkbook.group_payment_checkbook_manager"/>
+
+
+</odoo>

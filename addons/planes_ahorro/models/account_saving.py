@@ -48,6 +48,14 @@ class AccountSaving(models.Model):
         ('closed', 'Cerrado'),
     ], string='Estado del Plan', default='draft',tracking=True)
 
+    puede_cambiar_estados = fields.Boolean(
+        string='Puede Cambiar Estados',
+        compute='_compute_puede_cambiar_estados'
+    )
+
+    def _compute_puede_cambiar_estados(self):
+        for record in self:
+            record.puede_cambiar_estados = self.env.user.has_group('planes_ahorro.grp_cambiar_estados_planes')
 
     info_migrate = fields.Boolean(string='Información Migrada', default=False)
 
@@ -106,6 +114,21 @@ class AccountSaving(models.Model):
         compute="_compute_state_plan_description",
         store=True
     )
+
+    origin = fields.Selection([('automatic', ' Automatico'),
+                               ('imported', 'Importado')
+                               ], string="Origen", default="automatic",compute="compute_origin_lines")
+
+
+    @api.depends('line_ids','line_ids.origin')
+    def compute_origin_lines(self):
+        for brw_each in self:
+            origin=brw_each.line_ids.mapped('origin')
+            if not origin:
+                origin="automatic"
+            else:
+                origin=origin[0]
+            brw_each.origin=origin
 
     @api.depends('state_plan')
     def _compute_state_plan_description(self):

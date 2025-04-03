@@ -39,6 +39,8 @@
         "wizard/account_saving_payment_wizard.xml",
         'wizard/account_saving_wizard.xml',
         'wizard/account_saving_line_wizard.xml',
+        'wizard/account_saving_import_wizard.xml',
+
         'views/account_saving_plan.xml',
         'views/account_saving_lines.xml',
         'views/account_saving.xml',

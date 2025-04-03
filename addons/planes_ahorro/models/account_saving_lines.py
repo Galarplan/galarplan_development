@@ -67,6 +67,10 @@ class AccountSavingLines(models.Model):
 
     last_payment_date = fields.Date(string="Última Fecha de Pago", compute="_compute_last_payment_date", store=False,readonly=True)
 
+    origin=fields.Selection([('automatic',' Automatico'),
+                             ('imported','Importado')
+                             ],string="Origen",default="automatic")
+
     @api.depends('saving_id','payment_ids','payment_ids.state',
                  'payment_ids.amount_residual')
     def _compute_last_payment_date(self):
@@ -153,14 +157,16 @@ class AccountSavingLines(models.Model):
                 estado_pago="pendiente"
                 por_pagar=total
                 if not brw_each.invoice_id or brw_each.invoice_id.state!='posted':
-                    for brw_line_payment in brw_each.payment_line_ids:
-                        #if brw_line_payment.type!='historic':
-                        if brw_line_payment.payment_id:
-                            if brw_line_payment.payment_id.state=='posted':
+                    if brw_each.payment_line_ids:
+                        for brw_line_payment in brw_each.payment_line_ids:
+                            #if brw_line_payment.type!='historic':
+                            if brw_line_payment.payment_id:
+                                if brw_line_payment.payment_id.state=='posted':
+                                    pagos+=brw_line_payment.aplicado
+                            else:
                                 pagos+=brw_line_payment.aplicado
-                        else:
-                            pagos+=brw_line_payment.aplicado
-                    pagos += brw_each.migrated_payment_amount
+                    else:##si no tiene pagos registrados se iria por el campo calculado
+                        pagos += brw_each.migrated_payment_amount
                 else:##si estado es facturado
                     partner_account= brw_each.saving_id.property_account_receivable_id or brw_each.invoice_id.partner_id.property_account_receivable_id
                     total_invoices,total_payment=0.00,0.00

@@ -639,7 +639,7 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
                     "internal_id": brw_each.id,
                     "model_name": brw_each._name,
                     "description": brw_each.name,
-                    "email": brw_each.employee_id.personal_email,
+                    "email": brw_each.employee_id.private_email or brw_each.employee_id.work_email ,
                     "employee_id": brw_each.employee_id.id,
                     "company_id": brw_each.company_id.id,
                     "state": "draft",

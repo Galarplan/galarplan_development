@@ -151,8 +151,10 @@ groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
              />
                  <field name="currency_id" invisible="1"/>
                                 <field name="date"/>
-                                <field name="saving_amount" sum="total" invisible="context.get('hide_main',False)"/>
-                               <field name="principal_amount" sum="total" invisible="context.get('hide_main',False)"/>
+    <field name="saving_amount" sum="total" invisible="context.get('hide_main',False)"/>
+
+          <field name="principal_amount" sum="total" invisible="context.get('hide_main',False)"/>
+
 
                                  <field name="serv_admin_amount" sum="total" invisible="context.get('hide_main',False)"/>
                                <field name="seguro_amount" sum="total" invisible="context.get('hide_main',False)"/>
@@ -186,6 +188,8 @@ widget="badge"
 
                                <field name="invoice_id" optional="hide"/>
                                             <field name="parent_saving_state" invisible="1"/>
+
+            <field name="origin" optional="hide"/>
         </tree>
       </field>
     </record>
@@ -248,6 +252,7 @@ widget="badge"
                                <field name="invoice_id" optional="hide"/>
             <field name="plan_ahorro_move_id" optional="hide"/>
                                             <field name="parent_saving_state" invisible="1"/>
+                        <field name="origin" optional="hide"/>
         </tree>
       </field>
     </record>
@@ -329,9 +334,9 @@ widget="badge"
                  <field name="currency_id" invisible="1"/>
 
                                 <field name="date"/>
-
+  <field name="principal_amount" sum="total"/>
                                 <field name="saving_amount" sum="total"/>
-                               <field name="principal_amount" sum="total"/>
+
                                  <field name="serv_admin_amount" sum="total"/>
                                <field name="seguro_amount" sum="total"/>
 

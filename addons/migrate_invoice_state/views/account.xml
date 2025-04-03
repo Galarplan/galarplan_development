@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account.action_move_out_invoice_type" model="ir.actions.act_window">
+        <field name="domain">[('move_type','=','out_invoice'), ('state','!=','migrado')]</field>
+    </record>
+
+    <record id="action_move_out_invoice_migrado" model="ir.actions.act_window">
+        <field name="name">Facturas no regularizadas</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('move_type','=','out_invoice'), ('state','=','migrado')]</field>
+        <field name="context">{'default_move_type': 'out_invoice'}</field>
+    </record>
+
+    <menuitem
+        id="menu_invoice_migrado"
+        name="Facturas no regularizadas"
+        parent="account.menu_finance_receivables"
+        action="action_move_out_invoice_migrado"
+        sequence="25"
+    />
+
+
+</odoo>

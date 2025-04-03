@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_receipt_saving_line">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div style="text-align: center; font-weight: bold;">
+                    <span>GALARPLAN S.A.</span><br/>
+                    <span>RECIBO DE COBRO DE PLAN VEHICULAR</span>
+                </div>
+
+                <p><strong>Fecha:</strong> <t t-esc="format_date(o.date)"/>  <strong>Teléfono:</strong> <t t-esc="o.partner_id.phone"/></p>
+                <p><strong>Cliente:</strong> <t t-esc="o.partner_id.name"/></p>
+                <p><strong>Dirección:</strong> <t t-esc="o.partner_id.street"/></p>
+                <p><strong>Cédula:</strong> <t t-esc="o.partner_id.vat"/>  <strong>Asesor:</strong> <t t-esc="o.saving_id.seller_id.name"/></p>
+
+                <p><strong>Monto del plan:</strong> <t t-esc="o.saving_amount"/> </p>
+
+                <p><strong>Forma de pago:</strong>
+                    <t t-if="o.saving_id.is_direct">✔ Efectivo</t>
+                    <t t-if="o.saving_id.is_credit_sale">✔ Tarjeta de Crédito</t>
+                    <t t-if="o.saving_id.is_credit_bank">✔ Transferencia</t>
+                    <t t-if="o.saving_id.is_galarplan">✔ Inscripción al plan</t>
+                </p>
+
+                <p><strong>Valor Total:</strong> <t t-esc="o.por_pagar"/></p>
+
+                <br/><br/>
+                <div style="display: flex; justify-content: space-between;">
+                    <div>______________________<br/>Elaborado por</div>
+                    <div>______________________<br/>Recibí Conforme</div>
+                </div>
+                <br/>
+                <p style="font-size:10px; text-align:center;">
+                    Este recibo es válido únicamente para el sistema de compras programadas de vehículos...
+                </p>
+            </div>
+        </t>
+    </template>
+</odoo>

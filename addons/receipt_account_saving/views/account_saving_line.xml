@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <record id="view_account_saving_lines_main_tree_inherit_receipt_button" model="ir.ui.view">
+    <field name="name">account.saving.lines.tree.inherit.receipt.button</field>
+    <field name="model">account.saving.lines</field>
+    <field name="inherit_id" ref="planes_ahorro.account_saving_lines_main_tree_view"/>
+    <field name="arch" type="xml">
+
+      <!-- Insertar después del campo estado_pago -->
+      <xpath expr="//tree/field[@name='estado_pago']" position="after">
+        <button name="print_receipt"
+                type="object"
+                string="Recibo"
+                icon="fa-print"
+                help="Imprimir Recibo de Cobro"
+                attrs="{'invisible': [('parent_saving_state', 'in', ('draft','cancel'))]}"
+                groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"/>
+      </xpath>
+
+    </field>
+  </record>
+</odoo>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_saving_state">
+        <t t-call="general_format_document.general_template">
+            <div class="page">
+                <main>
+                    <h2 style="text-align: center;">Estado de Cuenta del Plan de Ahorro</h2>
+                    <br />
+                    <div class="row" name="fist_line">
+                        <div t-if="docs.partner_id.vat" class="col-3" name="div_vat">
+                            <strong>identificación:</strong>
+                            <div t-esc="docs.sudo().partner_id.vat" />
+                        </div>
+                        <div class="col-6" name="partner_header">
+                            <strong>Socio:</strong>
+                            <div t-field="docs.partner_id"
+                                t-options="{'widget': 'contact', 'fields': ['name'], 'no_marker': True}" />
+                        </div>
+                    </div>
+                    <div class="row" name="second_line">
+                        <div class="col-3" name="div_plan_code">
+                            <strong>Código del plan:</strong>
+                          <p t-field="docs.name"
+
+                            />
+                        </div>
+                        <div class="col-3" name="div_saving_type">
+                            <strong>Tipo de ahorro:</strong>
+
+                            <p t-if="docs.saving_type == 'normal'">Normal</p>
+<p t-else="ballon">Balón</p>
+                        </div>
+                        <div class="col-3" name="div_amount">
+                            <strong>Importe del Plan:</strong>
+                            <p t-field="docs.saving_amount"
+                                t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                        </div>
+                        <div class="col-3" name="div_currency">
+                            <strong>Moneda:</strong>
+                            <p t-field="docs.currency_id.name" />
+                        </div>
+                    </div>
+                    <div class="row" name="third_line">
+                        <div class="col-3" name="div_start_date">
+                            <strong>Fecha de inicio:</strong>
+                            <p t-field="docs.start_date" />
+                        </div>
+                        <div class="col-3" name="div_end_date">
+                            <strong>Fecha de Vencimiento:</strong>
+                            <p t-field="docs.end_date" />
+                        </div>
+                        <div class="col-3" name="div_state">
+                            <strong>Estado:</strong>
+                            <p t-field="docs.state_plan_description" />
+                        </div>
+                        <div class="col-3" name="div_state">
+                            <strong>Inscripción:</strong>
+                            <p t-field="docs.serv_inscription_amount" />
+                        </div>
+
+                    </div>
+                    <h5 class="mt0 text-center">LÍNEAS DEL PLAN DE AHORRO</h5>
+                    <div class="row" style="margin-left:10px; margin-right:10px;"
+                        name="saving_line_ids">
+                        <t t-set="payment_amount" t-value="0" />
+                        <t t-set="pending_amount" t-value="0" />
+                        <t t-set="middle_number" t-value="int(docs.periods/2)" />
+                        <div style="width:100%;">
+                            <table class="table table-sm" t-if="docs.line_ids">
+                                <thead>
+                                    <tr>
+                                        <th name="th_document"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>#</strong>
+                                        </th>
+                                        <th name="th_date"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>Fecha Vencimiento</strong>
+                                        </th>
+                                        <th name="th_payment_date"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>Fecha Pago</strong>
+                                        </th>
+                                        <th name="th_amount"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>Importe</strong>
+                                        </th>
+                                        <th name="th_payment_amount"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>Valor Pagado</strong>
+                                        </th>
+                                        <th name="th_pending_amount"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>Pendiente</strong>
+                                        </th>
+                                        <th name="th_payment_state"
+                                            style="vertical-align:middle;color:#000000; background-color:#f2f2f2!important;">
+                                            <strong>Estado</strong>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="docs.quota_ids.sorted(key=lambda l: l.number)"
+                                        t-as="ml">
+                                        <tr>
+                                            <td name="line_document">
+                                                <span t-field="ml.number" />
+                                            </td>
+                                            <td name="line_date">
+                                                <t t-if="ml.date">
+                                                    <span t-field="ml.date" />
+                                                </t>
+                                            </td>
+                                            <td name="line_payment_date">
+                                                  <t t-if="ml.last_payment_date">
+                                                    <span t-field="ml.last_payment_date" />
+                                                </t>
+                                            </td>
+                                            <td name="line_original">
+                                                <t t-if="ml.sequence == 0">
+                                                    <span t-esc="ml.serv_admin_amount"
+                                                        t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                </t>
+                                                <t t-if="ml.sequence != 0">
+                                                    <span t-esc="ml.saving_amount"
+                                                        t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                </t>
+                                            </td>
+                                            <td name="line_payment">
+                                                <span t-esc="ml.pagos"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                            </td>
+                                            <td name="line_pending">
+                                                <span t-esc="ml.pendiente"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                            </td>
+                                            <td name="line_state_payment">
+                                                <span t-field="ml.estado_pago" />
+                                            </td>
+                                        </tr>
+                                        <t t-set="payment_amount"
+                                            t-value="payment_amount+ml.pagos" />
+                                        <t t-set="pending_amount"
+                                            t-value="pending_amount+ml.pendiente" />
+                                    </t>
+                                    <tr>
+                                        <td />
+                                        <td>TOTAL</td>
+                                        <td />
+                                        <td />
+                                        <td>
+                                            <strong>
+                                                <span t-esc="payment_amount"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-esc="pending_amount"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                            </strong>
+                                        </td>
+                                        <td />
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </t>
+    </template>
+</odoo>

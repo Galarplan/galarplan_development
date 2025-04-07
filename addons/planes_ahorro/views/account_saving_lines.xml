@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="view_account_saving_lines_search" model="ir.ui.view">
+        <field name="name">account.saving.lines.search</field>
+        <field name="model">account.saving.lines</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Líneas de Ahorro">
+                   <field name="id" string="# ID" />
+
+                <field name="name"/>
+                <field name="saving_id" string="Plan de Ahorro"/>
+                <field name="date" string="Fecha de Cuota"/>
+                <field name="estado_pago" string="Estado de Pago"/>
+                <field name="invoice_id" string="Factura"/>
+
+<field name="partner_id" />
+                <field name="old_ref_id" />
+                <!-- Grupo de Filtros -->
+                                <group expand="0" string="Agrupar">
+                    <filter name="grp_company_id" string="Compañía" context="{'group_by':'company_id'}"/>
+                                    <filter name="grp_saving_id" string="Plan de Ahorro" context="{'group_by':'saving_id'}"/>
+                                    <filter name="grp_partner_id" string="Cliente" context="{'group_by':'partner_id'}"/>
+                                    <filter name="grp_date" string="Fecha de Cuota" context="{'group_by':'date'}"/>
+                                    <filter name="grp_estado_pago" string="Estado de Pago" context="{'group_by':'estado_pago'}"/>
+
+
+                                </group>
+                <group expand="0" string="Estado de Pago">
+                    <filter name="estado_pago_pendiente" string="Pendiente" domain="[('estado_pago', '=', 'pendiente')]"/>
+                    <filter name="estado_pago_pagado" string="Pagado" domain="[('estado_pago', '=', 'pagado')]"/>
+                </group>
+
+                <group expand="0" string="Migración">
+                    <filter name="migrado" string="Migrado" domain="[('migrated', '=', True)]"/>
+                    <filter name="no_migrado" string="No Migrado" domain="[('migrated', '=', False)]"/>
+                        <separator/>
+                <!-- Filtros por Estado de Pago -->
+                <filter name="pendiente" string="Pendiente" domain="[('estado_pago', '=', 'pendiente')]"/>
+                <filter name="pagado" string="Pagado" domain="[('estado_pago', '=', 'pagado')]"/>
+<separator/>
+                <!-- Filtros por Factura -->
+                <filter name="con_factura" string="Con Factura" domain="['|',('migrated_has_invoices','=',True),('invoice_id', '!=', False)]"/>
+                <filter name="sin_factura" string="Sin Factura" domain="[('invoice_id', '=', False),('migrated_has_invoices', '=', False)]"/>
+<separator/>
+  <filter name="enabled_for_invoice_yes" string="Habilitado Facturar" domain="[('enabled_for_invoice','=',True)]"/>
+     <filter name="enabled_for_invoice_no" string="Deshabilitado Factura" domain="[('enabled_for_invoice','!=',True)]"/>
+       <separator/>
+
+
+
+                <filter name="filter_today" string="Hoy" domain="[('days_difference', '=', 0)]"/>
+<filter name="filter_last_week" string="Anterior" domain="[('days_difference', '&gt;=', 1)]"/>
+<filter name="filter_next_week" string="Despues" domain="[('days_difference', '&lt;=', -1)]"/>
+
+
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="account_saving_lines_tree_view" model="ir.ui.view">
+      <field name="name">account.saving.lines.view</field>
+      <field name="model">account.saving.lines</field>
+        <field name="priority">1</field>
+      <field name="arch" type="xml">
+        <tree edit="false" create="false" delete="false"
+        decoration-it="(not invoice_id and parent_saving_state not in ('draft','cancel') and estado_pago=='pagado')"
+              decoration-bf="(migrated_has_invoices or migrated_payment_amount!=0.00 )"
+              limit="80"
+        >
+
+            <header>
+            <button name="action_do_invoices"
+                      string="Facturar" icon="fa-money"
+                      type="object"
+                      />
+            </header>
+<field name="saving_id" invisible="context.get('hide_saving',True)" />
+            <field name="company_id" invisible="context.get('hide_saving',True)" />
+        <field name="partner_id" invisible="context.get('hide_saving',True)" />
+            <field name="sequence"  optional="hide"  />
+                                        <field  name="number"  />
+             <field name="id"  optional="hide" string="# ID"
+             attrs="{'invisible':[('id','&lt;=',0)]}"
+             />
+                 <field name="currency_id" invisible="1"/>
+                                <field name="date"/>
+                                <field name="saving_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="principal_amount" sum="total" invisible="context.get('hide_main',False)"/>
+
+                                 <field name="serv_admin_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_amount" sum="total" invisible="context.get('hide_main',False)"/>
+<field name="serv_inscription_amount" sum="total" invisible="context.get('hide_inscription',False)"/>
+
+                                    <field name="serv_admin_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+<field name="rate_inscription" optional="hide" invisible="context.get('hide_inscription',False)"/>
+
+                               <field name="pagos"  sum="total"/>
+                                <field name="pendiente" sum="total"/>
+
+
+
+                                <field name="estado_pago" decoration-muted="estado_pago=='sin_aplicar'"
+                                decoration-danger="estado_pago=='pendiente'"
+                                       decoration-success="estado_pago=='pagado'"
+widget="badge"
+                                />
+                            <button  name="%(action_account_saving_line_wizard)d" type="action"
+                      help="Facturar" icon="fa-money"
+                     invisible="context.get('hide_invoice',False)"
+groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                       attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
+                      />
+
+
+                       <field name="migrated" optional="hide" />
+                                    <field name="migrated_payment_amount" optional="hide" sum="total"/>
+                        <field name="migrated_has_invoices" optional="hide" />
+ <field name="enabled_for_invoice"   optional="hide" widget="boolean_toggle" />
+
+<field name="last_payment_date" optional="hide" />
+                               <field name="invoice_id" optional="hide"/>
+                    <field name="plan_ahorro_move_id" optional="hide" />
+                                            <field name="parent_saving_state" invisible="1"/>
+        </tree>
+      </field>
+    </record>
+
+<record id="account_saving_lines_main_tree_view" model="ir.ui.view">
+      <field name="name">account.saving.lines.main.treeview</field>
+      <field name="model">account.saving.lines</field>
+        <field name="priority">100</field>
+      <field name="arch" type="xml">
+        <tree edit="false" create="false" delete="false"
+        decoration-it="(not invoice_id and parent_saving_state not in ('draft','cancel') and estado_pago=='pagado')"
+              decoration-bf="(migrated_has_invoices or migrated_payment_amount!=0.00 )"
+              limit="80"
+        >
+
+    <field name="saving_id" invisible="context.get('hide_saving',True)" />
+            <field name="company_id" invisible="context.get('hide_saving',True)" />
+        <field name="partner_id" invisible="context.get('hide_saving',True)" />
+            <field name="sequence"  optional="hide"  invisible="1"/>
+                                        <field  name="number"  />
+             <field name="id"  optional="hide" string="# ID"
+             attrs="{'invisible':[('id','&lt;=',0)]}"
+             />
+                 <field name="currency_id" invisible="1"/>
+                                <field name="date"/>
+    <field name="saving_amount" sum="total" invisible="context.get('hide_main',False)"/>
+
+          <field name="principal_amount" sum="total" invisible="context.get('hide_main',False)"/>
+
+
+                                 <field name="serv_admin_amount" sum="total" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_amount" sum="total" invisible="context.get('hide_main',False)"/>
+<field name="serv_inscription_amount" sum="total" invisible="1"/>
+
+                                    <field name="serv_admin_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+                               <field name="seguro_percentage"  optional="hide" invisible="context.get('hide_main',False)"/>
+<field name="rate_inscription" optional="hide" invisible="1"/>
+
+                               <field name="pagos"  sum="total"/>
+                                <field name="pendiente" sum="total"/>
+
+
+
+                                <field name="estado_pago" decoration-muted="estado_pago=='sin_aplicar'"
+                                decoration-danger="estado_pago=='pendiente'"
+                                       decoration-success="estado_pago=='pagado'"
+widget="badge"
+                                />
+                           <button name="%(action_account_saving_line_wizard)d" type="action" invisible="context.get('hide_invoice',False)"
+                      help="Facturar" icon="fa-money"  groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                       attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
+                      />
+
+
+                       <field name="migrated" optional="hide" />
+                                    <field name="migrated_payment_amount" optional="hide" sum="total"/>
+                        <field name="migrated_has_invoices" optional="hide" />
+ <field name="enabled_for_invoice" invisible="not context.get('hide_saving',True)"  optional="hide" widget="boolean_toggle"/>
+<field name="last_payment_date" optional="hide" />
+
+                               <field name="invoice_id" optional="hide"/>
+                                            <field name="parent_saving_state" invisible="1"/>
+
+            <field name="origin" optional="hide"/>
+        </tree>
+      </field>
+    </record>
+
+<record id="account_saving_lines_inscription_tree_view" model="ir.ui.view">
+      <field name="name">account.saving.lines.inscription.treeview</field>
+      <field name="model">account.saving.lines</field>
+        <field name="priority">102</field>
+      <field name="arch" type="xml">
+        <tree edit="false" create="false" delete="false"
+        decoration-it="(not invoice_id and parent_saving_state not in ('draft','cancel') and estado_pago=='pagado')"
+              decoration-bf="(migrated_has_invoices or migrated_payment_amount!=0.00 )"
+              limit="80"
+        >
+
+<field name="saving_id" invisible="context.get('hide_saving',True)" />
+            <field name="company_id" invisible="context.get('hide_saving',True)" />
+        <field name="partner_id" invisible="context.get('hide_saving',True)" />
+            <field name="sequence"  optional="hide"  invisible="1"/>
+                                        <field  name="number" optional="hide"  invisible="1" />
+             <field name="id"  optional="hide" string="# ID"
+             attrs="{'invisible':[('id','&lt;=',0)]}"
+             />
+                 <field name="currency_id" invisible="1"/>
+                                <field name="date"/>
+                                <field name="saving_amount" sum="total" invisible="1"/>
+                               <field name="principal_amount" sum="total" invisible="1"/>
+
+                                 <field name="serv_admin_amount" sum="total" invisible="1"/>
+                               <field name="seguro_amount" sum="total" invisible="1"/>
+<field name="serv_inscription_amount" sum="total" />
+
+                                    <field name="serv_admin_percentage"  optional="hide" invisible="1"/>
+                               <field name="seguro_percentage"  optional="hide" invisible="1"/>
+<field name="rate_inscription" optional="hide" invisible="0"/>
+
+                               <field name="pagos"  sum="total"/>
+                                <field name="pendiente" sum="total"/>
+
+
+
+                                <field name="estado_pago" decoration-muted="estado_pago=='sin_aplicar'"
+                                decoration-danger="estado_pago=='pendiente'"
+                                       decoration-success="estado_pago=='pagado'"
+widget="badge"
+                                />
+                            <button name="%(action_account_saving_line_wizard)d" type="action"
+                      help="Facturar" icon="fa-money" invisible="context.get('hide_invoice',False)"
+                     groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                      attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
+                      />
+
+
+                       <field name="migrated" optional="hide" />
+                                    <field name="migrated_payment_amount" optional="hide" sum="total"/>
+                        <field name="migrated_has_invoices" optional="hide" />
+ <field name="enabled_for_invoice"  widget="boolean_toggle" optional="hide" invisible="not context.get('hide_saving',True)" />
+<field name="last_payment_date" optional="hide" />
+
+                               <field name="invoice_id" optional="hide"/>
+            <field name="plan_ahorro_move_id" optional="hide"/>
+                                            <field name="parent_saving_state" invisible="1"/>
+                        <field name="origin" optional="hide"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="account_saving_lines_form_view" model="ir.ui.view">
+      <field name="name">account_saving.lines.form.view</field>
+      <field name="model">account.saving.lines</field>
+      <field name="arch" type="xml">
+                    <form string="saving items" edit="false" create="false" delete="false">
+                            <header>
+                            <button name="%(action_account_saving_line_wizard)d" type="action"
+                      help="Facturar" icon="fa-money" invisible="context.get('hide_invoice',False)"
+                      string="Facturar"
+                                    groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                     attrs="{'invisible':['|',('parent_saving_state','in',('draft','cancel')),('enabled_for_invoice','!=',True)]}"
+                      />
+                            </header>
+                        <sheet>
+                            <group>
+                            <group>
+                                        <field name="company_id" invisible="context.get('hide_saving',True)"
+                                        options="{'no_create':True,'no_open':True,'no_edit':True}"
+                                        />
+                                                                <field name="saving_id" invisible="context.get('hide_saving',True)" />
+                                        <field name="partner_id" invisible="context.get('hide_saving',True)" />
+<field name="sequence" readonly="1"/>
+                                <field name="enabled_for_invoice" invisible="not context.get('hide_saving',True)" widget="boolean_toggle" optional="hide" />
+                                <field name="last_payment_date" optional="hide" />
+                                <field name="parent_saving_state" invisible="1"/>
+                 <field name="currency_id" invisible="1"/>
+                            <field name="number"  readonly="1"/>
+                                <field name="date"  readonly="1"/>
+                                <field name="saving_amount"   readonly="1"/>
+                               <field name="principal_amount"   readonly="1"/>
+
+                                        <field name="serv_admin_amount"  readonly="1"/>
+                               <field name="seguro_amount"  readonly="1"/>
+
+                               <field name="serv_inscription_amount"  readonly="1"/>
+
+                               <field name="pagos"   readonly="1"/>
+                            </group>
+                                 <group>
+                                  <field name="pendiente"  readonly="1"/>
+                                <field name="estado_pago"  readonly="1"/>
+                                                               <field name="invoice_id"  readonly="1"/>
+
+            <field name="plan_ahorro_move_id" readonly="1"/>
+                                     <field name="old_ref_id" readonly="1"
+       attrs="{'invisible': [('old_ref_id', 'in', [False, '', None])]}"/>
+
+                            </group>
+
+                            </group>
+</sheet>
+                        <newline/>
+                        <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="message_ids" widget="mail_thread"/>
+            </div>
+                             </form>
+      </field>
+
+    </record>
+
+    <!-- -->
+
+     <record id="account_saving_lines_tree_editable_view" model="ir.ui.view">
+      <field name="name">account.saving.lines.editable.view</field>
+      <field name="model">account.saving.lines</field>
+          <field name="priority">999</field>
+      <field name="arch" type="xml">
+        <tree edit="true" create="false" delete="false"
+              limit="80 " editable="bottom"
+        >
+            <field name="sequence" readonly="1" optional="hide" force_save="1"/>
+                                        <field readonly="1" name="number"  force_save="1"/>
+             <field name="id" readonly="1" string="# ID" optional="hide"/>
+                 <field name="currency_id" invisible="1"/>
+
+                                <field name="date"/>
+  <field name="principal_amount" sum="total"/>
+                                <field name="saving_amount" sum="total"/>
+
+                                 <field name="serv_admin_amount" sum="total"/>
+                               <field name="seguro_amount" sum="total"/>
+
+                                    <field name="serv_admin_percentage" force_save="1" readonly="1" sum="total" optional="hide"/>
+                               <field name="seguro_percentage" force_save="1" readonly="1" sum="total" optional="hide"/>
+
+
+                                            <field name="parent_saving_state" invisible="1"/>
+        </tree>
+      </field>
+    </record>
+
+
+    <record id="account_saving_line_action" model="ir.actions.act_window">
+      <field name="name">Detalle de Planes de Ahorro</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">account.saving.lines</field>
+      <field name="view_mode">tree,form</field>
+      <field name="context">{'search_default_estado_pago_pendiente':1,'search_default_enabled_for_invoice_yes':1,'create':True,'delete':True,'edit':True,'hide_saving':False,'hide_invoice':False}</field>
+      <field name="domain">[('saving_id.state','in',('open','close'))]</field>
+      <field name="help" type="html">
+        <p class="oe_view_nocontent_create">
+          Click to create a new record.
+        </p>
+      </field>
+    </record>
+
+
+
+
+</odoo>

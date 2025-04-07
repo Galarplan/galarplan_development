@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <menuitem id="planes_ahorro_root" 
+                  name="Planes de Ahorro" 
+                  sequence="0"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+        <menuitem id="plan_ahorro"
+              name="Planes de Ahorro"
+              parent="planes_ahorro_root"
+              action="account_saving_action"
+              sequence="0"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+    />
+
+
+        <menuitem id="lineas_plan_ahorro"
+              name="Detalle de Planes de Ahorro"
+              parent="planes_ahorro_root"
+              action="account_saving_line_action"
+              sequence="1"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+    />
+
+
+        <menuitem id="account_saving_wizard_menu"
+              name="Importar Planes de Ahorro"
+              parent="planes_ahorro_root"
+              action="account_saving_wizard2_action"
+              sequence="2"
+                  groups="planes_ahorro.grp_administrador"
+    />
+
+  <menuitem id="plan_ahorro_infores"
+                name="Reportes" sequence="10"
+  parent="planes_ahorro_root"
+
+             groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+  />
+
+        <!-- Acciones dentro de Proceso -->
+        <menuitem id="menu_action_report_view_general_ledger_id"
+                  sequence="1" name="Mayor por Empresa" parent="plan_ahorro_infores"
+                   groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                  action="report_financial_view_accountant.action_report_view_general_ledger"/>
+
+
+
+         <menuitem id="plan_ahorro_conf_parent"
+              name="Configuración"
+              parent="planes_ahorro_root"
+              sequence="9999"
+                   groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+    />
+
+
+         <menuitem id="plan_ahorro_conf"
+              name="Planes de Ahorro"
+              parent="plan_ahorro_conf_parent"
+              action="account_saving_plan_action"
+              sequence="0"
+                   groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+    />
+
+
+
+
+
+    </data>
+</odoo>

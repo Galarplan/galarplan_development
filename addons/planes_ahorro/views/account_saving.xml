@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="account_saving_search_view" model="ir.ui.view">
+    <field name="name">account.saving.search.view</field>
+    <field name="model">account.saving</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="id" string="# ID" />
+
+        <field name="company_id" />
+        <field name="name" />
+        <field name="partner_id" />
+        <field name="start_date" />
+        <field name="end_date" />
+        <separator />
+        <filter name="filter_draft" string="Borrador" domain="[('state', '=', 'draft')]" />
+        <filter name="filter_open" string="Publicado" domain="[('state', '=', 'open')]" />
+        <filter name="filter_close" string="Cerrado" domain="[('state', '=', 'close')]" />
+        <filter name="filter_cancel" string="Cancelado" domain="[('state', '=', 'cancel')]" />
+        <separator />
+        <filter name="filter_draft" string="Borrador" domain="[('state_plan', '=', 'draft')]" />
+        <filter name="filter_posted" string="Publicado" domain="[('state_plan', '=', 'posted')]" />
+        <filter name="filter_active" string="Activo" domain="[('state_plan', '=', 'active')]" />
+        <filter name="filter_adjudicated_with_assets" string="Adjudicado con Bien"
+          domain="[('state_plan', '=', 'adjudicated_with_assets')]" />
+        <filter name="filter_adjudicated_without_assets" string="Adjudicado sin Bien"
+          domain="[('state_plan', '=', 'adjudicated_without_assets')]" />
+        <filter name="filter_awarded" string="Adjudicado" domain="[('state_plan', '=', 'awarded')]" />
+        <filter name="filter_pending_authorizated" string="Autorización de Retiro Pendiente"
+          domain="[('state_plan', '=', 'pending_authorizated')]" />
+        <filter name="filter_anulled" string="Anulado" domain="[('state_plan', '=', 'anulled')]" />
+        <filter name="filter_disabled" string="Desactivado"
+          domain="[('state_plan', '=', 'disabled')]" />
+        <filter name="filter_retired" string="Retirado" domain="[('state_plan', '=', 'retired')]" />
+        <filter name="filter_cancelled" string="Cancelado"
+          domain="[('state_plan', '=', 'cancelled')]" />
+        <filter name="filter_closed" string="Cerrado" domain="[('state_plan', '=', 'closed')]" />
+
+        <separator />
+        <filter string="Sin Facturas" name="filter_without_invoice"
+          domain="[('invoice_count', '=', 0)]" />
+        <filter string="Sin Pagos" name="filter_without_payment"
+          domain="[('payments_count', '=', 0)]" />
+        <group expand="1" string="Group By">
+          <filter string="Cliente" name="groupby_partner_id" context="{'group_by': 'partner_id'}" />
+          <filter string="Tipo" name="groupby_saving_type" context="{'group_by': 'saving_type'}" />
+          <filter string="Empresa" name="groupby_company" context="{'group_by': 'company_id'}" />
+          <filter string="Estado" name="groupby_state" context="{'group_by': 'state'}" />
+          <filter string="Diario" name="groupby_journal" context="{'group_by': 'journal_id'}" />
+
+          <filter string="Estado del Plan" name="groupby_state_plan"
+            context="{'group_by': 'state_plan'}" />
+
+        </group>
+      </search>
+    </field>
+  </record>
+
+
+  <record id="account_saving_tree_view" model="ir.ui.view">
+    <field name="name">account.saving.view</field>
+    <field name="model">account.saving</field>
+    <field name="arch" type="xml">
+      <tree decoration-danger="state=='open'"
+        decoration-info="state=='draft'"
+        decoration-success="state=='close'"
+        decoration-muted="state=='cancel'"
+      >
+
+
+        <field name="id" string="# ID" optional="hide" />
+        <field name="company_id" optional="show" />
+        <field name="name" />
+        <field name="partner_id" />
+        <field name="saving_type" optional="show" />
+        <field name="start_date" optional="show" />
+        <field name="end_date" optional="show" />
+        <field name="saving_amount" />
+        <field name="periods" optional="show" />
+        <field name="por_pagar" readonly="1" optional="show" />
+        <field name="pagos" readonly="1" optional="show" />
+        <field name="pendiente" readonly="1" optional="show" />
+        <field name="currency_id" invisible="1" />
+        <field name="state_plan" optional="show" />
+        <field name="state" optional="hide" />
+      </tree>
+    </field>
+  </record>
+
+
+  <record id="account_saving_form_view" model="ir.ui.view">
+    <field name="name">account_saving.form.view</field>
+    <field name="model">account.saving</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+
+
+          <button name="action_open"
+            string="Aprobar" icon="fa-check"
+            type="object"
+            attrs="{'invisible':[('state','not in',('draft',))]}"
+            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+          />
+
+
+          <button name="%(action_report_state_saving_xlsx)d"
+            type="action"
+            icon="fa-file-excel-o" help="Generar Estado de Cuenta en Excel"
+            attrs="{'invisible':[('state','in',('cancel'))]}"
+            string="Excel" />
+
+          <button name="%(action_account_saving_payment_wizard)d"
+            string="Registrar Pago" icon="fa-money"
+            type="action"
+            attrs="{'invisible':[('state','not in',('open',))]}"
+            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+          />
+
+          <button name="action_invoice"
+            string="Facturar" icon="fa-money"
+            type="object"
+            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+            attrs="{'invisible':[('state','not in',('open',))]}"
+          />
+
+          <button name="action_draft"
+            string="Reversar" icon="fa-rotate-left"
+            type="object"
+            attrs="{'invisible':[('state','not in',('open',))]}"
+            groups="planes_ahorro.grp_administrador"
+          />
+
+          <button name="action_cancel"
+            string="Anular" icon="fa-times"
+            type="object"
+            attrs="{'invisible':[('state','not in',('draft','posted'))]}"
+            groups="planes_ahorro.grp_administrador"
+          />
+
+          <button name="action_print_saving_state"
+            type="object"
+            icon="fa-print" help="Imprimir Estado de Cuenta"
+            attrs="{'invisible':[('state','in',('cancel'))]}"
+            string="Imprimir" />
+
+
+                   <button name="%(account_saving_import_assign_wizard_compute_action)d" colspan="1"
+                  string="Actualizar" icon="fa-list"
+                  type="action" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                  attrs="{'invisible':['|',('info_migrate','!=',True),('state','in',('close','cancel'))]}"
+                />
+
+
+
+          <field name="state_plan" widget="statusbar"
+          attrs="{'readonly':[('puede_cambiar_estados','!=',True)]}"
+ options="{'clickable': True}"
+          />
+        </header>
+        <sheet>
+
+
+          <div class="oe_button_box" name="button_box">
+            <button name="action_open_documents"
+              type="object" string="Documentos"
+              class="oe_stat_button"
+              icon="fa-file-o">
+              <field name="documents_count" widget="statinfo" />
+            </button>
+            <button name="action_open_payments"
+              type="object" string="Pagos"
+              class="oe_stat_button"
+              icon="fa-money">
+              <field name="payments_count" widget="statinfo" />
+            </button>
+          </div>
+          <div class="oe_title" colspan="2">
+            <h1>
+              <field name="name" required='1' attrs="{'readonly':[('state','!=','draft')]}" />
+            </h1>
+          </div>
+          <group colspan="2">
+            <group col="2">
+<field name="puede_cambiar_estados" invisible="1" />
+              <field name="id" string="# ID" readonly="1" attrs="{'invisible':[('id','&lt;=',0)]}" />
+
+
+              <field name="saving_type" required='1' attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="saving_plan_id"
+                options="{'no_create':True,'no_edit':True}"
+                domain="[('state','=','posted'),('saving_type','=',saving_type)]" required='1'
+                attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="partner_id" options="{'no_create':True,'no_edit':True}" required='1'
+                attrs="{'readonly':[('state','!=','draft')]}" />
+
+              <field name="seller_id" required="1"
+                options="{'no_edit':True,'no_create':True,'no_edit':True}"
+                attrs="{'readonly':[('state','!=','draft')]}"
+              />
+              <field name="start_date" required="1"
+                attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="end_date" required="0" readonly="1" force_save="1" />
+
+
+            </group>
+            <group col="2">
+              <field name="company_id" options="{'no_create':True,'no_edit':True,'no_open':True,}"
+                required="1"
+                attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="currency_id" invisible="1"
+                options="{'no_create':True,'no_edit':True,'no_open':True,}" />
+              <field name="info_migrate" readonly="1" attrs="{'readonly':[('state','!=','draft')]}" />
+
+              <field name="periods" attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="saving_amount" required="1"
+                attrs="{'readonly':[('state','!=','draft')]}" />
+
+              <field name="quota_amount" required="1"
+                attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="serv_inscription_amount" readonly="1" force_save="1" />
+              <field name="por_pagar" readonly="1" />
+              <field name="pagos" readonly="1" />
+              <field name="pendiente" readonly="1" />
+
+
+            </group>
+          </group>
+          <notebook>
+            <page string="Cuotas">
+              <group colspan="4">
+                <button name="compute_lines" colspan="1"
+                  string="Calcular" icon="fa-cogs"
+                  type="object" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                  attrs="{'invisible':[('state','not in',('draft',))]}"
+                />
+
+                 <button name="%(account_saving_import_wizard_compute_action)d" colspan="1"
+                  string="Importar" icon="fa-upload"
+                  type="action" groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                  attrs="{'invisible':[('state','not in',('draft',))]}"
+                />
+
+
+              </group>
+              <newline />
+              <field name="line_ids"
+                context="{'tree_view_ref':'planes_ahorro.account_saving_lines_tree_view','default_parent_saving_state':state}"
+                invisible="1"
+              />
+
+              <separator string="Inscripción" />
+              <newline />
+              <field name="inscription_ids"
+                context="{'hide_main':True,'hide_inscription':False,'tree_view_ref':'planes_ahorro.account_saving_lines_inscription_tree_view','default_parent_saving_state':state}"
+              />
+              <newline />
+              <separator string="Cuotas" />
+              <newline />
+              <field name="quota_ids"
+                context="{'hide_inscription':True,'tree_view_ref':'planes_ahorro.account_saving_lines_main_tree_view','default_parent_saving_state':state}"
+              />
+
+
+            </page>
+            <page string="Facturas &amp; Pagos">
+              <separator string="Facturas &amp; Asientos de las Cuotas"
+                attrs="{'invisible':[('invoice_ids','=',[])]}" />
+
+              <field name="invoice_ids" readonly="1" attrs="{'invisible':[('invoice_ids','=',[])]}">
+                <tree string="Facturas">
+                  <field name="id" string="# ID" optional="hide" />
+                  <field name="move_type" />
+                  <field name="name" />
+                  <field name="journal_id" />
+                  <field name="partner_id" optional="hide" />
+                  <field name="amount_untaxed_signed" sum="total" string="Base Imponible" />
+                  <field name="amount_total_signed" sum="total" string="Total" />
+
+
+                  <field name="payment_state" attrs="{'invisible':[('move_type','=','entry')]}"
+                    widget="badge" decoration-danger="payment_state == 'not_paid'"
+                    decoration-warning="payment_state in ('partial', 'in_payment')"
+                    decoration-success="payment_state in ('paid', 'reversed')" optional="show"
+                    modifiers="{&quot;invisible&quot;: [[&quot;payment_state&quot;, &quot;in&quot;, &quot;invoicing_legacy&quot;]], &quot;readonly&quot;: true}" />
+                  <field name="state" widget="badge" decoration-success="state == 'posted'"
+                    decoration-info="state == 'draft'" optional="show" on_change="1"
+                    modifiers="{&quot;readonly&quot;: true, &quot;required&quot;: true}" />
+
+                </tree>
+              </field>
+              <newline />
+              <separator string="Historial de Facturas Migradas"
+                attrs="{'invisible':[('historic_invoice_ids','=',[])]}" />
+              <field name="historic_invoice_ids"
+                attrs="{'invisible':[('historic_invoice_ids','=',[])]}" readonly="1">
+                <tree string="Historial">
+                  <field name="saving_line_id"
+                    options="{'no_open':True,'no_create':True,'no_edit':True}" />
+                  <field name="type" />
+                  <field name="invoice_date" />
+                  <field name="invoice_ref" />
+                  <field name="amount" sum="total" />
+                  <field name="invoice_state" />
+                </tree>
+
+                <form string="Historial">
+                  <group>
+                    <group>
+                      <field name="saving_line_id"
+                        options="{'no_open':True,'no_create':True,'no_edit':True}" />
+                      <field name="type" />
+                      <field name="invoice_date" />
+                      <field name="invoice_ref" />
+                    </group>
+                    <group>
+                      <field name="amount" />
+                      <field name="invoice_state" />
+                    </group>
+                  </group>
+
+
+                </form>
+
+              </field>
+              <newline />
+              <separator string="Pagos de las Cuotas"
+                attrs="{'invisible':[('payment_move_ids','=',[])]}" />
+              <newline />
+              <field name="payment_move_ids" readonly="1"
+                attrs="{'invisible':[('payment_move_ids','=',[])]}">
+
+              </field>
+              <newline />
+              <separator string="Historial de Pagos"
+                attrs="{'invisible':[('historic_payment_ids','=',[])]}" />
+              <field name="historic_payment_ids"
+                attrs="{'invisible':[('historic_payment_ids','=',[])]}" readonly="1">
+                <tree string="Historial">
+                  <field name="payment_journal_name" />
+                  <field name="payment_date" />
+                  <field name="payment_ref" />
+                  <field name="amount" sum="total" />
+                </tree>
+              </field>
+              <field name="payment_ids" attrs="{'invisible':[('payment_ids','=',[])]}" invisible="1">
+
+              </field>
+
+            </page>
+
+
+            <page string="Contrato">
+              <group colspan="2">
+                <group col="2">
+                  <field name="partner_signed_id" />
+                  <field name="partner_signed_date" />
+
+                </group>
+                <group col="2">
+                  <field name="company_signed_id" />
+                  <field name="company_signed_date" />
+                  <field name="interest_expenses_account_id" />
+
+                </group>
+
+
+              </group>
+              <newline />
+              <group>
+                 <field name="state" widget="radio" readonly="1"/>
+              </group>
+            </page>
+            <page string="Configuracion">
+              <group>
+                <group>
+                  <field name="journal_id"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}"
+                    attrs="{'required':[('info_migrate','!=',True)],'readonly':[('state','in',('close','cancel'))]}" />
+                  <field name="document_type_id"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}" readonly="1"
+                    force_save="1" />
+                  <field name="analytic_account_id"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}" />
+
+
+                  <field name="is_credit_sale" />
+                  <field name="is_credit_bank" />
+                  <field name="is_direct" />
+                  <field name="is_galarplan" />
+
+                  <field name="property_account_receivable_id" readonly="1"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}"
+                  />
+<field name="origin" readonly="1" force_save="1" />
+                </group>
+                <group>
+                  <field name="fixed_amount" required="1" readonly="1" force_save="1" />
+                  <field name="rate_inscription" readonly="1" force_save="1" />
+
+                  <field name="rate_expense" readonly="1" force_save="1" />
+                  <field name="rate_insurance" readonly="1" force_save="1" />
+                  <field name="rate_decrement_year" readonly="1" force_save="1" />
+
+                  <field name="old_ref_id" readonly="1"
+                    attrs="{'invisible': [('old_ref_id', 'in', [False, '', None])]}" />
+
+                </group>
+
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+        <newline />
+        <div class="oe_chatter">
+          <field name="message_follower_ids" widget="mail_followers" />
+          <field name="message_ids" widget="mail_thread" />
+        </div>
+      </form>
+    </field>
+
+  </record>
+
+  <record id="account_saving_action" model="ir.actions.act_window">
+    <field name="name">Planes de Ahorro</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="res_model">account.saving</field>
+    <field name="view_mode">tree,form</field>
+    <field name="context">
+      {'search_default_filter_draft':1,'search_default_filter_open':1,'search_default_filter_close':1}</field>
+    <field name="domain">[]</field>
+    <field name="help" type="html">
+      <p class="oe_view_nocontent_create">
+        Click to create a new record.
+      </p>
+    </field>
+  </record>
+
+
+</odoo>

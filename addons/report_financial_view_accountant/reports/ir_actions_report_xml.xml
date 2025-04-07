@@ -4,7 +4,8 @@
         <field name="name">Reporte Mayor en Excel</field>
         <field name="model">report.view.general.ledger</field>
         <field name="report_type">xlsx</field>
-         <field name="report_name">report_financial_view_accountant.ledger_report.xlsx</field>
-        <field name="print_report_name">'Reporte_Mayor'</field>
+        <field name="report_name">report_financial_view_accountant.grl_ledger_xlsx</field>
+        <field name="report_file">report_financial_view_accountant.grl_ledger_xlsx</field>
+        <field name="print_report_name">'Reporte_Mayor_' + object.name</field>
     </record>
 </odoo>

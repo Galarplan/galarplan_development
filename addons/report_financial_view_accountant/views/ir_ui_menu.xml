@@ -1,13 +1,21 @@
 <odoo>
     <data>
 
-             <menuitem id="menu_report_financial" 
-              name="Reporte de Mayores"
-              parent="account_accountant.menu_accounting"
-              action="action_report_view_general_ledger"
-              sequence="11"
-              groups="account.group_account_user"/>
+        <!-- Menú Raíz -->
 
+        <!-- Menú Raíz -->
+        <menuitem id="menu_report_financial_view_accountant_main" name="Reporte" sequence="10"/>
+
+        <!-- Menú Proceso -->
+        <menuitem id="menu_report_financial_view_accountant_sub1_main" name="Informe"
+                  parent="menu_report_financial_view_accountant_main" sequence="20"/>
+
+        <!-- Acciones dentro de Proceso -->
+        <menuitem id="menu_action_report_view_general_ledger_id" sequence="1"
+                  name="Mayor" parent="menu_report_financial_view_accountant_sub1_main"
+                  action="action_report_view_general_ledger"/>
 
     </data>
 </odoo>
+
+

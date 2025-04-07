@@ -2,7 +2,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
-from odoo.api import ondelete
+# from odoo.odoo.api import ondelete
 
 
 class report_view_general_ledger_line(models.Model):

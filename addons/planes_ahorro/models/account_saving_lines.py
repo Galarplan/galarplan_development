@@ -165,8 +165,8 @@ class AccountSavingLines(models.Model):
                                     pagos+=brw_line_payment.aplicado
                             else:
                                 pagos+=brw_line_payment.aplicado
-                    else:##si no tiene pagos registrados se iria por el campo calculado
-                        pagos += brw_each.migrated_payment_amount
+                    #else:##si no tiene pagos registrados se iria por el campo calculado
+                    pagos += brw_each.migrated_payment_amount
                 else:##si estado es facturado
                     partner_account= brw_each.saving_id.property_account_receivable_id or brw_each.invoice_id.partner_id.property_account_receivable_id
                     total_invoices,total_payment=0.00,0.00
@@ -196,6 +196,9 @@ class AccountSavingLines(models.Model):
 
     @api.model
     def calculate_base_amount(self, total, taxes):
+        from decimal import Decimal, ROUND_HALF_UP
+        def round_excel(value):
+            return float(Decimal(value).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP))
         """
         Calcula la base imponible a partir del total e impuestos.
 
@@ -206,10 +209,10 @@ class AccountSavingLines(models.Model):
         base_amount = total
         for tax in taxes:
             if tax.price_include:  # Impuesto incluido en el precio
-                base_amount = total / (1 + tax.amount / 100)
+                base_amount = total / (1 + tax.amount / 100.00)
             else:  # Impuesto excluido
-                base_amount = total / (1 + tax.amount / 100)  # Opcional si se requiere separar impuestos
-        return base_amount
+                base_amount = total / (1.00 + tax.amount / 100.00)  # Opcional si se requiere separar impuestos
+        return round_excel(base_amount)
 
 
 

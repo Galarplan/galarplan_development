@@ -49,70 +49,75 @@ class report_view_general_ledger(models.Model):
     #                                string='Journals', required=True)
     line_ids = fields.One2many('report.view.general.ledger.line', 'report_id', string='Lines', readonly=True)
 
-    def action_process(self):
+    def action_process_sql(self):
         for each in self:
-            company_id=each.company_id.id
+            company_id = each.company_id.id
             account_id = each.account_id.id
             partner_id = each.partner_id.id
             journal_id = each.journal_id and each.journal_id.id or 0
             date_start = each.date_from
             date_end = each.date_to
-            filter_state=each.target_move
+            filter_state = each.target_move
 
-            sort_By = (each.sortby=="sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
+            sort_By = (each.sortby == "sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
             self._cr.execute(f"""WITH variables AS (
-    SELECT 
-        {company_id}::int AS company_id,
-        {account_id}::int AS account_id,
-        {partner_id}::int AS partner_id,
-        {journal_id}::int AS journal_id,
-        '{date_start}'::date AS date_start,
-        '{date_end}'::date AS date_end,
-        '{filter_state}'::varchar AS filter_state
-)
-
-SELECT 
-    l.id AS move_line_id,
-    l.company_id,
-	l.partner_id,
-    l.ref AS referencia,
-	am.name as lname,
-    l.debit AS debit,
-    l.credit AS credit,
-    (l.debit - l.credit) AS balance,
-	coalesce(l.date_maturity,am.date) as ldate,
-	aj.id as journal_id 
-FROM account_move am 
-inner join account_journal aj on aj.id=am.journal_id 
-INNER JOIN account_move_line l ON l.move_id = am.id
-INNER JOIN variables ON am.company_id = variables.company_id  
-WHERE 
-    (am.date BETWEEN variables.date_start AND variables.date_end)
-    AND (
-        variables.filter_state = 'all' 
-        OR (variables.filter_state = 'posted' AND am.state = 'posted')
-    )
-    AND (variables.account_id = 0 OR l.account_id = variables.account_id)
-    AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
-    AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
-{ sort_By }
-""")
-            accounts_res=self._cr.dictfetchall()
+            SELECT 
+                {company_id}::int AS company_id,
+                {account_id}::int AS account_id,
+                {partner_id}::int AS partner_id,
+                {journal_id}::int AS journal_id,
+                '{date_start}'::date AS date_start,
+                '{date_end}'::date AS date_end,
+                '{filter_state}'::varchar AS filter_state
+                )
+        
+                SELECT 
+                    l.id AS move_line_id,
+                    l.company_id,
+                    l.partner_id,
+                    l.ref AS referencia,
+                    am.name as lname,
+                    l.debit AS debit,
+                    l.credit AS credit,
+                    (l.debit - l.credit) AS balance,
+                    coalesce(l.date_maturity,am.date) as ldate,
+                    aj.id as journal_id 
+                FROM account_move am 
+                inner join account_journal aj on aj.id=am.journal_id 
+                INNER JOIN account_move_line l ON l.move_id = am.id
+                INNER JOIN variables ON am.company_id = variables.company_id  
+                WHERE 
+                    (am.date BETWEEN variables.date_start AND variables.date_end)
+                    AND (
+                        variables.filter_state = 'all' 
+                        OR (variables.filter_state = 'posted' AND am.state = 'posted')
+                    )
+                    AND (variables.account_id = 0 OR l.account_id = variables.account_id)
+                    AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
+                    AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
+                {sort_By}
+            """)
+            accounts_res = self._cr.dictfetchall()
             print(accounts_res)
+            return accounts_res
+
+    def action_process(self):
+        for each in self:
+            accounts_res = each.action_process_sql()
             lines_move = [(5,)]
-            balance=0.00
-            DEC=2
+            balance = 0.00
+            DEC = 2
             for move in accounts_res:
                 # Iterar sobre la lista de 'move_lines'
-                balance+=move.get('balance')
+                balance += move.get('balance')
                 lines_move.append((0, 0, {'date': move.get('ldate'),
-                                              'partner_id': move.get('partner_id', None),
-                                              'name': move.get('lname'),
-                                                'journal_id': move.get('journal_id', None),
-                                              'debit': move.get('debit'),
-                                              'credit': move.get('credit'),
-                                              'amount_accumulated': round(balance,DEC)
-                                              }))
+                                          'partner_id': move.get('partner_id', None),
+                                          'name': move.get('lname'),
+                                          'journal_id': move.get('journal_id', None),
+                                          'debit': move.get('debit'),
+                                          'credit': move.get('credit'),
+                                          'amount_accumulated': round(balance, DEC)
+                                          }))
                 each.write({'line_ids': lines_move})
         return True
 
@@ -122,3 +127,21 @@ WHERE
     def action_export_excel(self):
         return self.env.ref('report_financial_view_accountant.action_general_ledger_xlsx').report_action(self)
 
+    def pre_print_reportfile(self):
+        # def add_months(sourcedate, months):
+        #     month = sourcedate.month - 1 + months
+        #     year = sourcedate.year + month // 12
+        #     month = month % 12 + 1
+        #     day = min(sourcedate.day, calendar.monthrange(year, month)[1])
+        #     return datetime.date(year, month, day)
+
+        # date_begin = add_months(datetime.datetime.strptime(self.date, "%Y-%m-%d"), -1).strftime("%Y-%m-%d")  # , %H:%M:%S
+        # date_begin = add_months(fields.Date.from_string(self.date), -1).strftime("%Y-%m-%d")
+        datas = {}
+        datas['ids'] = self.ids
+        # data['date_real_start'] = date_begin
+        # data['date_start'] = str(self.date)
+        # data['date_end'] = str(self.date_end)
+        # data['sel_position'] = self.sel_position
+        # data['user_id'] = self.user_id and ' =' + str(self.user_id.id) or '<> 0'
+        return datas

@@ -370,12 +370,16 @@ class AccountSaving(models.Model):
             brw_each.serv_inscription_amount=serv_inscription_amount
 
     def compute_lines(self):
-        DEC=2
+        from decimal import Decimal, ROUND_HALF_UP
+
+        def round_excel(value):
+            return float(Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
         for brw_each in self:
             new_date_process = brw_each.start_date
             total = 0.00
             totalglobal = 0.00
-            principal_amount = brw_each.periods!=0 and round(brw_each.saving_amount/brw_each.periods,DEC) or 0.00
+            principal_amount = brw_each.periods!=0 and round_excel(brw_each.saving_amount/brw_each.periods) or 0.00
             line_ids = [(5,)]
             ###inscripcion
             values = {
@@ -390,21 +394,41 @@ class AccountSaving(models.Model):
                 "migrated": False,
                 "migrated_has_invoices": False,
                 "migrated_payment_amount": False,
-                "serv_inscription_amount": round(
-                    brw_each.saving_amount * brw_each.saving_plan_id.rate_inscription / 100.00, DEC),
+                "serv_inscription_amount": round_excel(
+                    brw_each.saving_amount * brw_each.saving_plan_id.rate_inscription / 100.00),
                 "rate_inscription": brw_each.saving_plan_id.rate_inscription,
 
             }
             line_ids.append((0, 0, values))
             ####
+            valor_fijo_seguro=round_excel(principal_amount * brw_each.saving_plan_id.rate_insurance / 100.00)
+            anios=brw_each.periods/12
+            decremento_seguro=anios!=0 and (valor_fijo_seguro/anios) or 0
+            total_decremento=0
+            serv_admin_fijo=round_excel(
+                            principal_amount * brw_each.saving_plan_id.rate_expense / 100.00)
+            min_saving_amount=0.00
             for each_range in range(0, brw_each.periods):
+                print( brw_each.periods)
                 quota = each_range +1
                 new_date_process_temp =brw_each.start_date+ relativedelta(months=quota)
                 datevalue =new_date_process_temp
-                total += round(principal_amount, DEC)
-                if brw_each.periods == each_range :
-                    principal_amount = round(principal_amount + round((brw_each.saving_amount - total), DEC), DEC)
-
+                total += round_excel(principal_amount)
+                principal_amount= brw_each.fixed_amount
+                if brw_each.periods == quota :#en la ultima se hace el ajuste
+                    principal_amount = round_excel(principal_amount + round_excel((brw_each.saving_amount - total)))
+                serv_admin=serv_admin_fijo
+                if valor_fijo_seguro>0.00:
+                    #mult_cuota=1
+                    if each_range % 12 == 0 and each_range != 0:
+                        valor_fijo_seguro = round_excel(valor_fijo_seguro - decremento_seguro)
+                        total_decremento+=decremento_seguro
+                    serv_admin+=round_excel(total_decremento)
+                saving_amount_temp = round_excel(brw_each.fixed_amount + serv_admin + valor_fijo_seguro)
+                dif=brw_each.quota_amount-saving_amount_temp
+                if dif!=0.00:
+                    serv_admin=round_excel(serv_admin+dif)
+                #saving_amount = min_saving_amount
                 values = {
                     "sequence":each_range ,
                     "number":quota,
@@ -417,19 +441,16 @@ class AccountSaving(models.Model):
                     "migrated":False,
                     "migrated_has_invoices":False,
                     "migrated_payment_amount":False,
-                   "principal_amount": principal_amount,
                    "saving_amount": brw_each.quota_amount,
-                   "serv_admin_amount": round(
-                            principal_amount * brw_each.saving_plan_id.rate_expense / 100.00, DEC),
-                   "seguro_amount": round(principal_amount * brw_each.saving_plan_id.rate_insurance / 100.00,
-                                               DEC),
-
+                    "principal_amount":principal_amount,
+                    "serv_admin_amount":serv_admin ,
+                   "seguro_amount": valor_fijo_seguro,
                    "serv_admin_percentage":  brw_each.saving_plan_id.rate_expense,
                    "seguro_percentage": brw_each.saving_plan_id.rate_insurance
                 }
                 print(values)
                 line_ids.append((0, 0, values))
-                totalglobal += round(principal_amount, DEC)
+                totalglobal += round_excel(principal_amount)
                 if totalglobal > brw_each.saving_amount:
                     continue
             brw_each.line_ids= line_ids

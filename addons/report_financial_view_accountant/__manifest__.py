@@ -6,7 +6,7 @@
     "license": "AGPL-3",
     "summary": "Reporte financieros",
     "author": "Lajonner Crespin,David Crespin",
-    "depends": ["base", "account"],
+    "depends": ["base", "account", "report_xlsx"],
     "data": [
         #
         "security/ir.model.access.csv",

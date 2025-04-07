@@ -96,7 +96,7 @@
             <field name="res_model">report.view.general.ledger</field>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_report_view_general_ledger_form"/>
-    <field name="target">current</field>
+            <field name="target">current</field>
             <field name="context">{'fullscreen':True}</field>
         </record>
 

@@ -3,18 +3,17 @@
 
 
     <record model="ir.ui.view"
-            id="account_payment_tree_view_inherit">
+        id="account_payment_tree_view_inherit">
         <field name="name">account.payment.tree.inherit</field>
         <field name="model">account.payment</field>
         <field name="type">tree</field>
-        <field name="inherit_id" ref="account.view_account_payment_tree"/>
+        <field name="inherit_id" ref="account.view_account_payment_tree" />
         <field name="arch" type="xml">
             <field name="partner_id" position="after">
-                <field name="ref" string="Memo"/>
+                <field name="ref" string="Memo" />
             </field>
         </field>
     </record>
-
 
 
     <!-- account.payment form inherit view -->
@@ -24,71 +23,78 @@
         <field name="inherit_id" ref="account.view_account_payment_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_bank_id']" position="before">
-                <field name="is_prepayment" attrs="{'invisible': ['|', ('batch_payment', '=', True), ('is_internal_transfer', '=', True)]}" />
+                <field name="is_prepayment"
+                    attrs="{'invisible': ['|', ('batch_payment', '=', True), ('is_internal_transfer', '=', True)]}" />
                 <field name="prepayment_account_id"
-                       options='{"no_create_edit": True, "no_open": True, "no_quick_create": True}'
-                       attrs="{'invisible': [('is_prepayment', '!=', True)], 'required': [('is_prepayment', '=', True)], }" />
+                    options='{"no_create_edit": True, "no_open": True, "no_quick_create": True}'
+                    attrs="{'invisible': [('is_prepayment', '!=', True)], 'required': [('is_prepayment', '=', True)], }" />
                 <field name="available_invoices" invisible="1" />
-                <field name="batch_payment" attrs="{'invisible': ['|', ('is_prepayment', '=', True), ('is_internal_transfer', '=', True)]}"/>
+                <field name="batch_payment"
+                    attrs="{'invisible': ['|', ('is_prepayment', '=', True), ('is_internal_transfer', '=', True)]}" />
             </xpath>
         </field>
     </record>
 
 
     <record model="ir.ui.view"
-            id="account_payment_form_view_inherit">
+        id="account_payment_form_view_inherit">
         <field name="name">account.payment.offset.inherit</field>
         <field name="model">account.payment</field>
         <field name="type">form</field>
-        <field name="inherit_id" ref="account_payment_advance.view_account_payment_form_inherit"/>
+        <field name="inherit_id" ref="account_payment_advance.view_account_payment_form_inherit" />
         <field name="arch" type="xml">
 
             <field name="ref" position="after">
-                <field name="change_payment" attrs="{'readonly': [['state', 'not in', ('draft')]]}"/>
+                <field name="change_payment" attrs="{'readonly': [['state', 'not in', ('draft')]]}" />
             </field>
 
 
- <xpath expr="//sheet" position="inside">
+            <xpath expr="//sheet" position="inside">
 
-<group string="Contrapartidas" attrs="{'invisible':[('change_payment','!=',True)]}">
-                <group groups="account.group_account_readonly" name="account_contrapartida"
-                       colspan="4" attrs="{'invisible':[('change_payment','!=',True)]}">
-                    <div colspan="4" class="alert alert-info" role="alert" style="margin-bottom:0px;width:100%">
-                        <b>Cuentas en Contrapartida</b>
-                        siempre se visualizará para Pagos Manuales, no se mostrará cuando se realice Pagos Asociados a
-                        un Documento como Factura.
-                    </div>
-                    <field name="payment_line_ids" nolabel="1" attrs="{'readonly': [['state', 'not in', ['draft']]]}"
-                           context="{'default_partner_id': partner_id}">
-                        <tree editable="bottom">
-                            <field name="company_id" invisible="1"/>
-                            <field name="payment_id" invisible="1"/>
-                            <field name="account_id" string="Cuenta"
-                                   domain="[('company_id','=',company_id),('deprecated','=',False),('child_ids', '=', False)]"
-                                   options="{'no_create':True,'no_open':True,'no_edit':True,}"
-                            />
-                            <field name="partner_id" string="Empresa"
-                                   options="{'no_create':True,'no_open':True,'no_edit':True,}"/>
-                            <field name="debit" sum="total"/>
+                <group string="Contrapartidas" attrs="{'invisible':[('change_payment','!=',True)]}">
+                    <group groups="account.group_account_readonly" name="account_contrapartida"
+                        colspan="4" attrs="{'invisible':[('change_payment','!=',True)]}">
+                        <div colspan="4" class="alert alert-info" role="alert"
+                            style="margin-bottom:0px;width:100%">
+                            <b>Cuentas en Contrapartida</b> siempre se visualizará para Pagos
+                            Manuales, no se mostrará cuando se realice Pagos Asociados a un
+                            Documento como Factura. </div>
+                        <field name="payment_line_ids" nolabel="1"
+                            attrs="{'readonly': [['state', 'not in', ['draft']]]}"
+                            context="{'default_partner_id': partner_id}">
+                            <tree editable="bottom">
+                                <field name="company_id" invisible="1" />
+                                <field name="payment_id" invisible="1" />
+                                <field name="account_id" string="Cuenta"
+                                    domain="[('company_id','=',company_id),('deprecated','=',False),('child_ids', '=', False)]"
+                                    options="{'no_create':True,'no_open':True,'no_edit':True,}"
+                                />
+                                <field name="partner_id" string="Empresa"
+                                    options="{'no_create':True,'no_open':True,'no_edit':True,}" />
+                                <field name="debit" sum="total" />
 
-                            <field name="credit" sum="total"/>
+                                <field name="credit" sum="total" />
 
 
-                            <field name="amount" string="Monto" sum="total" optional="hide"/>
-                        </tree>
-                    </field>
-                    <group class="oe_subtotal_footer" attrs="{'invisible':[('payment_line_ids','=',[])]}">
-                        <field name="other_debit_total" readonly="1" force_save="1"/>
-                        <field name="other_credit_total" readonly="1" force_save="1"/>
-                        <field name="other_amount_total" readonly="1" force_save="1" string="Total" invisible="1"/>
-                        <field name="other_amount_diference" attrs="{'invisible':[('other_amount_diference','=',0.00)]}"
-                               readonly="1" force_save="1" style="color:#c0392b;"/>
-                        <field name="other_amount_diference"
-                               attrs="{'invisible':[('other_amount_diference','!=',0.00)]}" readonly="1" force_save="1"
-                               style="color:green;"/>
+                                <field name="amount" string="Monto" sum="total" optional="hide" />
+                            </tree>
+                        </field>
+                        <group class="oe_subtotal_footer"
+                            attrs="{'invisible':[('payment_line_ids','=',[])]}">
+                            <field name="other_debit_total" readonly="1" force_save="1" />
+                            <field name="other_credit_total" readonly="1" force_save="1" />
+                            <field name="other_amount_total" readonly="1" force_save="1"
+                                string="Total" invisible="1" />
+                            <field name="other_amount_diference"
+                                attrs="{'invisible':[('other_amount_diference','=',0.00)]}"
+                                readonly="1" force_save="1" style="color:#c0392b;" />
+                            <field name="other_amount_diference"
+                                attrs="{'invisible':[('other_amount_diference','!=',0.00)]}"
+                                readonly="1" force_save="1"
+                                style="color:green;" />
+                        </group>
                     </group>
                 </group>
-</group>
             </xpath>
 
         </field>

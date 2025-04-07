@@ -49,6 +49,46 @@ class report_view_general_ledger(models.Model):
     #                                string='Journals', required=True)
     line_ids = fields.One2many('report.view.general.ledger.line', 'report_id', string='Lines', readonly=True)
 
+    def action_process_init_sql(self, date_start, date_end):
+        for each in self:
+            if not date_start:
+                date_start = '1990-01-01'
+            company_id = each.company_id.id
+            account_id = each.account_id.id
+            partner_id = each.partner_id.id
+            journal_id = each.journal_id and each.journal_id.id or 0
+            filter_state = each.target_move
+            # sort_By = (each.sortby == "sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
+            self._cr.execute(f"""WITH variables AS (
+            SELECT 
+                {company_id}::int AS company_id,
+                {account_id}::int AS account_id,
+                {partner_id}::int AS partner_id,
+                {journal_id}::int AS journal_id,
+                '{date_start}'::date AS date_start,
+                '{date_end}'::date AS date_end,
+                '{filter_state}'::varchar AS filter_state
+                )
+        
+                SELECT 
+                    SUM(l.debit - l.credit) AS balance
+                FROM account_move am 
+                inner join account_journal aj on aj.id=am.journal_id 
+                INNER JOIN account_move_line l ON l.move_id = am.id
+                INNER JOIN variables ON am.company_id = variables.company_id  
+                WHERE 
+                    (am.date < variables.date_end)
+                    AND (
+                        variables.filter_state = 'all' 
+                        OR (variables.filter_state = 'posted' AND am.state = 'posted')
+                    )
+                    AND (variables.account_id = 0 OR l.account_id = variables.account_id)
+                    AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
+                    AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
+            """)
+            accounts_res = self._cr.dictfetchall()
+            return accounts_res
+
     def action_process_sql(self):
         for each in self:
             company_id = each.company_id.id
@@ -70,7 +110,7 @@ class report_view_general_ledger(models.Model):
                 '{date_end}'::date AS date_end,
                 '{filter_state}'::varchar AS filter_state
                 )
-        
+
                 SELECT 
                     l.id AS move_line_id,
                     l.company_id,
@@ -98,7 +138,6 @@ class report_view_general_ledger(models.Model):
                 {sort_By}
             """)
             accounts_res = self._cr.dictfetchall()
-            print(accounts_res)
             return accounts_res
 
     def action_process(self):

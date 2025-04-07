@@ -14,7 +14,7 @@ class grl_ledger_xlsx(models.AbstractModel):
         workbook.formats[0].set_font_size(9)
 
         # Configuración del worksheet
-        worksheet = workbook.add_worksheet(name="Mayor personalizado")
+        worksheet = workbook.add_worksheet(name="RMC")
         worksheet.set_portrait()
         worksheet.center_horizontally()
         worksheet.set_paper(9)
@@ -99,6 +99,18 @@ class grl_ledger_xlsx(models.AbstractModel):
                 'font_color': 'white',  # Color del texto
                 'bg_color': '#AF2B2F',  # Color de fondo
             })
+            f_string_bold_header_cl1_left = workbook.add_format({
+                'num_format': '@',
+                'bold': True,
+                'font_size': 9,
+                'valign': 'top',
+                'align': 'center',
+                'text_wrap': True,
+                'top': 1,
+                'bottom': 1,
+                'font_color': 'white',  # Color del texto
+                'bg_color': '#A3A3A3',  # Color de fondo
+            })
             f_date = workbook.add_format({
                 'num_format': 'dd/mm/yyyy',
                 'font_size': 9,
@@ -182,24 +194,45 @@ class grl_ledger_xlsx(models.AbstractModel):
                 19: "TOTAL ACUMULADO"
             }
             col_pos = 0
-            row_pos = 8
+            row_pos = 9
             #
-            # headers = self._get_ws_header()
-            # worksheet.freeze_panes(row_pos + 1, 0)
+            res_list_init = obj.action_process_init_sql(None, obj.date_from)
+            res_init = res_list_init and res_list_init[0]['balance'] or 0
+            #
+            worksheet.write(row_pos - 1, 0, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 1, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 2, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 3, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 4, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 5, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 6, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 7, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 8, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 9, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 10, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 11, 'SALDO INICIAL', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 12, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 13, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 14, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 15, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 16, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 17, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 18, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos - 1, 19, res_init, f_string_bold_header_cl1_left)
+            row_pos += 1
+            #
             worksheet.autofilter(row_pos, 0, row_pos, len(headers) - 1)
             for each_lst in headers.keys():
                 worksheet.write(row_pos, each_lst, headers.get(each_lst), f_string_bold_header_left)
-            row_pos += 1
+            row_pos += 2
             ############################################################
-            # row = 0
-            # res = generate_sql(dictionary_parameter)
-            identi = ''
-            state_flt = ''
             sum_debit = 0
             sum_credit = 0
+            amount_balance = res_init
             for move in res:
                 sum_debit += move.get('debit')
                 sum_credit += move.get('credit')
+                amount_balance += move.get('balance', 0)
                 brw_move_line = self.env['account.move.line'].browse(move.get('move_line_id'))
                 worksheet.write(row_pos, 0, move.get('ldate'), f_date)
                 worksheet.write(row_pos, 1, brw_move_line.account_id.code + ' ' + brw_move_line.account_id.name, f_string_plain_left)
@@ -220,6 +253,50 @@ class grl_ledger_xlsx(models.AbstractModel):
                 worksheet.write(row_pos, 16, move.get('credit'), f_float_2d)
                 worksheet.write(row_pos, 17, sum_debit, f_float_2d)
                 worksheet.write(row_pos, 18, sum_credit, f_float_2d)
-                worksheet.write(row_pos, 19, move.get('balance'), f_float_2d)
+                worksheet.write(row_pos, 19, amount_balance, f_float_2d)
                 row_pos += 1
+            # FILA DE 1ERA SUMATORIA
+            row_pos += 1
+            worksheet.write(row_pos, 0, 'SUBTOTAL', f_string_bold_header_left)
+            worksheet.write(row_pos, 1, obj.account_id.code + ' ' + obj.account_id.name, f_string_bold_header_left)
+            worksheet.write(row_pos, 2, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 3, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 4, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 5, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 6, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 7, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 8, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 9, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 10, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 11, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 12, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 13, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 14, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 15, sum_debit, f_string_bold_header_left)
+            worksheet.write(row_pos, 16, sum_credit, f_string_bold_header_left)
+            worksheet.write(row_pos, 17, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 18, '', f_string_bold_header_left)
+            worksheet.write(row_pos, 19, '', f_string_bold_header_left)
+            # FILA DE 2DA SUMATORIA
+            row_pos += 2
+            worksheet.write(row_pos, 0, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 1, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 2, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 3, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 4, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 5, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 6, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 7, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 8, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 9, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 10, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 11, 'SALDO FINAL', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 12, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 13, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 14, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 15, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 16, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 17, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 18, '', f_string_bold_header_cl1_left)
+            worksheet.write(row_pos, 19, amount_balance, f_string_bold_header_cl1_left)
             return obj

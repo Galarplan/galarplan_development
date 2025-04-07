@@ -58,7 +58,8 @@
                         <field name="reconcile_invoice_ids">
                             <tree editable="bottom" no_open="1" >
                                 <field name="available_invoices" invisible="1" />
-                                <field name="invoice_id" domain="available_invoices" string="Number" required="1"
+                                <!-- <field name="invoice_id" domain="available_invoices" string="Number" required="1" -->
+                                <field name="invoice_id" string="Number" required="1"
                                        options="{'limit': 10, 'create': false, 'create_edit': false, 'search_more': true, 'no_open': true}" />
                                 <field name="amount_untaxed" readonly="1" force_save="1"/>
                                 <field name="amount_tax" readonly="1" force_save="1"/>

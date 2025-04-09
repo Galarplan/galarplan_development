@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="invoice__extend_round_off_view" model="ir.ui.view">
+        <field name="name">invoice.move.extend_round_off</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_residual']" position="before">
+                <field name="round_active" invisible="1" />
+                <!-- <field name="round_off_value" attrs="{'invisible': [('round_active', '=', False)]}" /> -->
+                <field name="round_off_value" invisible="1" />
+                <field name="round_off_amount" invisible="0" attrs="{'readonly': [('round_active', '=', True)]}"/>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="account_tax_inherit" model="ir.ui.view">
+        <field name="name">account.tax.inherit.other_tax</field>
+        <field name="model">account.tax</field>
+        <field name="inherit_id" ref="account.view_tax_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='active']" position="after">
+                <field name="other_tax" />
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

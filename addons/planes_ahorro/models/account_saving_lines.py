@@ -38,6 +38,8 @@ class AccountSavingLines(models.Model):
     por_pagar = fields.Monetary(string='Por Pagar', compute="_compute_pendientes", store=True, readonly=False,tracking=True)
     pagos = fields.Monetary(string='Pagos',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
     pendiente = fields.Monetary(string='Pendiente',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
+    remanente = fields.Monetary(string='Remanente', default=0.00)
+
     estado_pago = fields.Selection([ ('sin_aplicar', 'Sin Aplicar'),
                                      ('pendiente', 'Pendiente'),
                                      ('pagado', 'Pagado')], string='Estado de pago', default='pendiente',compute="_compute_pendientes",store=True,readonly=False,tracking=True)
@@ -158,13 +160,13 @@ class AccountSavingLines(models.Model):
                 por_pagar=total
                 if not brw_each.invoice_id or brw_each.invoice_id.state!='posted':
                     if brw_each.payment_line_ids:
-                        for brw_line_payment in brw_each.payment_line_ids:
-                            #if brw_line_payment.type!='historic':
+                        for brw_line_payment in brw_each.payment_line_ids:###TABLA DONDE AMORTIZA O GUARDA CUANTO ESTA APLCAIDO
                             if brw_line_payment.payment_id:
                                 if brw_line_payment.payment_id.state=='posted':
                                     pagos+=brw_line_payment.aplicado
                             else:
-                                pagos+=brw_line_payment.aplicado
+                                if brw_line_payment.type != 'historic':
+                                    pagos+=brw_line_payment.aplicado
                     #else:##si no tiene pagos registrados se iria por el campo calculado
                     pagos += brw_each.migrated_payment_amount
                 else:##si estado es facturado
@@ -187,8 +189,14 @@ class AccountSavingLines(models.Model):
                 pagos=por_pagar
                 pendiente=0.00
             if brw_each.saving_id.state not in ('draft','cancel'):
-                if pendiente==0.00:
+                remanente = 0.00
+                if abs(pendiente)<=0.01:
+                    remanente=pendiente
                     estado_pago="pagado"
+                    pendiente=0.00
+                    por_pagar=por_pagar-remanente
+                    pagos=por_pagar
+                brw_each.remanente=remanente
             brw_each.estado_pago=estado_pago
             brw_each.por_pagar = por_pagar
             brw_each.pagos = pagos

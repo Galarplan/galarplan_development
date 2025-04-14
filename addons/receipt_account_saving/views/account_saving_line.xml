@@ -13,8 +13,9 @@
                 string="Recibo"
                 icon="fa-print"
                 help="Imprimir Recibo de Cobro"
-                attrs="{'invisible': [('parent_saving_state', 'in', ('draft','cancel'))]}"
+                attrs="{'invisible': ['|', ('parent_saving_state', 'in', ('draft','cancel')), ('estado_pago', '!=', 'pagado')]}"
                 groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"/>
+        <field name="deposit_date" />
       </xpath>
 
     </field>

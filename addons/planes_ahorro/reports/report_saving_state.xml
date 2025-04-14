@@ -111,7 +111,10 @@
                                                 </t>
                                             </td>
                                             <td name="line_payment_date">
-                                                <t t-if="ml.last_payment_date">
+                                                <t t-if="ml.deposit_date">
+                                                    <span t-field="ml.deposit_date" />
+                                                </t>
+                                                <t t-else="">
                                                     <span t-field="ml.last_payment_date" />
                                                 </t>
                                             </td>

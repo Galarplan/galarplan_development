@@ -23,6 +23,9 @@ class AccountSavingPaymentWizard(models.TransientModel):
         default=fields.Date.context_today,
         required=True,
     )
+
+    deposit_date = fields.Date('Deposito cliente')
+
     payment_journal_id = fields.Many2one(
         'account.journal',
         string='Diario',
@@ -144,6 +147,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         )
         lines=[]
         for brw_line in self.payment_ids:
+            brw_line.saving_line_id.deposit_date = self.deposit_date
             lines.append((0,0,{
                 "number":brw_line.saving_line_id.number,
                 "date": brw_line.saving_line_id.date,

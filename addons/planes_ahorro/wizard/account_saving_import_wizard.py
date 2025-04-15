@@ -112,6 +112,17 @@ class AccountSavingImportWizard(models.TransientModel):
             if isinstance(excel_date, float) or isinstance(excel_date, int):
                 return base_date + timedelta(days=int(excel_date))
             return None
+        
+        def excel_date_to_date_2(excel_date):
+            # Excel date starts from January 1, 1900, but has an off-by-one bug (1900 is treated as a leap year).
+            # To fix this, subtract 2 days.
+            base_date = datetime(1900, 1, 1) - timedelta(days=2)
+
+            # Convert the Excel date (integer or float) to a date
+            if isinstance(excel_date, float) or isinstance(excel_date, int):
+                if (excel_date != 0):
+                    return base_date + timedelta(days=int(excel_date))
+            return None
 
         NUMERO = 0
         FECHA = 1
@@ -123,6 +134,9 @@ class AccountSavingImportWizard(models.TransientModel):
         PORCENTAJE_SERVICIO_ADMINISTRATIVO = 7
         PORCENTAJE_SEGURO = 8
         PORCENTAJE_INSCRIPCION = 9
+        ESTADO_DE_PAGO = 10
+        MONTO_PAGADO = 11
+        FECHA_PAGO = 12
         DEC=2
         for brw_each in self:
             line_ids = [(5,)]
@@ -147,13 +161,16 @@ class AccountSavingImportWizard(models.TransientModel):
                     sheet.cell(row_index, PORCENTAJE_SERVICIO_ADMINISTRATIVO).value)
                 porcentaje_seguro = clean_value(sheet.cell(row_index, PORCENTAJE_SEGURO).value)
                 porcentaje_inscripcion = clean_value(sheet.cell(row_index, PORCENTAJE_INSCRIPCION).value)
-
+                estado_pago = str(sheet.cell(row_index, ESTADO_DE_PAGO).value).strip() or "sin_aplicar"
+                monto_pagado = clean_value(sheet.cell(row_index, MONTO_PAGADO).value)
+                fecha_pagado = clean_value(sheet.cell(row_index, FECHA_PAGO).value)
                 # Validación: al menos un valor debe ser mayor a 0
                 if not any([aportacion, planes_ahorro, servicio_administrativo, seguro, inscripcion]):
                     raise ValueError(
                         f"Error en la fila {row_index}: Al menos un valor entre APORTACION, PLANES DE AHORRO, SERVICIO ADMINISTRATIVO, SEGURO e INSCRIPCION debe ser mayor a 0.")
                 numero=int(numero)
                 fecha=excel_date_to_date(fecha)
+                fecha_pagado=excel_date_to_date_2(fecha_pagado)
                 if numero == 0:
                     if inscripcion>0.00:
                         values = {
@@ -170,6 +187,10 @@ class AccountSavingImportWizard(models.TransientModel):
                             "migrated_payment_amount": False,
                             "serv_inscription_amount": inscripcion,
                             "rate_inscription": porcentaje_inscripcion,
+                            "estado_pago": estado_pago,
+                            "migrated_payment_amount": monto_pagado,
+                            "last_payment_date": fecha_pagado,
+                            "deposit_date":fecha_pagado
                         }
                         line_ids.append((0, 0, values))
                 else:
@@ -178,7 +199,7 @@ class AccountSavingImportWizard(models.TransientModel):
                         raise ValidationError(_("El valor de la aportacion deberia ser la suma de planes de ahorro,serv. administrativo y seguro"))
                     values = {
                         "sequence": numero,
-                        "number": numero+1,
+                        "number": numero,
                         "date": fecha,
                         "pagos": 0.00,
                         "pendiente": 0.00,
@@ -194,6 +215,10 @@ class AccountSavingImportWizard(models.TransientModel):
                         "seguro_amount": seguro,
                         "serv_admin_percentage": porcentaje_servicio_administrativo,
                         "seguro_percentage": porcentaje_seguro,
+                        "estado_pago": estado_pago,
+                        "migrated_payment_amount": monto_pagado,
+                        "last_payment_date": fecha_pagado,
+                        "deposit_date":fecha_pagado
                     }
                     line_ids.append((0, 0, values))
             brw_each.saving_id.write({"line_ids":line_ids})

@@ -80,9 +80,9 @@ class ReportSavingStateXLSX(models.AbstractModel):
         for ml in docs.quota_ids.sorted(key=lambda l: l.number):
             ws.cell(row=row, column=1, value=ml.number)
             ws.cell(row=row, column=2, value=ml.date or "")
-            ws.cell(row=row, column=3, value=ml.last_payment_date or "")
+            ws.cell(row=row, column=3, value=ml.deposit_date or ml.last_payment_date or "")
             ws.cell(row=row, column=4, value=ml.serv_admin_amount if ml.sequence == 0 else ml.saving_amount)
-            ws.cell(row=row, column=5, value=ml.pagos)
+            ws.cell(row=row, column=5, value=ml.pagos or ml.migrated_payment_amount or "")
             ws.cell(row=row, column=6, value=ml.pendiente)
             ws.cell(row=row, column=7, value=ml.estado_pago)
             payment_amount_total += ml.pagos

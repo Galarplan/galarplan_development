@@ -133,15 +133,17 @@
                                                     t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
                                             </td> -->
                                             <td name="line_payment">
-                                                <t t-set="expected_amount"
-                                                    t-value="ml.serv_admin_amount if ml.sequence == 0 else ml.saving_amount" />
-                                                <t t-if="abs(ml.pagos - expected_amount) &gt;= 0.01">
-                                                    <span t-esc="expected_amount"
-                                                        t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                <t t-set="expected_amount" t-value="ml.serv_admin_amount if ml.sequence == 0 else ml.saving_amount"/>
+                                                <t t-if="ml.estado_pago=='pagado'">
+                                                    <t t-if="abs(ml.pagos - expected_amount) &gt;= 0.01">
+                                                      <span t-esc="expected_amount" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span t-esc="ml.pagos" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>    
+                                                    </t>
                                                 </t>
                                                 <t t-else="">
-                                                    <span t-esc="ml.pagos"
-                                                        t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                   <span t-esc="ml.pagos" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                                 </t>
                                             </td>
                                             <td name="line_pending">

@@ -10,6 +10,7 @@
 				<field name="id" invisible="1"/>
 				<field name="payslip_journal_id" domain="[('type','=','general'),('company_id','=',id)]" />
 				<field name="vacation_passed_days" required="1" />
+				<field name="account_by_payslip_run" />
 			</field>
 
 		</field>

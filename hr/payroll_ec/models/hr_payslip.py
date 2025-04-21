@@ -564,6 +564,14 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
         return True
 
     def action_payslip_draft(self):
+        for brw_each in self:
+            if brw_each.move_id:
+                if brw_each.move_id.state != 'cancel':
+                    brw_each.move_id.button_draft()
+                    brw_each.move_id.button_cancel()
+                if brw_each.move_id.state != 'cancel':
+                    raise ValidationError(_("El documento contable %s debe estar anulado") % (brw_each.move_id.name,))
+                brw_each.write({"move_id":False})
         value=super(HrPayslip,self).action_payslip_draft()
         self.remove_lines_historic()
         return value
@@ -639,7 +647,7 @@ GROUP BY date_series.salary_rule_id,date_series.employee_id, date_series.holiday
                     "internal_id": brw_each.id,
                     "model_name": brw_each._name,
                     "description": brw_each.name,
-                    "email": brw_each.employee_id.private_email or brw_each.employee_id.work_email ,
+                    "email": brw_each.employee_id.private_email or brw_each.employee_id.work_email,
                     "employee_id": brw_each.employee_id.id,
                     "company_id": brw_each.company_id.id,
                     "state": "draft",

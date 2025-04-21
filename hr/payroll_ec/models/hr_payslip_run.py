@@ -149,7 +149,6 @@ class HrPayslipRun(models.Model):
             if brw_each.slip_ids:
                 for brw_slip in brw_each.slip_ids:
                     brw_slip.compute_sheet()
-
         return True
 
     @api.model
@@ -377,6 +376,13 @@ class HrPayslipRun(models.Model):
             brw_each.write({"move_line_ids": move_line_ids})
 
     def create_payslip_move(self):
+        for brw_each in self:
+            if brw_each.company_id.account_by_payslip_run:
+                brw_each.create_payslip_move_payslip_run()
+            else:
+                brw_each.create_payslip_move_payslip()
+
+    def create_payslip_move_payslip_run(self):
         OBJ_MOVE = self.env["account.move"]
         OBJ_MOVE_LINE = self.env["account.move.line"]
         OBJ_RULE = self.env["hr.salary.rule"].sudo()
@@ -462,6 +468,104 @@ class HrPayslipRun(models.Model):
                 raise ValidationError(_("No se pudo generar el asiento contable "))
             if brw_each.move_id.state != 'posted':
                 raise ValidationError(_("El asiento %s debe estar en estado publicado") % (brw_each.move_id.name), )
+
+    def create_payslip_move_payslip(self):
+        OBJ_MOVE = self.env["account.move"]
+        OBJ_MOVE_LINE = self.env["account.move.line"]
+        OBJ_RULE = self.env["hr.salary.rule"].sudo()
+        for brw_each in self:
+            payslips = brw_each.slip_ids
+            for payslip in payslips:
+                self._cr.execute("""
+                        SELECT AM.RULE_ID,
+                               AM.analytic_account_id,
+                               AM.ACCOUNT_ID,
+                               SUM(AM.DEBIT) AS DEBIT,
+                               SUM(AM.CREDIT) AS CREDIT
+                        FROM HR_PAYSLIP_MOVE AM
+                        WHERE AM.PAYSLIP_ID = %s
+                        GROUP BY AM.RULE_ID, AM.ACCOUNT_ID, AM.analytic_account_id
+                    """, (payslip.id,))
+                result = self._cr.fetchall()
+                if not result:
+                    continue
+
+                if not brw_each.company_id.payslip_journal_id:
+                    raise ValidationError(
+                        _("Debes definir un diario de nómina para la compañía %s") % (brw_each.company_id.name,))
+
+                vals = {
+                    "move_type": "entry",
+                    "name": "/",
+                    'narration': payslip.name,
+                    'date': payslip.date_to,
+                    'ref': "ROL %s - %s" % (payslip.number or payslip.id, payslip.employee_id.name),
+                    'company_id': brw_each.company_id.id,
+                    'partner_id':payslip.employee_id.partner_id.id,
+                    "journal_id": brw_each.company_id.payslip_journal_id.id,
+                }
+
+                line_ids = [(5,)]
+                for rule_id, analytic_account_id, account_id, debit, credit in result:
+                    brw_rule = OBJ_RULE.browse(rule_id)
+                    each_line_vals = {
+                        "name": brw_rule.name,
+                        'debit': debit,
+                        'credit': credit,
+                        'ref': vals["ref"],
+                        'account_id': account_id,
+                        'partner_id':payslip.employee_id.partner_id.id,
+                        'date': payslip.date_to,
+                        "rule_id": brw_rule.id
+                    }
+                    if analytic_account_id:
+                        each_line_vals["analytic_distribution"] = {str(analytic_account_id): 100}
+                    line_ids.append((0, 0, each_line_vals))
+
+                vals["line_ids"] = line_ids
+                brw_move = OBJ_MOVE.create(vals)
+                brw_move.action_post()
+
+                if brw_move.state != "posted":
+                    raise ValidationError(
+                        _("Asiento contable %s,id %s no fue publicado!") % (brw_move.name, brw_move.id))
+
+                payslip.move_id = brw_move.id
+
+                # Reconciliación
+                srch_inputs = self.env["hr.payslip.input"].sudo().search([
+                    ('payslip_id', '=', payslip.id),
+                    ('move_line_id', '!=', False)
+                ])
+                values_reconciles = {}
+                if srch_inputs:
+                    for brw_input in srch_inputs:
+                        if not values_reconciles.get(brw_input.rule_id, False):
+                            values_reconciles[brw_input.rule_id] = {
+                                "account_id": self.env["account.account"],
+                                "move_lines": self.env["account.move.line"],
+                                "type": brw_input.rule_id.category_id.code == 'IN' and 'credit' or 'debit',
+                                "reverse_type": brw_input.rule_id.category_id.code == 'IN' and 'debit' or 'credit'
+                            }
+                        account_values = values_reconciles[brw_input.rule_id]
+                        account_values["move_lines"] += brw_input.move_line_id
+                        account_values["account_id"] = brw_input.move_line_id.account_id
+                        values_reconciles[brw_input.rule_id] = account_values
+
+                for reconcile_data in values_reconciles.values():
+                    move_lines = reconcile_data["move_lines"]
+                    account = reconcile_data["account_id"]
+                    move_lines_srch = OBJ_MOVE_LINE.search([
+                        ('move_id', '=', brw_move.id),
+                        ('account_id', '=', account.id),
+                        ('move_id.state', '=', 'posted')
+                    ])
+                    (move_lines + move_lines_srch).reconcile()
+
+                if not payslip.move_id:
+                    raise ValidationError(_("No se pudo generar el asiento contable para el rol %s") % (payslip.name,))
+                if payslip.move_id.state != 'posted':
+                    raise ValidationError(_("El asiento %s debe estar en estado publicado") % (payslip.move_id.name))
 
     def print_report(self):
         # Obtenemos la acción de reporte

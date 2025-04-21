@@ -17,7 +17,7 @@ class HrPayslipInput(models.Model):
     category_code = fields.Char(related="category_id.code", store=False, readonly=True)
 
     code = fields.Char(string="Código")
-    movement_id = fields.Many2one("hr.employee.movement.line", "Movimiento", required=True)
+    movement_id = fields.Many2one("hr.employee.movement.line", "Movimiento", required=False)
 
     move_line_id = fields.Many2one("account.move.line", "Linea de Asiento",store=True,readonly=False, required=False,compute="_get_compute_move_line_id")
 

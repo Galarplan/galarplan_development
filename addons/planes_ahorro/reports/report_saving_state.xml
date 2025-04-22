@@ -112,20 +112,18 @@
                                             </td>
                                             <td name="line_payment_date">
                                                 <t t-if="ml.deposit_date">
-                                                    <span t-field="ml.deposit_date" />
+                                                    <span t-field="ml.deposit_date"/>
                                                 </t>
                                                 <t t-else="">
-                                                    <span t-field="ml.last_payment_date" />
+                                                    <span t-field="ml.last_payment_date"/>
                                                 </t>
                                             </td>
                                             <td name="line_original">
-                                                <t t-if="ml.sequence == 0">
-                                                    <span t-esc="ml.serv_admin_amount"
-                                                        t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                <t t-if="ml.number == 0">
+                                                    <span t-esc="ml.serv_inscription_amount" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                                 </t>
-                                                <t t-if="ml.sequence != 0">
-                                                    <span t-esc="ml.saving_amount"
-                                                        t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                <t t-if="ml.number != 0">
+                                                    <span t-esc="ml.saving_amount" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                                 </t>
                                             </td>
                                             <!-- <td name="line_payment">
@@ -133,9 +131,10 @@
                                                     t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
                                             </td> -->
                                             <td name="line_payment">
-                                                <t t-set="expected_amount" t-value="ml.serv_admin_amount if ml.sequence == 0 else ml.saving_amount"/>
+                                                <t t-set="expected_amount" t-value="ml.serv_inscription_amount if ml.number == 0 else ml.saving_amount"/>
                                                 <t t-if="ml.estado_pago=='pagado'">
-                                                    <t t-if="abs(ml.pagos - expected_amount) &gt;= 0.01">
+                                                    <!--<t t-if="abs(ml.pagos - expected_amount) &;= 0.01">-->
+                                                    <t t-if="abs(ml.pagos - expected_amount) == 0.01">
                                                       <span t-esc="expected_amount" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                                     </t>
                                                     <t t-else="">
@@ -147,11 +146,10 @@
                                                 </t>
                                             </td>
                                             <td name="line_pending">
-                                                <span t-esc="ml.pendiente"
-                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                                <span t-esc="ml.pendiente" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                             </td>
                                             <td name="line_state_payment">
-                                                <span t-field="ml.estado_pago" />
+                                                <span t-field="ml.estado_pago"/>
                                             </td>
                                         </tr>
                                         <t t-set="payment_amount"

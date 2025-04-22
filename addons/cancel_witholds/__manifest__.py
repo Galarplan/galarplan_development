@@ -27,6 +27,7 @@
         # 'security/ir.model.access.csv',
         'security/res_group.xml',
         'views/account_move.xml',
+        'views/ir_ui_menu.xml',
     ],
     # only loaded in demonstration mode
     # 'demo': [

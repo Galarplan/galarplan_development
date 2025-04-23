@@ -8,7 +8,7 @@
     'license': 'LGPL-3',
     'category': '',
     'depends': [
-        'l10n_ec'
+        'base','account','l10n_ec','l10n_latam_invoice_document'
     ],
     # 'data': [
     #     ''

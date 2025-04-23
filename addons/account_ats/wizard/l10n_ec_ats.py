@@ -80,7 +80,7 @@ class l10n_ec_ats(models.TransientModel):
             self.file_name = file_name
             return {
                          'type' : 'ir.actions.act_url',
-                         'url': '/web/content/%s/%s/report_file/%s' % (self._name,self.id,file_name),
+                         'url': '/web/content/%s/%s/report_file/%s?download=true' % (self._name,self.id,file_name),
                          'target': 'new'
                 }
 

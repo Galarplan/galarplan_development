@@ -1,0 +1,627 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* account_parent
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-04-23 02:49+0000\n"
+"PO-Revision-Date: 2025-04-23 10:00-0500\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es_EC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.5\n"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+msgid "<strong>Date from :</strong>"
+msgstr "<strong>Fecha desde..:</strong>"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+msgid "<strong>Date to :</strong>"
+msgstr "<strong>Fecha a :</strong>"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+msgid "<strong>Target Moves :</strong>"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_account_account
+msgid "Account"
+msgstr "Cuenta"
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_account_chart_template
+msgid "Account Chart Template"
+msgstr "Plantilla de Plan de Cuentas"
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_account_open_chart
+msgid "Account Open chart"
+msgstr "Saldos Iniciales"
+
+#. module: account_parent
+#: model:ir.model.fields,help:account_parent.field_account_account__account_type
+msgid ""
+"Account Type is used for information purpose, to generate country-specific "
+"legal reports, and set the rules to close a fiscal year and generate "
+"opening entries."
+msgstr ""
+"El tipo de cuenta es usado con propósitos informativos, para generar "
+"informes legales específicos de cada país, y establecer las reglas para "
+"cerrar un ejercicio fiscal y generar los asientos de apertura."
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_chart
+msgid "Account charts"
+msgstr "Plan de Cuentas"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_open_chart__display_account__all
+msgid "All"
+msgstr "Todos"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_open_chart__target_move__all
+msgid "All Entries"
+msgstr "Todas las entradas"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_open_chart__target_move__posted
+msgid "All Posted Entries"
+msgstr "Todas las entradas publicadas"
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Assets"
+msgstr "Activos"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__unfold
+msgid "Auto Unfold"
+msgstr "Despliegue Automático"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__balance
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Balance"
+msgstr "Balance"
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Balance Sheet"
+msgstr "Balance General"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Bank and Cash"
+msgstr "Caja y Banco"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/controllers/main.py:0
+#, python-format
+msgid ""
+"Binary fields can not be exported to Excel unless their content is base64-"
+"encoded. That does not seem to be the case for %s."
+msgstr ""
+"Los campos binarios no pueden exportarse a Excel a menos que su contenido "
+"esté codificado en base64. No parece ser el caso de %s."
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_chart
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: account_parent
+#: model:ir.actions.client,name:account_parent.open_view_account_tree
+msgid "Chart of Account Hierarchy"
+msgstr "Plan Contable Jerarquico"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Chart of Account Not Loaded."
+msgstr "Plan de cuentas no cargado."
+
+#. module: account_parent
+#: model:ir.actions.act_window,name:account_parent.action_account_chart
+#: model:ir.ui.menu,name:account_parent.menu_action_account_chart
+msgid "Chart of Accounts Hierarchy"
+msgstr "Plan Jerarquico"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__child_ids
+msgid "Child Accounts"
+msgstr "Cuentas Hijas"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_open_chart__report_type__account_type
+msgid "CoA based on Account Type"
+msgstr "Agrupado segun el Tipo de cuenta"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_open_chart__report_type__account
+msgid "CoA based on Accounts"
+msgstr "Agrupado basado en cuentas y subcuentas"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Code"
+msgstr "Codigo"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__company_id
+msgid "Company"
+msgstr "Compañia"
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_res_config_settings
+msgid "Config Settings"
+msgstr "Ajustes de configuración"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Cost of Revenue"
+msgstr "Costos de Ingresos"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__create_uid
+msgid "Created by"
+msgstr "Creado Por"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__credit
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Credit"
+msgstr "Crédito"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Credit Card"
+msgstr "Tarjeta de Crédito"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_list_parent
+msgid "Cuenta Padre"
+msgstr "Cuenta Padre"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Current Assets"
+msgstr "Activos Corrientes"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Current Liabilities"
+msgstr "Pasivo Corriente"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Current Year Earnings"
+msgstr "Beneficios del año en curso"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Date :"
+msgstr "Fecha :"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Date From :"
+msgstr "Desde:"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Date To :"
+msgstr "Hasta:"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_chart
+msgid "Date(s)"
+msgstr "Fechas"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__debit
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Debit"
+msgstr "Debito"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Depreciation"
+msgstr "Depreciación"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__display_account
+msgid "Display Accounts"
+msgstr "Mostrar Cuentas"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Display Accounts :"
+msgstr "Mostrar Cuentas :"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__display_name
+msgid "Display Name"
+msgstr "Nombre Visual"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__date_to
+msgid "End Date"
+msgstr "Fecha Fin"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "End date must be greater than start date!"
+msgstr "Fecha de Fin debe ser mayor que la fecha de inicio!"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Ending Balance"
+msgstr "Saldo Final"
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Equity"
+msgstr "Capital"
+
+#. module: account_parent
+#. odoo-javascript
+#: code:addons/account_parent/static/src/xml/account_parent_backend.xml:0
+#, python-format
+msgid "Error"
+msgstr "Error"
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Expense"
+msgstr "Gasto"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Expenses"
+msgstr "Gastos"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Fixed Assets"
+msgstr "Activos Fijos"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__id
+msgid "ID"
+msgstr "ID"
+
+#. module: account_parent
+#: model:ir.model.fields,help:account_parent.field_res_config_settings__parent_account_loaded
+msgid ""
+"If you have an parent account chart template already imported and want to "
+"load for this company "
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,help:account_parent.field_account_open_chart__report_type
+msgid "If you haven't configured parent accounts, then use 'Account Type'"
+msgstr ""
+"Si no ha configurado cuentas de nivel superior, utilice «Tipo de cuenta»."
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Income"
+msgstr "Ingresos"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__initial_balance
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Initial Balance"
+msgstr "Balance Inicial"
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_account_journal
+msgid "Journal"
+msgstr "Diario"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__move_line_ids
+msgid "Journal Entry Lines"
+msgstr "Entradas de Diario"
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_account_move_line
+msgid "Journal Item"
+msgstr "Items de Diario"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Liabilities"
+msgstr "Pasivos"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.res_config_settings_view_form
+msgid "Load Parent Accounts"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_res_config_settings__parent_account_loaded
+msgid "Load Parent accounts"
+msgstr ""
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Name"
+msgstr ""
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Non-current Assets"
+msgstr "Activos No Corrientes"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Non-current Liabilities"
+msgstr "Pasivos No Corrientes"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_chart
+msgid ""
+"Note: If there is no parent accounts set, then No hierarchical view will be "
+"displayed."
+msgstr ""
+"Nota: Si no hay cuentas de nivel superior, no se mostrará ninguna vista "
+"jerárquica."
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_chart
+msgid "Open Charts"
+msgstr ""
+
+#. module: account_parent
+#. odoo-javascript
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#, python-format
+msgid "Other"
+msgstr "Otros"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Other Income"
+msgstr "Otros Ingresos"
+
+#. module: account_parent
+#. odoo-javascript
+#: code:addons/account_parent/static/src/xml/account_parent_backend.xml:0
+#, python-format
+msgid "PRINT PDF"
+msgstr ""
+
+#. module: account_parent
+#. odoo-javascript
+#: code:addons/account_parent/static/src/xml/account_parent_backend.xml:0
+#, python-format
+msgid "PRINT XLS"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__parent_id
+#: model:ir.model.fields,field_description:account_parent.field_account_account_template__parent_id
+msgid "Parent Account"
+msgstr "Cuenta Superior"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.res_config_settings_view_form
+msgid "Parent Accounts"
+msgstr "Cuentas Superiores"
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__parent_path
+msgid "Parent Path"
+msgstr ""
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Payable"
+msgstr "Por Pagar"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Prepayments"
+msgstr "Prepagos"
+
+#. module: account_parent
+#. odoo-javascript
+#. odoo-python
+#: code:addons/account_parent/static/src/js/account_type_selection.js:0
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Profit & Loss"
+msgstr "Perdidas y Ganancias"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/wizard/account_chart.py:0
+#, python-format
+msgid "Receivable"
+msgstr "Por Cobrar"
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.res_config_settings_view_form
+msgid "Reloads Parent Accounts from chart of account template"
+msgstr ""
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Report :"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__report_type
+msgid "Report type"
+msgstr ""
+
+#. module: account_parent
+#: model:res.groups,name:account_parent.group_coas_user
+msgid "Show Chart of Account Structure"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__show_initial_balance
+msgid "Show Initial Balance"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__date_from
+msgid "Start Date"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_open_chart__target_move
+msgid "Target Moves"
+msgstr ""
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Target Moves :"
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model,name:account_parent.model_account_account_template
+msgid "Templates for Accounts"
+msgstr "Plantillas de cuentas"
+
+#. module: account_parent
+#. odoo-python
+#: code:addons/account_parent/controllers/main.py:0
+#, python-format
+msgid ""
+"There are too many rows (%s rows, limit: 65535) to export as Excel 97-2003 "
+"(.xls) format. Consider splitting the export."
+msgstr ""
+
+#. module: account_parent
+#: model:ir.model.fields,help:account_parent.field_account_account_template__account_type
+msgid ""
+"These types are defined according to your country. The type contains more "
+"information about the account and its specificities."
+msgstr ""
+"Estos tipos se definen en función de tu país. Contienen más información "
+"sobre la cuenta y sus especificaciones."
+
+#. module: account_parent
+#: model:ir.model.fields,field_description:account_parent.field_account_account__account_type
+#: model:ir.model.fields,field_description:account_parent.field_account_account_template__account_type
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_body_pdf
+#: model_terms:ir.ui.view,arch_db:account_parent.report_coa_hierarchy
+msgid "Type"
+msgstr "Tipo"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_account__account_type__view
+#: model:ir.model.fields.selection,name:account_parent.selection__account_account_template__account_type__view
+msgid "View"
+msgstr "Vista"
+
+#. module: account_parent
+#: model:ir.model.fields.selection,name:account_parent.selection__account_open_chart__display_account__movement
+msgid "With movements"
+msgstr "Con Movimientos"
+
+#. module: account_parent
+#: model:ir.model.fields,help:account_parent.field_account_open_chart__display_account
+msgid ""
+"`All`: All account will be displayed, `With Movements`: Only accounts that "
+"have a movement based on the conditions given"
+msgstr ""
+
+#. module: account_parent
+#: model_terms:ir.ui.view,arch_db:account_parent.view_account_chart
+msgid "or"
+msgstr ""

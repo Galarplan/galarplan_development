@@ -38,5 +38,15 @@
         groups="account.group_account_readonly,account.group_account_invoice"
     />
 
+    <menuitem id="menu_move_withhold_in"
+        action="action_move_withhold_in" sequence="3"
+        parent="account.menu_finance_payables"
+    />
+
+    <menuitem id="menu_move_withhold_out"
+        action="action_move_withhold_out" sequence="3"
+        parent="account.menu_finance_receivables"
+    />
+
 
 </odoo>

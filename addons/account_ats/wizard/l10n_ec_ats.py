@@ -30,7 +30,7 @@ class l10n_ec_ats(models.TransientModel):
         srch=self.env["calendar.month"].sudo().search([('value','=',month)])
         return srch and srch[0].id or False
     
-    company_id=fields.Many2one("res.company","Compañia",default=get_default_company_id)
+    company_id=fields.Many2one("res.company","Compañia",default=lambda self: self.env.company.id)
     report_file = fields.Binary(copy=False, )
     file_name = fields.Char(copy=False, )
     type_report = fields.Selection([('ATS', '(ATS) ANEXO TRANSACCIONAL SIMPLIFICADO')],default='ATS', copy=False)
@@ -87,7 +87,7 @@ class l10n_ec_ats(models.TransientModel):
     # region ATS
     def ATS(self, date_from, date_to):
         config = self.env['ir.config_parameter'].sudo()
-        company_id = self.env.user.company_id
+        company_id = self.company_id
 
         root = Element("iva")
         SubElement(root, "TipoIDInformante").text = 'R'
@@ -130,7 +130,7 @@ class l10n_ec_ats(models.TransientModel):
         return base64.b64encode(report)
 
     def _generate_ventas_general(self, root, date_from, date_to):
-        company_id = self.env.user.company_id
+        company_id = self.company_id
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
@@ -182,7 +182,7 @@ group by        rp.vat,
                 case when res_partner.is_company='f' then '01' else '02' end ,                
                 case when doc_document_type.code='01' then '18' else doc_document_type.code end 
                 
-        """ % (str_date_from,str_date_from,company_id)
+        """ % (str_date_from,str_date_from,company_id.id)
 
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
@@ -476,7 +476,7 @@ select
         return root
     
     def _generate_ventas(self, root, date_from, date_to):
-        company_id = self.env.user.company_id
+        company_id = self.company_id
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
@@ -516,9 +516,17 @@ select
                 '001'::VARCHAR numestabruc,
                 'NA'::VARCHAR::VARCHAR totalventas,
                 'iva'::VARCHAR codigooperativo,
-                case when(res_partner.vat='9999999999999') then '07'
-                    else l10n_latam_identification_type.l10n_ec_code
-                end as  ventas_tpidcliente,
+                case 
+			        when res_partner.vat is null then '07' -- Consumidor final
+			        when res_partner.vat='9999999999999' then '07' -- Consumidor final
+			        when l10n_latam_identification_type.l10n_ec_code is null then 
+			            case 
+			                when length(res_partner.vat) = 10 then '05' -- RUC asumido si tiene 10 dígitos
+			                when length(res_partner.vat) = 13 then '04' -- Cédula asumida si tiene 13 dígitos
+			                else '06' -- Pasaporte por defecto para otros casos
+			            end
+			        else l10n_latam_identification_type.l10n_ec_code
+			    end as ventas_tpidcliente,
                 res_partner.vat as ventas_idcliente,
                 'NO'::VARCHAR ventas_parterel,
                 case when res_partner.is_company='f' then '01' else '02' end ventas_tipocliente,                
@@ -552,9 +560,17 @@ select
 where doc_document_type.code!='00'                 
 group by        rp.vat,
                 rp.name , 
-                  case when(res_partner.vat='9999999999999') then '07'
-                    else l10n_latam_identification_type.l10n_ec_code
-                end,
+                  case 
+			        when res_partner.vat is null then '07'
+			        when res_partner.vat='9999999999999' then '07'
+			        when l10n_latam_identification_type.l10n_ec_code is null then 
+			            case 
+			                when length(res_partner.vat) = 10 then '05'
+			                when length(res_partner.vat) = 13 then '04'
+			                else '06'
+			            end
+			        else l10n_latam_identification_type.l10n_ec_code
+			    end,
                 res_partner.vat,Coalesce(doc_payment_type.code,'01'),
                 case when res_partner.is_company='f' then '01' else '02' end ,                
                 case when doc_document_type.code='01' then '18' else doc_document_type.code end """ % (str_date_from,str_date_to,company_id.id)
@@ -596,7 +612,7 @@ group by        rp.vat,
         return root
 
     def _generate_ventasEstablecimiento(self, root, date_from, date_to):
-        company_id = self.env.user.company_id
+        company_id = self.company_id
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
@@ -638,7 +654,7 @@ group by        rp.vat,
             #SubElement(ventaEst, "ivaComp").text = '0.00'
 
     def _generate_anulados(self, root, date_from, date_to):
-        company_id = self.env.user.company_id
+        company_id = self.company_id
         anulados = False
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)

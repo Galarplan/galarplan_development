@@ -375,7 +375,12 @@ select
                 SubElement(pagoExterior, "pagExtSujRetNorLeg").text = "NA"
                 #if(line['compras_baseimponible'])>1000:
                 formasDePago = SubElement(detalleCompras, "formasDePago")
-                SubElement(formasDePago, "formaPago").text = line['compras_formapago']
+                
+                if (float(line['compras_basenograiva']) + float(line['compras_baseimponible']) + float(line['compras_baseimpgrav']) + float(line['compras_baseimpexe']) )>500:
+                    SubElement(formasDePago, "formaPago").text = line['compras_formapago']
+                else:
+                    SubElement(formasDePago, "formaPago").text = "01"
+
                 
                 if (line["detalle"]):
                     air = SubElement(detalleCompras, "air")

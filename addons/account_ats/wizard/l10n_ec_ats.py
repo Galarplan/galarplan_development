@@ -263,9 +263,9 @@ awt.l10n_ec_authorization_number
 
 select 
 
-                case  when(l10n_latam_identification_type.l10n_ec_code='04') then '01'  
-                   when(l10n_latam_identification_type.l10n_ec_code='05') then '02' 
-                   when(l10n_latam_identification_type.l10n_ec_code='06') then '03' else '03' 
+                case  when length(res_partner.vat) = 13 then '01'  
+                      when length(res_partner.vat) = 10 then '02' 
+                   else '03' 
                 end as compras_tpidprov, 
                 res_partner.vat as compras_idprov,
                 res_partner.name as compras_nombreprov,

@@ -136,8 +136,9 @@ class AccountSavingPaymentWizard(models.TransientModel):
         }
         payment = self.env['account.payment'].create(payment_vals)
         for line in payment.line_ids.filtered(lambda l: l.account_id == payment.partner_id.property_account_receivable_id):
-            line.account_id = self.saving_id.property_account_receivable_id  # Usa la cuenta configurada en el cliente
-
+            # line.account_id = self.saving_id.property_account_receivable_id  # Usa la cuenta configurada en el cliente
+              line.account_id = self.saving_id.property_account_receivable_id
+              
         payment.action_post()
         payment.message_post(
             body='PAGO DE PLAN DE AHORRO %s' % (self.saving_id.id,),

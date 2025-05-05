@@ -82,6 +82,8 @@ class AccountSavingPlan(models.Model):
     ahorro_account_id = fields.Many2one("account.account", "Cuenta para Ahorros",
                                         default=_get_default_ahorro_account_id)
 
+    prepayment_account_id = fields.Many2one("account.account", "Cuenta para Anticipos de pagos")
+
 
     old_id=fields.Integer("Antiguo ID")
 

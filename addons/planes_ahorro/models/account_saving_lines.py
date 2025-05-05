@@ -347,13 +347,15 @@ class AccountSavingLines(models.Model):
                         if not brw_each.saving_id.property_account_receivable_id:
                             raise ValidationError(_("Debes definir una cuenta por cobrar al cliente para el ahorro  en %s") % (
                                     brw_each.saving_id.name,))
-                        ahorro_account_id = brw_each.saving_id.saving_plan_id.ahorro_account_id
+                        # ahorro_account_id = brw_each.saving_id.saving_plan_id.ahorro_account_id
+                        ahorro_account_id = brw_each.saving_id.saving_plan_id.prepayment_account_id
 
-                        invoice_line_ids+= [#(5,),
+                        if brw_each.saving_id.state_plan == 'adjudicated_with_assets':
+                            invoice_line_ids+= [#(5,),
                                      (0, 0, {
                                         'display_type':'planes',
                                          "for_planes":True,
-                                         "name": "AHORRO PROGRAMADO",
+                                         "name": "PAGO PLAN",
                                          "credit": brw_each.principal_amount,
                                          "date_maturity":local_date,
                                          "date": local_date,
@@ -362,13 +364,35 @@ class AccountSavingLines(models.Model):
                                      (0, 0, {
                                          'display_type': 'planes',
                                          "for_planes": True,
-                                         "name": "CUENTA POR COBRAR AHORRO PROGRAMADO",
+                                         "name": "CUENTA POR COBRAR ",
                                          "debit": brw_each.principal_amount,
                                          "date_maturity": local_date,
                                          "date": local_date,
                                          "partner_id": brw_each.saving_id.partner_id.id,
-                                         "account_id": brw_each.saving_id.property_account_receivable_id.id
+                                         "account_id": brw_each.saving_id.property_account_adjudicated_id.id
                                      })]
+                        else:
+                            invoice_line_ids+= [#(5,),
+                                     (0, 0, {
+                                        'display_type':'planes',
+                                         "for_planes":True,
+                                         "name": "PAGO PLAN",
+                                         "credit": brw_each.principal_amount,
+                                         "date_maturity":local_date,
+                                         "date": local_date,
+                                         "partner_id": brw_each.saving_id.partner_id.id,
+                                         "account_id": ahorro_account_id and ahorro_account_id.id or False}),
+                                     (0, 0, {
+                                         'display_type': 'planes',
+                                         "for_planes": True,
+                                         "name": "CUENTA POR COBRAR",
+                                         "debit": brw_each.principal_amount,
+                                         "date_maturity": local_date,
+                                         "date": local_date,
+                                         "partner_id": brw_each.saving_id.partner_id.id,
+                                         "account_id": brw_each.saving_id.property_account_unadjudicated_id.id
+                                     })]
+                            
                         # ahorro_vals = {
                         #     "line_ids":lines_ids,
                         #     "partner_id": brw_each.saving_id.partner_id.id,

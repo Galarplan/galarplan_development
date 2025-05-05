@@ -47,8 +47,8 @@ class AccountMoveLine(models.Model):
                     if account_type == 'liability_payable':
                         raise UserError(
                             _("Account %s is of payable type, but is used in a sale operation.", line.account_id.code))
-                    if (line.display_type == 'payment_term') ^ (account_type == 'asset_receivable'):
-                        raise UserError(_("Any journal item on a receivable account must have a due date and vice versa."))
+                    # if (line.display_type == 'payment_term') ^ (account_type == 'asset_receivable'):
+                    #     raise UserError(_("Any journal item on a receivable account must have a due date and vice versa."))
             if line.move_id.is_purchase_document(include_receipts=True):
                 if not line.for_planes:
                     if account_type == 'asset_receivable':

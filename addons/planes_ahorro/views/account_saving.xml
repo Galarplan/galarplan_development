@@ -393,6 +393,12 @@
                   <field name="property_account_receivable_id" readonly="1"
                     options="{'no_create':True,'no_edit':True,'no_open':True,}"
                   />
+                  <field name="property_account_adjudicate_id" readonly="1"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}"
+                  />
+                  <field name="property_account_unadjudicated_id" readonly="1"
+                    options="{'no_create':True,'no_edit':True,'no_open':True,}"
+                  />
 <field name="origin" readonly="1" force_save="1" />
                 </group>
                 <group>

@@ -103,10 +103,22 @@ class AccountSaving(models.Model):
 
     property_account_receivable_id = fields.Many2one(
         "account.account",
-        string="Cuenta por Cobrar Seleccionada",
+        string="Cuenta De Anticipo",
         compute="_compute_receivable_account",
         store=True,
-        help="Cuenta contable seleccionada según el tipo de venta del cliente.",
+        help="Cuenta contable seleccionada Para Pagos y Facturacion del cliente.",
+    )
+
+    property_account_adjudicate_id = fields.Many2one(
+        "account.account",
+        string="Cuenta por Cobrar Adjudicado",
+        help="Cuenta contable seleccionada si el cliente es adjudicado",
+    )
+
+    property_account_unadjudicated_id = fields.Many2one(
+        "account.account",
+        string="Cuenta por Cobrar No Adjudicado",
+        help="Cuenta contable seleccionada si el cliente no es adjudicado",
     )
 
     state_plan_description = fields.Char(

@@ -129,68 +129,210 @@ class l10n_ec_ats(models.TransientModel):
         report = tostring(root, encoding="UTF-8")
         return base64.b64encode(report)
 
+#     def _generate_ventas_general(self, root, date_from, date_to):
+#         company_id = self.company_id
+#         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
+#         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
+
+#         sql = """
+#                         select 
+#                 'ventas'::VARCHAR tipo,
+#                 rp.vat as idinformante,
+#                 rp.name razonsocial,
+#                 '001'::VARCHAR numestabruc,
+#                 'NA'::VARCHAR::VARCHAR totalventas,
+#                 'iva'::VARCHAR codigooperativo,
+#                 case when(rp.vat='9999999999999') then '07'
+#                     else l10n_latam_identification_type.l10n_ec_code
+#                 end as ventas_tpidcliente,
+#                 res_partner.vat as ventas_idcliente,
+#                 'NO'::VARCHAR ventas_parterel,
+#                 case when res_partner.is_company='f' then '01' else '02' end ventas_tipocliente,                
+#                 case when doc_document_type.code='01' then '18' else doc_document_type.code end ventas_tipocomprobante,
+#                 'E' ventas_tipoem,
+#                 count(1) ventas_numerocomprobantes,
+#                 0.00 as ventas_valorretiva,
+#                 0.00 as ventas_valorretrenta,
+#                 CAST('01' AS VARCHAR ) ventas_formapago,
+#                 CAST('' AS VARCHAR ) ventas_codestab,
+#                 0.00 as ventas_ventasestab,
+#                 'NA'::VARCHAR ventas_ivacomp,
+#                 sum(account_move.amount_base0) as   ventas_basenograiva,
+#                 sum(account_move.amount_baseno0) as   ventas_baseimponible,
+#                 sum(account_move.amount_tax0) as   ventas_baseimpgrav,
+#                 sum(account_move.amount_taxno0) as  ventas_montoiva,
+#                 'NA'::VARCHAR ventas_tipocompe,
+#                 0 ventas_monto,
+#                 0 ventas_montoice
+                
+#                 from res_company 
+#                 inner join res_partner rp  on rp.id=res_company.partner_id 
+#                 inner join account_move on account_move.company_id = res_company.id and account_move.move_type in ('out_invoice','out_refund') and account_move.state in ('posted','paid') 
+#                 and coalesce(account_move.anulado_sri,false)!=true 
+#                 left join res_partner on account_move.partner_id = res_partner.id
+#                 left join l10n_latam_identification_type on res_partner.l10n_latam_identification_type_id = l10n_latam_identification_type.id
+#                 left join l10n_ec_sri_payment doc_payment_type on doc_payment_type.id = account_move.l10n_ec_sri_payment_id 
+#                 left join l10n_latam_document_type doc_document_type on doc_document_type.id = account_move.l10n_latam_document_type_id 
+#                 where account_move.invoice_date>='%s' and account_move.invoice_date<='%s' and account_move.company_id=%s and doc_document_type.code!='00'  
+# group by        rp.vat,
+#                 rp.name ,
+#                 case when(rp.vat='9999999999999') then '07'
+#                     else l10n_latam_identification_type.l10n_ec_code end,
+#                 res_partner.vat,
+#                 case when res_partner.is_company='f' then '01' else '02' end ,                
+#                 case when doc_document_type.code='01' then '18' else doc_document_type.code end 
+                
+#         """ % (str_date_from,str_date_from,company_id.id)
+
+#         self.env.cr.execute(sql)
+#         result = self.env.cr.dictfetchall()
+#         totalVentas = 0
+#         for line in result:
+#             totalVentas = line['ventas_ventasestab']
+#         SubElement(root, "totalVentas").text = '%.2f' % float(totalVentas)
+#         SubElement(root, "codigoOperativo").text = "IVA"
+#         return root
+
     def _generate_ventas_general(self, root, date_from, date_to):
         company_id = self.company_id
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
         sql = """
-                        select 
-                'ventas'::VARCHAR tipo,
-                rp.vat as idinformante,
-                rp.name razonsocial,
-                '001'::VARCHAR numestabruc,
-                'NA'::VARCHAR::VARCHAR totalventas,
-                'iva'::VARCHAR codigooperativo,
-                case when(rp.vat='9999999999999') then '07'
-                    else l10n_latam_identification_type.l10n_ec_code
-                end as ventas_tpidcliente,
-                res_partner.vat as ventas_idcliente,
-                'NO'::VARCHAR ventas_parterel,
-                case when res_partner.is_company='f' then '01' else '02' end ventas_tipocliente,                
-                case when doc_document_type.code='01' then '18' else doc_document_type.code end ventas_tipocomprobante,
-                'E' ventas_tipoem,
-                count(1) ventas_numerocomprobantes,
-                0.00 as ventas_valorretiva,
-                0.00 as ventas_valorretrenta,
-                CAST('01' AS VARCHAR ) ventas_formapago,
-                CAST('' AS VARCHAR ) ventas_codestab,
-                0.00 as ventas_ventasestab,
-                'NA'::VARCHAR ventas_ivacomp,
-                sum(account_move.amount_base0) as   ventas_basenograiva,
-                sum(account_move.amount_baseno0) as   ventas_baseimponible,
-                sum(account_move.amount_tax0) as   ventas_baseimpgrav,
-                sum(account_move.amount_taxno0) as  ventas_montoiva,
-                'NA'::VARCHAR ventas_tipocompe,
-                0 ventas_monto,
-                0 ventas_montoice
-                
-                from res_company 
-                inner join res_partner rp  on rp.id=res_company.partner_id 
-                inner join account_move on account_move.company_id = res_company.id and account_move.move_type in ('out_invoice','out_refund') and account_move.state in ('posted','paid') 
-                and coalesce(account_move.anulado_sri,false)!=true 
-                left join res_partner on account_move.partner_id = res_partner.id
-                left join l10n_latam_identification_type on res_partner.l10n_latam_identification_type_id = l10n_latam_identification_type.id
-                left join l10n_ec_sri_payment doc_payment_type on doc_payment_type.id = account_move.l10n_ec_sri_payment_id 
-                left join l10n_latam_document_type doc_document_type on doc_document_type.id = account_move.l10n_latam_document_type_id 
-                where account_move.invoice_date>='%s' and account_move.invoice_date<='%s' and account_move.company_id=%s and doc_document_type.code!='00'  
-group by        rp.vat,
-                rp.name ,
-                case when(rp.vat='9999999999999') then '07'
-                    else l10n_latam_identification_type.l10n_ec_code end,
-                res_partner.vat,
-                case when res_partner.is_company='f' then '01' else '02' end ,                
-                case when doc_document_type.code='01' then '18' else doc_document_type.code end 
-                
-        """ % (str_date_from,str_date_from,company_id.id)
+        WITH ventas_base AS (
+            SELECT 
+                am.id,
+                LEFT(RIGHT(REPLACE(am.name, '-', ''), 15), 3) AS establecimiento,
+                rp.vat as company_vat,
+                rp.name as company_name,
+                CASE 
+                    WHEN partner.vat IS NULL THEN '99'
+                    WHEN partner.vat='9999999999999' THEN '07'
+                    WHEN ident_type.l10n_ec_code IS NULL THEN 
+                        CASE 
+                            WHEN length(partner.vat) = 10 THEN '04'
+                            WHEN length(partner.vat) = 13 THEN '05'
+                            ELSE '06'
+                        END
+                    ELSE ident_type.l10n_ec_code
+                END AS ventas_tpidcliente,
+                partner.vat AS ventas_idcliente,
+                CASE WHEN partner.is_company='f' THEN '01' ELSE '02' END ventas_tipocliente,
+                CASE WHEN doc_type.code='01' THEN '18' ELSE doc_type.code END ventas_tipocomprobante,
+                am.amount_total,
+                am.amount_base0,
+                am.amount_baseno0,
+                am.amount_tax,
+                am.amount_taxno0,
+                -- Identificador único para cada venta
+                MD5(CONCAT(
+                    LEFT(RIGHT(REPLACE(am.name, '-', ''), 15), 3),
+                    partner.vat,
+                    CASE WHEN doc_type.code='01' THEN '18' ELSE doc_type.code END,
+                    am.invoice_date::text,
+                    am.amount_total::text
+                )) AS venta_hash
+            FROM account_move am
+            JOIN res_company comp ON am.company_id = comp.id
+            JOIN res_partner rp ON rp.id = comp.partner_id
+            JOIN res_partner partner ON am.partner_id = partner.id
+            LEFT JOIN l10n_latam_identification_type ident_type 
+                ON partner.l10n_latam_identification_type_id = ident_type.id
+            JOIN l10n_latam_document_type doc_type 
+                ON doc_type.id = am.l10n_latam_document_type_id 
+            WHERE am.move_type IN ('out_invoice','out_refund') 
+                AND am.state IN ('posted','paid') 
+                AND COALESCE(am.anulado_sri, false) != true
+                AND am.invoice_date BETWEEN %s AND %s 
+                AND am.company_id = %s 
+                AND doc_type.code != '00'
+        ),
+        ventas_unicas AS (
+            SELECT DISTINCT ON (venta_hash) *
+            FROM ventas_base
+            ORDER BY venta_hash, id
+        ),
+        ventas_agrupadas AS (
+            SELECT 
+                establecimiento,
+                company_vat,
+                company_name,
+                ventas_tpidcliente,
+                ventas_idcliente,
+                ventas_tipocliente,
+                ventas_tipocomprobante,
+                COUNT(1) AS ventas_numerocomprobantes,
+                SUM(amount_total) AS ventas_ventasestab,
+                SUM(amount_base0) AS ventas_basenograiva,
+                SUM(amount_baseno0) AS ventas_baseimponible,
+                SUM(amount_tax) AS ventas_baseimpgrav,
+                SUM(amount_taxno0) AS ventas_montoiva
+            FROM ventas_unicas
+            GROUP BY 
+                establecimiento,
+                company_vat,
+                company_name,
+                ventas_tpidcliente,
+                ventas_idcliente,
+                ventas_tipocliente,
+                ventas_tipocomprobante
+        )
+        SELECT 
+            'ventas'::VARCHAR tipo,
+            company_vat AS idinformante,
+            company_name AS razonsocial,
+            '001'::VARCHAR numestabruc,
+            'NA'::VARCHAR totalventas,
+            'iva'::VARCHAR codigooperativo,
+            ventas_tpidcliente,
+            ventas_idcliente,
+            'NO'::VARCHAR ventas_parterel,
+            ventas_tipocliente,
+            ventas_tipocomprobante,
+            'E'::VARCHAR ventas_tipoem,
+            ventas_numerocomprobantes,
+            0.00 AS ventas_valorretiva,
+            0.00 AS ventas_valorretrenta,
+            '01'::VARCHAR ventas_formapago,
+            establecimiento AS ventas_codestab,
+            ventas_ventasestab,
+            'NA'::VARCHAR ventas_ivacomp,
+            ventas_basenograiva,
+            ventas_baseimponible,
+            ventas_baseimpgrav,
+            ventas_montoiva,
+            'NA'::VARCHAR ventas_tipocompe,
+            0 AS ventas_monto,
+            0 AS ventas_montoice
+        FROM ventas_agrupadas
+        ORDER BY ventas_idcliente, ventas_tipocomprobante
+        """ % (str_date_from, str_date_to, company_id.id)
 
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
-        totalVentas = 0
+        
+        # Resto del código para generar el XML...
+        
+        # Calcular total de ventas sumando todos los establecimientos
+        totalVentas = sum(float(line['ventas_ventasestab']) for line in result if line['ventas_ventasestab'])
+        
+        # Obtener número real de establecimientos únicos
+        establecimientos_unicos = set(line['ventas_codestab'] for line in result)
+        num_establecimientos = len(establecimientos_unicos)
+        
+        # Validar consistencia
+        if num_establecimientos != int(root.get('numEstablecimientos', 0)):
+            root.set('numEstablecimientos', str(num_establecimientos))
+        
+        # Generar XML
+        ventas = SubElement(root, "ventas")
         for line in result:
-            totalVentas = line['ventas_ventasestab']
-        SubElement(root, "totalVentas").text = '%.2f' % float(totalVentas)
+            detalleVentas = SubElement(ventas, "detalleVentas")
+            # ... (resto del código para generar el XML)
+        
+        SubElement(root, "totalVentas").text = '%.2f' % totalVentas
         SubElement(root, "codigoOperativo").text = "IVA"
+        
         return root
 
     def _generate_compras(self, root, date_from, date_to):
@@ -375,13 +517,18 @@ select
                 SubElement(pagoExterior, "pagExtSujRetNorLeg").text = "NA"
                 #if(line['compras_baseimponible'])>1000:
                 
-                
-                if (float(line['compras_basenograiva']) + float(line['compras_baseimponible']) + float(line['compras_baseimpgrav']) + float(line['compras_baseimpexe']) )>500:
-                    formasDePago = SubElement(detalleCompras, "formasDePago")
-                    SubElement(formasDePago, "formaPago").text = line['compras_formapago']
-                # else:
-                #     SubElement(formasDePago, "formaPago").text = "01"
+                # Reemplaza tu condición actual con esto:
+                total = sum([
+                    float(line.get('compras_basenograiva', 0)) or 0,
+                    float(line.get('compras_baseimponible', 0)) or 0,
+                    float(line.get('compras_baseimpgrav', 0)) or 0,
+                    float(line.get('compras_baseimpexe', 0)) or 0,
+                    float(line.get('compras_montoiva', 0)) or 0,
+                ])
 
+                if total >= 500:
+                    formasDePago = SubElement(detalleCompras, "formasDePago")
+                    SubElement(formasDePago, "formaPago").text = line.get('compras_formapago', '01')
                 
                 if (line["detalle"]):
                     air = SubElement(detalleCompras, "air")

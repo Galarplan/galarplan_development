@@ -120,6 +120,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         if not self.saving_line_ids:
             raise ValidationError(_("Al menos una cuota debe ser seleccionada"))
         sobrantes=self.payment_ids.filtered(lambda x: x.number>=99999999)
+        print('======================================Sobrante',sobrantes)
         if sobrantes and sobrantes != float(0):
             sobrante=round(sum(sobrantes.mapped('aplicado')),DEC)
             raise ValidationError(_("Todo el monto del pago debe distribuirse completamente en una o más cuotas, sin dejar saldos sobrantes.Sobran %s") % (sobrante,))

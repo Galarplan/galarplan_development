@@ -356,7 +356,7 @@ class AccountSavingLines(models.Model):
                                         'display_type':'planes',
                                          "for_planes":True,
                                          "name": "PAGO PLAN",
-                                         "credit": brw_each.principal_amount,
+                                         "debit": brw_each.principal_amount,
                                          "date_maturity":local_date,
                                          "date": local_date,
                                          "partner_id": brw_each.saving_id.partner_id.id,
@@ -365,11 +365,11 @@ class AccountSavingLines(models.Model):
                                          'display_type': 'planes',
                                          "for_planes": True,
                                          "name": "CUENTA POR COBRAR ",
-                                         "debit": brw_each.principal_amount,
+                                         "credit": brw_each.principal_amount,
                                          "date_maturity": local_date,
                                          "date": local_date,
                                          "partner_id": brw_each.saving_id.partner_id.id,
-                                         "account_id": brw_each.saving_id.property_account_adjudicated_id.id
+                                         "account_id": brw_each.saving_id.property_account_adjudicate_id.id
                                      })]
                         else:
                             invoice_line_ids+= [#(5,),
@@ -377,7 +377,7 @@ class AccountSavingLines(models.Model):
                                         'display_type':'planes',
                                          "for_planes":True,
                                          "name": "PAGO PLAN",
-                                         "credit": brw_each.principal_amount,
+                                         "debit": brw_each.principal_amount,
                                          "date_maturity":local_date,
                                          "date": local_date,
                                          "partner_id": brw_each.saving_id.partner_id.id,
@@ -386,7 +386,7 @@ class AccountSavingLines(models.Model):
                                          'display_type': 'planes',
                                          "for_planes": True,
                                          "name": "CUENTA POR COBRAR",
-                                         "debit": brw_each.principal_amount,
+                                         "credit": brw_each.principal_amount,
                                          "date_maturity": local_date,
                                          "date": local_date,
                                          "partner_id": brw_each.saving_id.partner_id.id,

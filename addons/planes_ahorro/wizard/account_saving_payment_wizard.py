@@ -120,7 +120,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         if not self.saving_line_ids:
             raise ValidationError(_("Al menos una cuota debe ser seleccionada"))
         sobrantes=self.payment_ids.filtered(lambda x: x.number>=99999999)
-        if sobrantes:
+        if sobrantes and sobrantes != float(0):
             sobrante=round(sum(sobrantes.mapped('aplicado')),DEC)
             raise ValidationError(_("Todo el monto del pago debe distribuirse completamente en una o más cuotas, sin dejar saldos sobrantes.Sobran %s") % (sobrante,))
         payment_vals = {
@@ -138,7 +138,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         for line in payment.line_ids.filtered(lambda l: l.account_id == payment.partner_id.property_account_receivable_id):
             # line.account_id = self.saving_id.property_account_receivable_id  # Usa la cuenta configurada en el cliente
               line.account_id = self.saving_id.property_account_receivable_id
-              
+
         payment.action_post()
         payment.message_post(
             body='PAGO DE PLAN DE AHORRO %s' % (self.saving_id.id,),

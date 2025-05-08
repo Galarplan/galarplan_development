@@ -349,6 +349,7 @@ class AccountSavingLines(models.Model):
                                     brw_each.saving_id.name,))
                         # ahorro_account_id = brw_each.saving_id.saving_plan_id.ahorro_account_id
                         ahorro_account_id = brw_each.saving_id.saving_plan_id.prepayment_account_id
+                        print('=========================',ahorro_account_id)
 
                         if brw_each.saving_id.state_plan == 'adjudicated_with_assets':
                             invoice_line_ids+= [#(5,),
@@ -364,7 +365,7 @@ class AccountSavingLines(models.Model):
                                      (0, 0, {
                                          'display_type': 'planes',
                                          "for_planes": True,
-                                         "name": "CUENTA POR COBRAR ",
+                                         "name": "CUENTA POR COBRAR ADJ ",
                                          "credit": brw_each.principal_amount,
                                          "date_maturity": local_date,
                                          "date": local_date,
@@ -385,14 +386,15 @@ class AccountSavingLines(models.Model):
                                      (0, 0, {
                                          'display_type': 'planes',
                                          "for_planes": True,
-                                         "name": "CUENTA POR COBRAR",
+                                         "name": "CUENTA POR COBRAR NADJ",
                                          "credit": brw_each.principal_amount,
                                          "date_maturity": local_date,
                                          "date": local_date,
                                          "partner_id": brw_each.saving_id.partner_id.id,
                                          "account_id": brw_each.saving_id.property_account_unadjudicated_id.id
                                      })]
-                            
+                            print('==================================',brw_each.saving_id.property_account_unadjudicated_id.id,brw_each.saving_id.property_account_unadjudicated_id.name)
+                        print('===================================',invoice_line_ids)    
                         # ahorro_vals = {
                         #     "line_ids":lines_ids,
                         #     "partner_id": brw_each.saving_id.partner_id.id,

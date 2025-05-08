@@ -45,6 +45,7 @@ class AccountMoveLine(models.Model):
             if line.move_id.is_sale_document(include_receipts=True):
                 if not line.for_planes:
                     if account_type == 'liability_payable':
+                        continue
                         raise UserError(
                             _("Account %s is of payable type, but is used in a sale operation.", line.account_id.code))
                     # if (line.display_type == 'payment_term') ^ (account_type == 'asset_receivable'):

@@ -1,4 +1,6 @@
 from odoo import models, fields, api
+from odoo.exceptions import UserError
+import json
 
 class Checkbook(models.Model):
     _name = 'payment.checkbook'
@@ -6,6 +8,10 @@ class Checkbook(models.Model):
     _description = 'Checkbook'
 
     journal_id = fields.Many2one('account.journal', required=True)
+    available_journals_ids = fields.Many2many(
+    'account.journal',
+    compute='_compute_available_journals'
+    )
     bank_account_id = fields.Many2one('res.partner.bank', readonly=True)
     reference = fields.Char()
     date = fields.Date()
@@ -33,6 +39,16 @@ class Checkbook(models.Model):
         ('missing', 'Missing'),
         ('cancelled', 'Cancelled')
     ], default='draft', string="Status")
+
+    @api.depends('company_id')
+    def _compute_available_journals(self):
+        for record in self:
+            domain = [
+                ('type', '=', 'bank'),
+                ('company_id', '=', record.company_id.id) if record.company_id else (),
+                ('code', '!=', 'odo14')
+            ]
+            record.available_journals_ids = self.env['account.journal'].search(domain)
 
     # Métodos de cambio de estado
     def action_draft(self):
@@ -74,7 +90,7 @@ class Checkbook(models.Model):
             name = f"{rec.journal_id.name} / {rec.from_seq} - {rec.to_seq}"
             result.append((rec.id, name))
         return result
-
+    
 
 class CheckbookLine(models.Model):
     _name = 'payment.checkbook.line'
@@ -83,6 +99,8 @@ class CheckbookLine(models.Model):
     checkbook_id = fields.Many2one('payment.checkbook', required=True, ondelete='cascade')
     check_number = fields.Char(string="Check Number", required=True)
     is_used = fields.Boolean(default=False)
+    parent_state = fields.Selection(related='checkbook_id.state', store=True)
+    reference = fields.Char('Reference')
     payment_id = fields.Many2one('account.payment', string='Used in Payment', readonly=True)
     journal_id = fields.Many2one('account.journal',string='Diario',readonly=True)
 

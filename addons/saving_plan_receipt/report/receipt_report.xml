@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <report 
+        id="action_report_receipt_saving_plan"
+        name="saving_plan_receipt.report_receipt_saving_plan"
+        model="receipt.saving.plan.view"
+        string="Recibo de Plan de Ahorro"
+        report_type="qweb-html"
+        paperformat="saving_plan_receipt.receipt_paperformat"
+    />
+
+</odoo>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_receipt_saving_plan">
+        <t t-call="web.html_container">
+            <head>
+                <meta charset="UTF-8" />
+            </head>
+            <t t-foreach="docs" t-as="o">
+                <div class="header"
+                    style="text-align: center;width: 50%;margin: 0 auto;">
+                    <!-- Logo de la empresa -->
+                    <!-- <t t-if="env.company.logo">
+                        <img t-att-src="'data:image/png;base64,%s' % env.company.logo"
+                            style="max-width: 150px; max-height: 80px; margin-bottom: 10px;"
+                            alt="Company Logo" />
+                    </t> -->
+                    <t t-set="company_logo" t-value="env.company.sudo().logo" />
+                    <t t-if="company_logo">
+                        <img t-att-src="'data:image/png;base64,' + company_logo.decode('utf-8')"
+                            style="max-width: 150px; max-height: 80px; margin-bottom: 10px;"
+                            alt="Company Logo" />
+                    </t>
+                    <!-- <t t-if="company.logo">
+                        <img t-attf-src="data:image/png;base64,{{ company.logo }}"
+                            style="max-width: 150px; max-height: 80px; margin-bottom: 10px;"
+                            alt="Company Logo" />
+                    </t> -->
+                    <!-- <t t-if="company and company.logo">
+                        <img t-att-src="'data:image/png;base64,%s' % company.logo"
+                            style="max-width: 150px; max-height: 80px; margin-bottom: 10px;"
+                            alt="Company Logo" />
+                    </t> -->
+                    <!-- Dirección de la empresa -->
+                    <p style="margin: 3px 0; font-size: 12px; color: #666;">
+                        <strong>Dirección:</strong>
+                        <span t-field="env.company.street" />
+                        <t t-if="env.company.street2">, <span t-field="env.company.street2" /></t>
+                        <t t-if="env.company.city">, <span t-field="env.company.city" /></t>
+                        <t t-if="env.company.state_id">, <span t-field="env.company.state_id.name" /></t>
+                        <t t-if="env.company.country_id">, <span
+                                t-field="env.company.country_id.name" /></t>
+                    </p>
+                    <!-- RUC de la empresa -->
+                    <p style="margin: 3px 0; font-size: 12px; color: #666;">
+                        <strong>RUC:</strong>
+                        <span t-field="env.company.vat" />
+                    </p>
+                    <!-- Títulos existentes -->
+                    <h6 style="margin-bottom: 5px;">RECIBO DE COBRO</h6>
+                    <h6 style="margin-top: 0; color: #666;">Plan de Ahorros</h6>
+                </div>
+
+                <div class="receipt-container"
+                    style="width: 50%; margin: 0 auto; border: 1px solid #ddd; padding: 15px; font-family: Arial, sans-serif;">
+                    <!-- Encabezado -->
+                    <div class="receipt-header"
+                        style="border-bottom: 1px dashed #999; padding-bottom: 10px; margin-bottom: 15px;">
+                        <div style="float: left; width: 60%;">
+                            <p style="margin: 3px 0;">
+                                <strong>Socio:</strong>
+                                <span t-field="o.partner_name" />
+                            </p>
+                            <p style="margin: 3px 0;">
+                                <strong>Identificación:</strong>
+                                <span t-field="o.partner_vat" />
+                            </p>
+                            <p style="margin: 3px 0;">
+                                <strong>Plan:</strong>
+                                <span t-field="o.nombre_plan" />
+                            </p>
+                        </div>
+                        <div style="float: right; width: 35%; text-align: right;">
+                            <p style="margin: 3px 0;">
+                                <strong>Fecha Pago:</strong>
+                                <t t-if="o.last_payment">
+                                    <span t-field="o.last_payment" t-options='{"widget": "date"}' />
+                                </t>
+                                <t t-else="">
+                                    <span t-field="o.deposit_partner" t-options='{"widget": "date"}' />
+                                </t>
+
+                            </p>
+                            <p style="margin: 3px 0;">
+                                <strong>Ahorro:</strong>
+                                <span t-field="o.ahorro"
+                                    t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                            </p>
+                            <p style="margin: 3px 0;">
+                            <strong>Cuota:</strong>
+                            <span t-esc="o.name.split(',')[1].split(' ')[1]"/> <!--Número de cuota -->
+                            </p>
+                            <!-- <p style="margin: 3px 0;">
+                                <strong>Factura:</strong>
+                                <span t-field="o.invoice_name" />
+                            </p>
+                            <p style="margin: 3px 0;">
+                                <strong>Autorización:</strong>
+                                <span t-field="o.authorization_type" />
+                            </p> -->
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+
+                    <!-- Detalles del pago -->
+                    <div class="receipt-details" style="margin-bottom: 15px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                                    <strong>Concepto</strong>
+                                </td>
+                                <td
+                                    style="padding: 5px 0; border-bottom: 1px solid #eee; text-align: right;">
+                                    <strong>Valor</strong>
+                                </td>
+                            </tr>
+                            <!-- <tr>
+                                <td style="padding: 5px 0; border-bottom: 1px solid #eee;">Ahorro</td>
+                                <td
+                                    style="padding: 5px 0; border-bottom: 1px solid #eee; text-align: right;">
+                                    <span t-field="o.ahorro"
+                                    t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                                </td>
+                            </tr> -->
+                            <tr>
+                                <td style="padding: 5px 0; border-bottom: 1px solid #eee;">Capital</td>
+                                <td
+                                    style="padding: 5px 0; border-bottom: 1px solid #eee; text-align: right;">
+                                    <span t-field="o.cap"
+                                        t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                                    Administración</td>
+                                <td
+                                    style="padding: 5px 0; border-bottom: 1px solid #eee; text-align: right;">
+                                    <span t-field="o.adm_waste_1"
+                                        t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; border-bottom: 1px solid #eee;">Seguro</td>
+                                <td
+                                    style="padding: 5px 0; border-bottom: 1px solid #eee; text-align: right;">
+                                    <span t-field="o.adm_waste_2"
+                                        t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                                </td>
+                            </tr>
+                            <tr style="font-weight: bold;">
+                                <td style="padding: 5px 0; border-top: 1px solid #ddd;">TOTAL PAGADO</td>
+                                <td
+                                    style="padding: 5px 0; border-top: 1px solid #ddd; text-align: right;">
+                                    <span t-field="o.payment"
+                                        t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="receipt-footer"
+                        style="font-size: 12px; color: #666; border-top: 1px dashed #999; padding-top: 10px;">
+                        <p style="margin: 5px 0;">
+                            <strong>Saldo pendiente:</strong>
+                            <span t-field="o.pending_cap"
+                                t-options='{"widget": "monetary", "display_currency": env.company.currency_id}' />
+                        </p>
+                        <p style="margin: 5px 0;">
+                            <t t-if="o.invoice_name and o.invoice_name != 'Migrado'">
+                                <strong>Factura:</strong>
+                                <span t-field="o.invoice_name" />
+                            </t>
+                        </p>
+                        <p style="margin: 5px 0; text-align: center;">
+                            <t t-if="o.authorization_type and o.authorization_type != 'Migrado'">
+                                <!-- <img
+                                t-att-src="'/report/barcode/?type=Code128&value=%s&width=300&height=50'
+                                % o.authorization_type"
+                                     style="display: block; margin: 0 auto;"/> -->
+                                <!-- <img style="width:100%; height:15.5mm;"
+                                            t-att-src="'/report/barcode/Code128/' + o.authorization_type"
+                                            alt="Missing barcode for authorization number"
+                                        /> -->
+                                <img
+                                    t-att-src="'/report/barcode/Code128/%s&amp;width=300&amp;height=50' % o.authorization_type"
+                                    style="display: block; margin: 0 auto; max-width: 100%; height: 15.5mm;"
+                                    alt="Barcode for authorization number" />
+                                <p style="margin: 5px 0;text-align: center;">
+                                    <span t-field="o.authorization_type" />
+                                </p>
+                            </t>
+                        </p>
+                        <!-- <p style="margin: 5px 0;">
+                            <strong>Fecha de depósito:</strong>
+                            <span t-field="o.deposit_partner" t-options='{"widget": "date"}' />
+                        </p> -->
+                        <p style="margin: 5px 0; text-align: center; font-style: italic;">Gracias
+                            por su pago</p>
+                    </div>
+                </div>
+
+                <!-- Salto de página para múltiples recibos -->
+                <!-- <t t-if="not o._last">
+                    <div style="page-break-after: always;"></div>
+                </t> -->
+            </t>
+        </t>
+    </template>
+</odoo>

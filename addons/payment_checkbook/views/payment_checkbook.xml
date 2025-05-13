@@ -40,7 +40,9 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="journal_id" required="1" />
+                            <field name="available_journals_ids" invisible="1" />
+                            <field name="journal_id" required="1"
+                                domain="[('id', 'in', available_journals_ids)]" />
                             <field name="date" />
                             <field name="return_date"
                                 attrs="{'invisible':[('return_date','=',False)]}" />
@@ -68,6 +70,7 @@
                                     <field name="check_number" />
                                     <field name="is_used" />
                                     <field name="payment_id" />
+                                    <field name="reference" />
                                 </tree>
                             </field>
                         </page>
@@ -82,23 +85,49 @@
         </field>
     </record>
 
+
+    <record id="view_account_payment_form_inherited_cheque_custom" model="ir.ui.view">
+        <field name="name">account.payment.form.inherited.cheque.custom</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="st_pdc_management.view_account_payment_form_inherited_cheque" />
+        <field name="arch" type="xml">
+
+            <!-- Modificar el campo cheque_no para que sea visible en pdc y check_printing -->
+            <xpath expr="//field[@name='cheque_no']" position="attributes">
+                <attribute name="attrs">{
+                    'invisible': [('payment_method_code','not in',['pdc','check_printing'])],
+                    'required': [
+                    '|',
+                    ('payment_method_code','=','pdc'),
+                    ('payment_method_code','=','check_printing'),
+                    ('state','!=', 'posted')
+                    ],
+                    'readonly':[(1, '=', 1)]
+                    }</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+
     <record id="action_payment_checkbook" model="ir.actions.act_window">
         <field name="name">Checkbooks</field>
         <field name="res_model">payment.checkbook</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(4, ref('payment_checkbook.group_payment_checkbook_manager'))]" />
+        <field name="groups_id"
+            eval="[(4, ref('payment_checkbook.group_payment_checkbook_manager'))]" />
     </record>
 
     <!-- <menuitem id="menu_checkbook_root" name="Checkbooks"
         parent="account.menu_finance"
         groups="payment_checkbook.group_payment_checkbook_manager" /> -->
 
-    <menuitem id="menu_report_financial" 
-              name="Talonario de Cheques"
-              parent="account_accountant.menu_accounting"
-              action="action_payment_checkbook"
-              sequence="12"
-              groups="payment_checkbook.group_payment_checkbook_manager"/>
+    <menuitem id="menu_report_financial"
+        name="Talonario de Cheques"
+        parent="account_accountant.menu_accounting"
+        action="action_payment_checkbook"
+        sequence="12"
+        groups="payment_checkbook.group_payment_checkbook_manager" />
 
 
 </odoo>

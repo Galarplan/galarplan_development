@@ -9,7 +9,8 @@
     'category': '',
     'depends': [
         'base',
-        'account'
+        'account',
+        'st_pdc_management'
     ],
     'data': [
         'security/security.xml',

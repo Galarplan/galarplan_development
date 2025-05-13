@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_receipt_saving_plan_view_user,receipt.saving.plan.view.user,model_receipt_saving_plan_view,group_receipt_user,1,0,0,0
+access_receipt_saving_plan_view_manager,receipt.saving.plan.view.manager,model_receipt_saving_plan_view,group_receipt_manager,1,1,1,1
+access_receipt_validation_user,receipt.validation.user,model_receipt_validation,group_validator_receipt_user,1,1,1,0
+access_receipt_validation_auditor,receipt.validation.auditor,model_receipt_validation,group_validator_receipt_auditor,1,1,1,0
+access_receipt_validation_manager,receipt.validation.manager,model_receipt_validation,group_validator_receipt_admin,1,1,1,1

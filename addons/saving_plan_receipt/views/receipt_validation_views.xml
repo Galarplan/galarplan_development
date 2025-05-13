@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_receipt_validation_tree" model="ir.ui.view">
+        <field name="name">receipt.validation.tree</field>
+        <field name="model">receipt.validation</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="date"/>
+                <field name="amount"/>
+                <field name="state"/>
+                <field name="validated_by"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_receipt_validation_search" model="ir.ui.view">
+        <field name="name">receipt.validation.search</field>
+        <field name="model">receipt.validation</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" filter_domain="[('name', 'ilike', self)]"/>
+                <field name="partner_id"/>
+                <field name="state"/>
+                <field name="date"/>
+                <filter name="today" string="Hoy" domain="[('date', '=', context_today())]"/>
+                <filter name="draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
+                <filter name="posted" string="Publicados" domain="[('state', '=', 'posted')]"/>
+                <filter name="verified" string="Verificados" domain="[('state', '=', 'verified')]"/>
+                <group string="Group By">
+                    <filter name="group_by_partner" string="Por Cliente" context="{'group_by':'partner_id'}"/>
+                    <filter name="group_by_state" string="Por Estado" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_receipt_validation_form" model="ir.ui.view">
+        <field name="name">receipt.validation.form</field>
+        <field name="model">receipt.validation</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,posted,verified,rejected"/>
+                    <button name="action_post" string="Publicar" type="object" class="oe_highlight" states="draft" groups="saving_plan_receipt.group_validator_receipt_user"/>
+                    <button name="action_verify" string="Verificar" type="object" class="oe_highlight" states="posted" groups="saving_plan_receipt.group_validator_receipt_auditor"/>
+                    <button name="action_reject" string="Rechazar" type="object" states="posted" groups="saving_plan_receipt.group_validator_receipt_auditor"/>
+                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object" states="posted,verified,rejected" groups="saving_plan_receipt.group_validator_receipt_admin"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="state" readonly="1"/>
+                            <field name="validated_by" readonly="1"/>
+                            <field name="validation_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Detalles">
+                            <group>
+                                <field name="description"/>
+                                <field name="attachment_id"/>
+                            </group>
+                        </page>
+                        <!-- <page string="Plan de Ahorros">
+                            <field name="saving_plan_id"/>
+                            <field name="saving_line_id"/>
+                        </page> -->
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_receipt_validation" model="ir.actions.act_window">
+        <field name="name">Validación de Comprobantes</field>
+        <field name="res_model">receipt.validation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_receipt_validation_search"/>
+    </record>
+
+</odoo>

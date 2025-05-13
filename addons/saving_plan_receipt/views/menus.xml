@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menú principal -->
+    <menuitem id="menu_receipt_saving_root" name="Recibos" sequence="10"/>
+
+    <!-- Submenú -->
+    <menuitem id="menu_receipt_saving_management" name="Gestión de Ahorros" parent="menu_receipt_saving_root" sequence="10"/>
+
+    <!-- Menú para los recibos -->
+    <menuitem id="menu_receipt_saving_plan_view" name="Recibos de Pago" parent="menu_receipt_saving_management" action="action_receipt_saving_plan_view" sequence="10"/>
+
+    <!-- Nuevo menú de validación de comprobantes integrado en tu estructura -->
+    <menuitem id="menu_receipt_validation" name="Validación de Comprobantes" parent="menu_receipt_saving_root" sequence="20"/>
+    
+    <menuitem id="menu_receipt_validation_list" name="Listado de Comprobantes" parent="menu_receipt_validation" action="action_receipt_validation" sequence="10"/>
+</odoo>

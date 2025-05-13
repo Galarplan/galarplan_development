@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Grupo para cajeros -->
+    <record id="group_receipt_user" model="res.groups">
+        <field name="name">Usuario de Recibos</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Grupo para administradores -->
+    <record id="group_receipt_manager" model="res.groups">
+        <field name="name">Administrador de Recibos</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="implied_ids" eval="[(4, ref('group_receipt_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+
+</odoo>

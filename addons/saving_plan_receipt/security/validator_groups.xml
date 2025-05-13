@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Grupo para usuarios generales -->
+        <record id="group_validator_receipt_user" model="res.groups">
+            <field name="name">Validador de Comprobantes de Ahorro</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        
+        <!-- Grupo para auditores -->
+        <record id="group_validator_receipt_auditor" model="res.groups">
+            <field name="name">Auditor de Comprobantes de Ahorro</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        
+        <!-- Grupo para administradores -->
+        <record id="group_validator_receipt_admin" model="res.groups">
+            <field name="name">Administrador de Comprobantes de Ahorro</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="implied_ids" eval="[(4, ref('saving_plan_receipt.group_validator_receipt_user')), (4, ref('saving_plan_receipt.group_validator_receipt_auditor'))]"/>
+            <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+        
+        <!-- Regla: Usuarios generales solo ven sus comprobantes -->
+        <record id="receipt_validation_rule_user" model="ir.rule">
+            <field name="name">Usuario solo ve sus comprobantes</field>
+            <field name="groups" eval="[(4, ref('saving_plan_receipt.group_validator_receipt_user'))]"/>
+            <field name="model_id" ref="model_receipt_validation"/>
+            <field name="domain_force">['|', ('create_uid', '=', user.id), ('partner_id', 'in', user.partner_id.ids)]</field>
+        </record>
+        
+        <!-- Regla: Auditores ven comprobantes publicados -->
+        <record id="receipt_validation_rule_auditor" model="ir.rule">
+            <field name="name">Auditor ve comprobantes publicados</field>
+            <field name="model_id" ref="model_receipt_validation"/>
+            <field name="domain_force">[('state', '=', 'posted')]</field>
+            <field name="groups" eval="[(4, ref('saving_plan_receipt.group_validator_receipt_auditor'))]"/>
+        </record>
+        
+        <!-- Regla: Administradores ven todos los comprobantes -->
+        <record id="receipt_validation_rule_admin" model="ir.rule">
+            <field name="name">Administrador ve todos los comprobantes</field>
+            <field name="model_id" ref="model_receipt_validation"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('saving_plan_receipt.group_validator_receipt_admin'))]"/>
+        </record>
+    </data>
+</odoo>

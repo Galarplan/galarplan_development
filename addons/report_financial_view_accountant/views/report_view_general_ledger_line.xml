@@ -11,6 +11,8 @@
                     <field name="date"/>
                     <field name="journal_id" optional="show"/>
                     <field name="partner_id" optional="hide"/>
+                    <field name="company_id" optional="hide"/>
+                    <field name="move_id" widget="many2one_button" options="{'type': 'object'}"/>
                     <field name="name"/>
                     <field name="debit" sum="total"/>
                     <field name="credit" sum="total" />

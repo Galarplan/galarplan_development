@@ -72,6 +72,7 @@
                                 <field name="date_to" />
                                 <field name="journal_id" options="{'no_create':True,'no_open':True,'no_edit':True}" />
                                 <field name="sortby" />
+                                <field name="total_accumulated" string="Total Acumulado"/>
                             </group>
 
                         </group>

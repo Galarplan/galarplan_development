@@ -43,6 +43,21 @@ class report_view_general_ledger(models.Model):
                                           ' you to add a row to display the amount '
                                           'of debit/credit/balance that precedes'
                                           ' the filter you\'ve set.')
+    total_accumulated = fields.Float(
+        string="Total Acumulado",
+        compute='_compute_total_accumulated',
+        store=True,
+        readonly=True
+    )
+
+    @api.depends('line_ids.amount_accumulated')
+    def _compute_total_accumulated(self):
+        for report in self:
+            if report.line_ids:
+                report.total_accumulated = report.line_ids[-1].amount_accumulated  # Último valor acumulado
+            else:
+                report.total_accumulated = 0.0
+                
     # journal_ids = fields.Many2many('account.journal',
     #                                'account_report_general_ledger_view_journal_rel',
     #                                'account_id', 'journal_id',
@@ -113,6 +128,7 @@ class report_view_general_ledger(models.Model):
 
                 SELECT 
                     l.id AS move_line_id,
+                    am.id as move_id,
                     l.company_id,
                     l.partner_id,
                     l.ref AS referencia,
@@ -155,7 +171,8 @@ class report_view_general_ledger(models.Model):
                                           'journal_id': move.get('journal_id', None),
                                           'debit': move.get('debit'),
                                           'credit': move.get('credit'),
-                                          'amount_accumulated': round(balance, DEC)
+                                          'amount_accumulated': round(balance, DEC),
+                                          'move_id': move.get('move_line_id') and self.env['account.move.line'].browse(move.get('move_line_id')).move_id.id or False,
                                           }))
                 each.write({'line_ids': lines_move})
         return True

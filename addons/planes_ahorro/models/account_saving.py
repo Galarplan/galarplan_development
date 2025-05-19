@@ -89,7 +89,7 @@ class AccountSaving(models.Model):
     pendiente = fields.Monetary(string='Pendiente', compute="_compute_documents", store=True, readonly=False,tracking=True)
     periods = fields.Integer(string='Periodo',default=0,tracking=True)
     serv_inscription_amount=fields.Monetary(string='Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True)
-
+    rate_inscription_plan = fields.Float(string='(%)Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True)
     old_id = fields.Integer("Antiguo ID",tracking=True)
     old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 
@@ -351,6 +351,7 @@ class AccountSaving(models.Model):
             self.periods=int(brw_plan.periods) or 0
             self.journal_id=brw_plan.journal_id and brw_plan.journal_id.id or self._get_default_journal_id()
             self.document_type_id = brw_plan.document_type_id
+            self.rate_inscription_plan = brw_plan.rate_inscription
 
     @api.onchange('periods','start_date','quota_amount','saving_plan_id','partner_id')
     def onchange_periods(self):
@@ -376,10 +377,13 @@ class AccountSaving(models.Model):
         DEC=2
         for brw_each in self:
             serv_inscription_amount=0.00
+            # rate_inscription = 0.00
             if brw_each.saving_plan_id:
                 serv_inscription_amount = round(
                 brw_each.saving_amount * brw_each.saving_plan_id.rate_inscription / 100.00, DEC)
+                # rate_inscription = brw_each.saving_plan_id.rate_inscription
             brw_each.serv_inscription_amount=serv_inscription_amount
+            # brw_each.rate_inscription_plan = rate_inscription
 
     def compute_lines(self):
         from decimal import Decimal, ROUND_HALF_UP
@@ -394,6 +398,7 @@ class AccountSaving(models.Model):
             principal_amount = brw_each.periods!=0 and round_excel(brw_each.saving_amount/brw_each.periods) or 0.00
             line_ids = [(5,)]
             ###inscripcion
+            # print('===================',brw_each.rate_inscription_plan,round_excel(brw_each.saving_amount * brw_each.rate_inscription_plan / 100.00))
             values = {
                 "sequence": 0,
                 "number": 0,
@@ -406,9 +411,10 @@ class AccountSaving(models.Model):
                 "migrated": False,
                 "migrated_has_invoices": False,
                 "migrated_payment_amount": False,
-                "serv_inscription_amount": round_excel(
-                    brw_each.saving_amount * brw_each.saving_plan_id.rate_inscription / 100.00),
-                "rate_inscription": brw_each.saving_plan_id.rate_inscription,
+                # "serv_inscription_amount": round_excel(brw_each.saving_amount * brw_each.saving_plan_id.rate_inscription / 100.00),
+                "serv_inscription_amount": round_excel(brw_each.saving_amount * brw_each.rate_inscription_plan / 100.00),
+                # "rate_inscription": brw_each.saving_plan_id.rate_inscription,
+                "rate_inscription": brw_each.rate_inscription_plan,
 
             }
             line_ids.append((0, 0, values))
@@ -421,7 +427,7 @@ class AccountSaving(models.Model):
                             principal_amount * brw_each.saving_plan_id.rate_expense / 100.00)
             min_saving_amount=0.00
             for each_range in range(0, brw_each.periods):
-                print( brw_each.periods)
+                # print( brw_each.periods)
                 quota = each_range +1
                 new_date_process_temp =brw_each.start_date+ relativedelta(months=quota)
                 datevalue =new_date_process_temp
@@ -460,7 +466,7 @@ class AccountSaving(models.Model):
                    "serv_admin_percentage":  brw_each.saving_plan_id.rate_expense,
                    "seguro_percentage": brw_each.saving_plan_id.rate_insurance
                 }
-                print(values)
+                # print(values)
                 line_ids.append((0, 0, values))
                 totalglobal += round_excel(principal_amount)
                 if totalglobal > brw_each.saving_amount:

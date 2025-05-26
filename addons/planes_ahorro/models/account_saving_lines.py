@@ -145,8 +145,10 @@ class AccountSavingLines(models.Model):
                         enabled_for_invoice=True
             brw_each.enabled_for_invoice = enabled_for_invoice
 
-    @api.depends('saving_id.state','payment_ids','payment_ids.state','payment_line_ids.type','invoice_id','invoice_id.state','invoice_id.payment_state','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
-    @api.onchange('saving_id.state''payment_ids','payment_ids.state','payment_line_ids.type','invoice_id','invoice_id.state','invoice_id.payment_   state','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
+    # @api.depends('saving_id.state','payment_ids','payment_ids.state','payment_line_ids.type','invoice_id','invoice_id.state','invoice_id.payment_state','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
+    # @api.onchange('saving_id.state''payment_ids','payment_ids.state','payment_line_ids.type','invoice_id','invoice_id.state','invoice_id.payment_   state','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
+    @api.depends('saving_id.state','payment_ids','payment_ids.state','payment_line_ids.type','principal_amount','serv_admin_amount','seguro_amount','payment_line_ids')
+    @api.onchange('saving_id.state''payment_ids','payment_ids.state','payment_line_ids.type','principal_amount', 'serv_admin_amount', 'seguro_amount','payment_line_ids')
     def _compute_pendientes(self):
         DEC=2
         for brw_each in self:
@@ -423,12 +425,11 @@ class AccountSavingLines(models.Model):
                                         brw_process_doc.id, brw_payment.payment_id.id)
                                 if brw_process_doc.plan_ahorro_move_id:
                                     #####
-                                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
-                                        brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
-                        brw_each.write({"invoice_id": brw_process_doc.id,
-                                        "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False,
-                                        'enabled_for_invoice': False
-                                        })
+                                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
+                                brw_each.write({"invoice_id": brw_process_doc.id,
+                                    "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False,
+                                    'enabled_for_invoice': False
+                                })
                 # else:
                 #     if len(srch_invoice)==1:
                 #         if srch_invoice.state=='draft':

@@ -5,12 +5,12 @@
         <field name="model">receipt.validation</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="name"/>
-                <field name="partner_id"/>
-                <field name="date"/>
-                <field name="amount"/>
-                <field name="state"/>
-                <field name="validated_by"/>
+                <field name="name" />
+                <field name="partner_id" />
+                <field name="date" />
+                <field name="amount" />
+                <field name="state" />
+                <field name="validated_by" />
             </tree>
         </field>
     </record>
@@ -20,17 +20,18 @@
         <field name="model">receipt.validation</field>
         <field name="arch" type="xml">
             <search>
-                <field name="name" filter_domain="[('name', 'ilike', self)]"/>
-                <field name="partner_id"/>
-                <field name="state"/>
-                <field name="date"/>
-                <filter name="today" string="Hoy" domain="[('date', '=', context_today())]"/>
-                <filter name="draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
-                <filter name="posted" string="Publicados" domain="[('state', '=', 'posted')]"/>
-                <filter name="verified" string="Verificados" domain="[('state', '=', 'verified')]"/>
+                <field name="name" filter_domain="[('name', 'ilike', self)]" />
+                <field name="partner_id" />
+                <field name="state" />
+                <field name="date" />
+                <filter name="today" string="Hoy" domain="[('date', '=', context_today())]" />
+                <filter name="draft" string="Borrador" domain="[('state', '=', 'draft')]" />
+                <filter name="posted" string="Publicados" domain="[('state', '=', 'posted')]" />
+                <filter name="verified" string="Verificados" domain="[('state', '=', 'verified')]" />
                 <group string="Group By">
-                    <filter name="group_by_partner" string="Por Cliente" context="{'group_by':'partner_id'}"/>
-                    <filter name="group_by_state" string="Por Estado" context="{'group_by':'state'}"/>
+                    <filter name="group_by_partner" string="Por Cliente"
+                        context="{'group_by':'partner_id'}" />
+                    <filter name="group_by_state" string="Por Estado" context="{'group_by':'state'}" />
                 </group>
             </search>
         </field>
@@ -42,43 +43,75 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,posted,verified,rejected"/>
-                    <button name="action_post" string="Publicar" type="object" class="oe_highlight" states="draft" groups="saving_plan_receipt.group_validator_receipt_user"/>
-                    <button name="action_verify" string="Verificar" type="object" class="oe_highlight" states="posted" groups="saving_plan_receipt.group_validator_receipt_auditor"/>
-                    <button name="action_reject" string="Rechazar" type="object" states="posted" groups="saving_plan_receipt.group_validator_receipt_auditor"/>
-                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object" states="posted,verified,rejected" groups="saving_plan_receipt.group_validator_receipt_admin"/>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,posted,verified,rejected" />
+                    <button name="action_post" string="Publicar" type="object" class="oe_highlight"
+                        states="draft" groups="saving_plan_receipt.group_validator_receipt_user" />
+                    <button name="action_verify" string="Verificar" type="object"
+                        class="oe_highlight" states="posted"
+                        groups="saving_plan_receipt.group_validator_receipt_auditor" />
+                    <button name="action_reject" string="Rechazar" type="object" states="posted"
+                        groups="saving_plan_receipt.group_validator_receipt_auditor" />
+                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object"
+                        states="posted,verified,rejected"
+                        groups="saving_plan_receipt.group_validator_receipt_admin" />
                 </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" class="oe_inline"
+                                style="font-size: 1.5em; font-weight: bold;" />
+                        </h1>
+                    </div>
                     <group>
                         <group>
-                            <field name="name"/>
-                            <field name="partner_id"/>
-                            <field name="date"/>
-                            <field name="amount"/>
+                            <field name="partner_id" />
+                            <field name="mail_partner" />
+                            <field name="date" />
+                            <field name="amount" />
+                            <field name="payment_form" />
                         </group>
                         <group>
-                            <field name="state" readonly="1"/>
-                            <field name="validated_by" readonly="1"/>
-                            <field name="validation_date" readonly="1"/>
+                            <field name="state" readonly="1" />
+                            <field name="validated_by" readonly="1" />
+                            <field name="validation_date" readonly="1" />
+                            <field name="company_id" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="description" />
                         </group>
                     </group>
                     <notebook>
                         <page string="Detalles">
+
+                            <field name="attachment_id" widget="many2many_binary"
+                                options="{'no_create': True, 'no_open': False}">
+                                <tree string="Documentos Adjuntos">
+                                    <field name="name" />
+                                </tree>
+                                <form>
+                                    <sheet>
+                                        <group>
+                                            <field name="name" />
+                                            <!-- <field name="datas" filename="datas_fname"/> -->
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+
+                        </page>
+                        <page string="Plan de Ahorros">
                             <group>
-                                <field name="description"/>
-                                <field name="attachment_id"/>
+                                <field name="saving_plan_id" />
+                                <field name="saving_line_id" />
                             </group>
                         </page>
-                        <!-- <page string="Plan de Ahorros">
-                            <field name="saving_plan_id"/>
-                            <field name="saving_line_id"/>
-                        </page> -->
                     </notebook>
                 </sheet>
                 <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
+                    <field name="message_follower_ids" />
+                    <field name="activity_ids" />
+                    <field name="message_ids" />
                 </div>
             </form>
         </field>
@@ -88,7 +121,7 @@
         <field name="name">Validación de Comprobantes</field>
         <field name="res_model">receipt.validation</field>
         <field name="view_mode">tree,form</field>
-        <field name="search_view_id" ref="view_receipt_validation_search"/>
+        <field name="search_view_id" ref="view_receipt_validation_search" />
     </record>
 
 </odoo>

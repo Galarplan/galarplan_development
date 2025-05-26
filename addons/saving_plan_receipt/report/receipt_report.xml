@@ -9,4 +9,14 @@
         paperformat="saving_plan_receipt.receipt_paperformat"
     />
 
+    <report
+        id="action_report_receipt_validation"
+        name="saving_plan_receipt.report_receipt_validation"
+        model="receipt.validation"
+        string="Reporte de Validación"
+        report_type="qweb-html"
+        paperformat="saving_plan_receipt.paperformat_receipt"
+    />
+
+
 </odoo>

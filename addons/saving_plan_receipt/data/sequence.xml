@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="receipt_number" model="ir.sequence">
+        <field name="name">Comprobante de cobro</field>
+        <field name="code">receipt_payment</field>
+        <field name="prefix">%(year)s-</field>
+        <field name="padding">6</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="implementation">standard</field>
+        <field name="use_date_range">True</field>
+        <field name="company_id" eval="True" />
+    </record>
+
+</odoo>

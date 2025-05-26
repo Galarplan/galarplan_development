@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reporte de Validación de Comprobantes -->
+    <template id="report_receipt_validation">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <!-- Encabezado -->
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <h2>Validación de Comprobante</h2>
+                            <h3 t-if="docs.state == 'posted'" style="color: orange;">DOCUMENTO PRELIMINAR - EN CONFIRMACIÓN</h3>
+                            <h3 t-if="docs.state == 'verified'" style="color: green;">DOCUMENTO VERIFICADO</h3>
+                        </div>
+                        <div class="col-xs-6 text-right">
+                            <p><strong>Número:</strong> <span t-field="docs.name"/></p>
+                            <p><strong>Fecha:</strong> <span t-field="docs.date"/></p>
+                            <p><strong>Estado:</strong> <span t-field="docs.state"/></p>
+                        </div>
+                    </div>
+
+                    <!-- Información del Cliente -->
+                    <div class="row mt16">
+                        <div class="col-xs-12">
+                            <h4>Información del Cliente</h4>
+                            <p><strong>Nombre:</strong> <span t-field="docs.partner_id"/></p>
+                            <p><strong>Email:</strong> <span t-field="docs.mail_partner"/></p>
+                        </div>
+                    </div>
+
+                    <!-- Detalles del Pago -->
+                    <div class="row mt16">
+                        <div class="col-xs-12">
+                            <h4>Detalles del Pago</h4>
+                            <p><strong>Monto:</strong> <span t-field="docs.amount"/></p>
+                            <p><strong>Forma de Pago:</strong> <span t-field="docs.payment_form"/></p>
+                            <p><strong>Descripción:</strong> <span t-field="docs.description"/></p>
+                        </div>
+                    </div>
+
+                    <!-- Solo muestra en versión completa -->
+                    <!-- <div t-if="complete" class="row mt16">
+                        <div class="col-xs-12">
+                            <h4>Información de Validación</h4>
+                            <p><strong>Validado por:</strong> <span t-field="docs.validated_by"/></p>
+                            <p><strong>Fecha de Validación:</strong> <span t-field="docs.validation_date"/></p>
+                        </div>
+                    </div> -->
+                    <div t-if="docs.state == 'verified'" class="row mt16">
+                        <div class="col-xs-12">
+                            <h4>Información de Validación</h4>
+                            <p><strong>Validado por:</strong> <span t-field="docs.validated_by"/></p>
+                            <p><strong>Fecha de Validación:</strong> <span t-field="docs.validation_date"/></p>
+                        </div>
+                    </div>
+
+                    <!-- Plan de Ahorros (solo versión completa) -->
+                    <!-- <div t-if="complete and doc.saving_plan_id" class="row mt16">
+                        <div class="col-xs-12">
+                            <h4>Plan de Ahorros</h4>
+                            <p><strong>Plan:</strong> <span t-field="docs.saving_plan_id"/></p>
+                            <p><strong>Línea:</strong> <span t-field="docs.saving_line_id"/></p>
+                        </div>
+                    </div> -->
+                    <div t-if="docs.state == 'verified' and docs.saving_plan_id" class="row mt16">
+                        <div class="col-xs-12">
+                            <h4>Plan de Ahorros</h4>
+                            <p><strong>Plan:</strong> <span t-field="docs.saving_plan_id"/></p>
+                            <p><strong>Línea:</strong> <span t-field="docs.saving_line_id"/></p>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje preliminar -->
+                    <!-- <div t-if="preliminary" class="row mt32">
+                        <div class="col-xs-12 alert alert-warning">
+                            <strong>NOTA:</strong> Este documento es preliminar y se encuentra en proceso de verificación. 
+                            La información mostrada está sujeta a confirmación.
+                        </div>
+                    </div> -->
+                    <div t-if="docs.state == 'posted'" class="row mt32">
+                        <div class="col-xs-12 alert alert-warning">
+                            <strong>NOTA:</strong> Este documento es preliminar y se encuentra en proceso de verificación. 
+                            La información mostrada está sujeta a confirmación.
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    
+    <!-- Añadir botón de impresión en el formulario -->
+    <!-- <record id="view_receipt_validation_form" model="ir.ui.view">
+        <field name="model">receipt.validation</field>
+        <field name="inherit_id" ref="tu_modulo.view_receipt_validation_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(tu_modulo.action_report_receipt_validation)d"
+                    string="Imprimir"
+                    type="action"
+                    class="oe_highlight"
+                    states="posted,verified"
+                    groups="saving_plan_receipt.group_validator_receipt_user"/>
+            </xpath>
+        </field>
+    </record> -->
+</odoo>

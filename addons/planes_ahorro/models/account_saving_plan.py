@@ -22,7 +22,7 @@ class AccountSavingPlan(models.Model):
         ('normal', 'normal'),
         ('ballon', 'Balón'),
     ], string='Tipo de ahorro', default='normal')
-    name = fields.Integer(string='Nombre', required=True)
+    name = fields.Char(string='Nombre', required=True)
     periods = fields.Integer(string='Periodo',default=0)
     saving_amount    = fields.Monetary(string='Monto de ahorro')
 

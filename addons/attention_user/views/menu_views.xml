@@ -1,0 +1,38 @@
+<odoo>
+    <menuitem id="menu_customer_attention_root" name="Atención al Cliente" sequence="10" />
+
+
+    <menuitem id="menu_attention_management" name="Gestión de Atención"
+        parent="menu_customer_attention_root" sequence="10" />
+    <!-- <menuitem id="menu_devolutions_management" name="Gestión de Devoluciones"
+        parent="menu_customer_attention_root" sequence="20" /> -->
+    <menuitem id="menu_documents_management" name="Gestión de Documentos"
+        parent="menu_customer_attention_root" sequence="20" />
+    <!-- <menuitem id="menu_reports_analysis" name="Reportes y Análisis"
+        parent="menu_customer_attention_root" sequence="40" />  -->
+
+    <menuitem id="menu_config_management" name="Configuracion"
+        parent="menu_customer_attention_root" sequence="30" />
+
+    <menuitem action="action_attention_user" id="menu_attention_user"
+        parent="menu_attention_management" sequence="10" name="Registros de Atención" />
+
+    <menuitem action="action_attention_devolution" id="menu_attention_devolution"
+        parent="menu_attention_management" sequence="10" name="Registros de Devoluciones" />
+
+    <menuitem action="action_document_attention" id="menu_document_attention"
+        parent="menu_documents_management" sequence="10" name="Documentos de Atención" />
+
+
+    <menuitem id="menu_attention_concept" name="Conceptos" parent="menu_config_management"
+        action="action_attention_concept" sequence="10" />
+
+    <menuitem id="menu_document_reason" name="Razones"
+        parent="menu_config_management" action="action_document_reason" sequence="20" />
+
+    <menuitem id="menu_document_action" name="Acciones"
+        parent="menu_config_management"
+        action="action_document_action"
+        sequence="30" />
+
+</odoo>

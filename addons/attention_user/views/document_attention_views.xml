@@ -1,0 +1,57 @@
+<odoo>
+    <record id="view_document_attention_tree" model="ir.ui.view">
+        <field name="name">document.attention.tree</field>
+        <field name="model">document.attention</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="date" />
+                <field name="client_id" />
+                <field name="reason_id" />
+                <field name="paid_value" />
+                <field name="action_id" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_document_attention_form" model="ir.ui.view">
+        <field name="name">document.attention.form</field>
+        <field name="model">document.attention</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="type_document" />
+                        <field name="date" />
+                        <field name="client_id" />
+                        <field name="codigo" />
+                        <field name="monto" />
+                        <field name="income_date" />
+                        <field name="advisor_id" />
+                        <field name="commercial_manager_id" />
+                        <field name="paid_value" />
+                        <field name="reason_id" string="Razon" />
+                        <field name="evidence" />
+                    </group>
+                    <group>
+                        <field name="document_detail" />
+                    </group>
+                    <group attrs="{'invisible': [('evidence', '=', False)]}">
+                        <field name="document_file" filename="document_filename" />
+                        <field name="document_filename" invisible="1" />
+                        <field name="document_file_type" invisible="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_document_attention" model="ir.actions.act_window">
+        <field name="name">Documentos de Atención</field>
+        <field name="res_model">document.attention</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Crea tu primer documento de atención
+            </p>
+        </field>
+    </record>
+</odoo>

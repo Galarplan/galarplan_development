@@ -1,0 +1,68 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_document_reason_tree" model="ir.ui.view">
+        <field name="name">document.reason.tree</field>
+        <field name="model">document.reason</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="document_type" widget="badge" optional="hide"/>
+                <field name="requires_evidence" widget="boolean_toggle" optional="hide"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_document_reason_form" model="ir.ui.view">
+        <field name="name">document.reason.form</field>
+        <field name="model">document.reason</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="document_type" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="requires_evidence" invisible="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_document_reason_search" model="ir.ui.view">
+        <field name="name">document.reason.search</field>
+        <field name="model">document.reason</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter string="Activos" name="active" domain="[('active','=',True)]"/>
+                <filter string="Para uso interno" name="internal" domain="[('document_type','in',['internal','both'])]"/>
+                <filter string="Para clientes" name="external" domain="[('document_type','in',['external','both'])]"/>
+                <filter string="Requieren evidencia" name="needs_evidence" domain="[('requires_evidence','=',True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action and Menu -->
+    <record id="action_document_reason" model="ir.actions.act_window">
+        <field name="name">Razones de Documentos</field>
+        <field name="res_model">document.reason</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configura las diferentes razones para la generación de documentos
+            </p>
+        </field>
+    </record>
+
+</odoo>

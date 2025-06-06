@@ -1,0 +1,93 @@
+<odoo>
+    <record id="view_attention_user_tree" model="ir.ui.view">
+        <field name="name">attention.user.tree</field>
+        <field name="model">attention.user</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="date" />
+                <field name="partner_id" />
+                <field name="concept_id" />
+                <field name="advisor_id" />
+                <field name="commercial_manager_id" />
+                <field name="amount" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_attention_user_form" model="ir.ui.view">
+        <field name="name">attention.user.form</field>
+        <field name="model">attention.user</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="date" />
+                            <field name="partner_id" />
+                            <field name="group" />
+                            <field name="code_id" domain="[('partner_id', '=', partner_id)]" />
+                            <field name="amount" readonly="1"/>
+                            <field name="total_payment" readonly="1"/>
+                            <field name="pending_amount" readonly = "1"/>
+                            <field name="start_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="advisor_id" />
+                            <field name="commercial_manager_id" />
+                            <field name="concept_id" />
+                            <field name="doc" />    
+                        </group>
+                    </group>
+                    <group>
+                        <field name="detail" />
+                        <field name="customer_service" />
+                    </group>
+                    <field name="document_ids" attrs="{'invisible': [('doc', '=', False)]}" context="{
+                        'default_client_id': partner_id,
+                        'default_advisor_id': advisor_id,
+                        'default_commercial_manager_id': commercial_manager_id,
+                        'default_paid_value': total_payment,
+                        'default_monto': amount
+                    }">
+                        <tree>
+                            <field name="date" />
+                            <field name="reason_id" />
+                            <field name="paid_value" />
+                            <field name="document_detail" />
+                            <field name="evidence" />
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_attention_user_search" model="ir.ui.view">
+        <field name="name">attention.user.search</field>
+        <field name="model">attention.user</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id" />
+                <field name="concept_id" />
+                <field name="date" />
+                <field name="advisor_id" />
+                <filter string="This Month" name="this_month"
+                    domain="[('date','&gt;=', context_today().replace(day=1))]" />
+            </search>
+        </field>
+    </record>
+
+
+    <record id="action_attention_user" model="ir.actions.act_window">
+        <field name="name">Registros de Atención</field>
+        <field name="res_model">attention.user</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Crea tu primer registro de atención al cliente
+            </p>
+        </field>
+    </record>
+
+
+</odoo>

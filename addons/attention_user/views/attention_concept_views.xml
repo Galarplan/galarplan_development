@@ -1,0 +1,53 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_attention_concept_tree" model="ir.ui.view">
+        <field name="name">attention.concept.tree</field>
+        <field name="model">attention.concept</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_attention_concept_form" model="ir.ui.view">
+        <field name="name">attention.concept.form</field>
+        <field name="model">attention.concept</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="code"/>
+                        <field name="name"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_attention_concept_search" model="ir.ui.view">
+        <field name="name">attention.concept.search</field>
+        <field name="model">attention.concept</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter string="Activos" name="active" domain="[('active','=',True)]"/>
+                <filter string="Inactivos" name="inactive" domain="[('active','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action and Menu -->
+    <record id="action_attention_concept" model="ir.actions.act_window">
+        <field name="name">Conceptos de Atención</field>
+        <field name="res_model">attention.concept</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

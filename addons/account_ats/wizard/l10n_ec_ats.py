@@ -30,7 +30,7 @@ class l10n_ec_ats(models.TransientModel):
         srch=self.env["calendar.month"].sudo().search([('value','=',month)])
         return srch and srch[0].id or False
     
-    company_id=fields.Many2one("res.company","Compañia",default=lambda self: self.env.company.id)
+    company_id=fields.Many2one("res.company","Compañia",default = lambda self: self.env.company.id)
     report_file = fields.Binary(copy=False, )
     file_name = fields.Char(copy=False, )
     type_report = fields.Selection([('ATS', '(ATS) ANEXO TRANSACCIONAL SIMPLIFICADO')],default='ATS', copy=False)
@@ -88,6 +88,9 @@ class l10n_ec_ats(models.TransientModel):
     def ATS(self, date_from, date_to):
         config = self.env['ir.config_parameter'].sudo()
         company_id = self.company_id
+        
+
+        print(company_id)
 
         root = Element("iva")
         SubElement(root, "TipoIDInformante").text = 'R'
@@ -195,6 +198,7 @@ class l10n_ec_ats(models.TransientModel):
 
     def _generate_ventas_general(self, root, date_from, date_to):
         company_id = self.company_id
+        print('===================',company_id)
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
 
@@ -308,6 +312,7 @@ class l10n_ec_ats(models.TransientModel):
         ORDER BY ventas_idcliente, ventas_tipocomprobante
         """ % (str_date_from, str_date_to, company_id.id)
 
+
         self.env.cr.execute(sql)
         result = self.env.cr.dictfetchall()
         
@@ -338,7 +343,7 @@ class l10n_ec_ats(models.TransientModel):
     def _generate_compras(self, root, date_from, date_to):
         str_date_from = str(date_from.year) + "-" + str(date_from.month).zfill(2) + "-" + str(date_from.day).zfill(2)
         str_date_to = str(date_to.year) + "-" + str(date_to.month).zfill(2) + "-" + str(date_to.day).zfill(2)
-        company_id = self.env.user.company_id
+        company_id = self.company_id
         
 
         sql = """;with variables as (

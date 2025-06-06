@@ -1,0 +1,19 @@
+<odoo>
+    <record id="group_customer_attention_user" model="res.groups">
+        <field name="name">Customer Attention User</field>
+        <field name="category_id" ref="base.module_category_services_helpdesk"/>
+    </record>
+
+    <record id="group_customer_attention_auditor" model="res.groups">
+        <field name="name">Customer Attention Auditor</field>
+        <field name="category_id" ref="base.module_category_services_helpdesk"/>
+        <field name="implied_ids" eval="[(4, ref('group_customer_attention_user'))]"/>
+    </record>
+
+    <record id="group_customer_attention_admin" model="res.groups">
+        <field name="name">Customer Attention Administrator</field>
+        <field name="category_id" ref="base.module_category_services_helpdesk"/>
+        <field name="implied_ids" eval="[(4, ref('group_customer_attention_auditor'))]"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>

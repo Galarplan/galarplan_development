@@ -480,14 +480,14 @@ result=amount>0.00</field>
 		</record>
 
 	<record model='hr.salary.rule' id='rule_PROV_IESS_1215'>
-			<field name='name'>PROV. IESS 12.15%</field>
+			<field name='name'>PROV. IESS 11.15%</field>
 			<field name='code'>PROV_IESS</field>
 			<field name='active' eval="True" />
 		<field name='force_payslip' eval="0" />
 			<field name='category_id' ref='payroll_ec.type_provision' />
             <field name='sequence'>1</field>
 			<field name='type'>payslip</field>
-			<field name='condition_python'>amount=compute_iess(brw_payslip,12.15)
+			<field name='condition_python'>amount=compute_iess(brw_payslip,11.15)
 amount_factor=amount
 result=amount>0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>

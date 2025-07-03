@@ -39,6 +39,158 @@ class AccountSavingPaymentWizard(models.TransientModel):
     enable_residual=fields.Boolean("Habilitar Saldo",default=False)
     ref=fields.Char("Memo",required=True)
 
+    quotas_for_payment = fields.Float(
+        string='Cuotas que Puede Pagar',
+        compute='_compute_quotas_for_payment',
+        store=True,
+        digits=(12, 2)  # Puedes ajustar la precisión si deseas más decimales
+    )
+
+    to_date = fields.Boolean('Ponerse al dia')
+
+    @api.depends('amount', 'saving_id.quota_amount')
+    def _compute_quotas_for_payment(self):
+        for record in self:
+            if record.saving_id.quota_amount > 0:
+                record.quotas_for_payment = record.amount / record.saving_id.quota_amount
+            else:
+                record.quotas_for_payment = 0.0
+
+    @api.onchange('amount', 'saving_id.quota_amount')
+    def onchange_quotas_for_payment(self):
+        self._compute_quotas_for_payment()
+
+    @api.onchange('amount', 'quotas_for_payment', 'saving_id.line_ids','saving_id.state_plan')
+    def _onchange_limit_amount(self):
+        import math
+
+        cantidad = int(math.ceil(self.quotas_for_payment or 0))  # Lo dejamos si necesitas usarlo luego
+        monto_total = float(self.amount or 0.0)
+
+        lineas_filtradas = self.saving_id.line_ids.filtered(lambda x: x.pendiente > 0.0).ids
+        if not lineas_filtradas:
+            self.saving_line_ids = [(5,)]
+            self.payment_ids = [(5,)]
+            return
+
+        self._cr.execute("""
+               SELECT id FROM account_saving_lines 
+               WHERE id IN %s 
+               ORDER BY date ASC, number ASC, id ASC
+           """, (tuple(lineas_filtradas),))
+        result_restantes = [row[0] for row in self._cr.fetchall()]
+
+        resultado = []
+        suma_pendiente = 0.0
+
+        ###
+        if self.saving_id.state_plan!='adjudicated_with_assets' and self.to_date == False:
+            for linea_id in result_restantes[:2]:
+                linea = self.env["account.saving.lines"].browse(linea_id)
+                restante_permitido = monto_total - suma_pendiente
+
+                if restante_permitido <= 0:
+                    break
+
+                if linea.pendiente <= restante_permitido:
+                    resultado.append(linea)
+                    suma_pendiente += linea.pendiente
+                else:
+                    # Aplicación parcial
+                    #linea_copia = linea.copy()
+                    linea.pendiente = restante_permitido
+                    resultado.append(linea)
+                    suma_pendiente += restante_permitido
+                    break
+
+            restantes = list(reversed(result_restantes[2:]))
+            print("reverse", restantes)
+
+            for linea_id in restantes:
+                linea = self.env["account.saving.lines"].sudo().browse(linea_id)
+                print("////")
+                if suma_pendiente >= monto_total:
+                    break
+
+                pendiente = linea.pendiente
+                restante_permitido = monto_total - suma_pendiente
+
+                if pendiente <= restante_permitido:
+                    resultado.append(linea)
+                    suma_pendiente += pendiente
+                elif restante_permitido > 0:
+                    # Tomamos una fracción de la cuota
+                    #linea_copia = linea.copy()
+                    linea.pendiente = restante_permitido
+                    resultado.append(linea)
+                    suma_pendiente += restante_permitido
+                    break
+        else:
+            for linea_id in result_restantes:
+                linea = self.env["account.saving.lines"].browse(linea_id)
+                restante_permitido = monto_total - suma_pendiente
+                if restante_permitido <= 0:
+                    break
+                if linea.pendiente <= restante_permitido:
+                    resultado.append(linea)
+                    suma_pendiente += linea.pendiente
+                else:
+                    # Aplicación parcial
+                    # linea_copia = linea.copy()
+                    linea.pendiente = restante_permitido
+                    resultado.append(linea)
+                    suma_pendiente += restante_permitido
+                    break
+        # Asignar el resultado
+        self.saving_line_ids = [(6, 0, [r.id for r in resultado])]
+        self.aplicar_pagos(resultado)
+
+    def aplicar_pagos(self,resultado):
+        payment_ids = [(5,)]  # Limpia los registros existentes
+        acum = 0
+
+        # Iterar sobre las líneas seleccionadas
+        sequence = 1
+        for brw_line in resultado:
+            pendiente = brw_line.pendiente
+            aplicado = min(pendiente,
+                           self.amount - acum)  # Aplica solo lo necesario para no exceder el monto disponible
+
+            # Si aún queda saldo disponible para aplicar
+            if aplicado > 0:
+                payment_ids.append((0, 0, {
+                    "number": brw_line.number,
+                    "date": brw_line.date,
+                    "saving_line_id": brw_line.id,
+                    "line_id": brw_line.id,
+                    "aplicado": aplicado,
+                    "sequence": sequence
+                }))
+                acum += aplicado  # Acumula el monto aplicado
+                sequence += 1
+            if acum >= self.amount:  # Detén el proceso si el monto se ha cubierto completamente
+                break
+
+        # Agregar una línea para el excedente, si queda saldo disponible
+        sobrante = self.amount - acum
+        if sobrante > 0:
+            payment_ids.append((0, 0, {
+                "aplicado": sobrante,
+                "number": 99999999,
+                "sequence": sequence
+            }))
+            sequence += 1
+
+        # Asignar las líneas calculadas
+        self.payment_ids = payment_ids
+
+
+    def _get_lineas_ordenadas(self,lines):
+        return sorted(
+            lines.filtered(lambda x: x.pendiente > 0.00),
+            key=lambda x: (x.id, x.number, x.date)
+        )
+
     @api.onchange('payment_journal_id')
     @api.depends('payment_journal_id')
     def onchange_payment_journal(self):
@@ -81,7 +233,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
         payment_ids = [(5,)]  # Limpia los registros existentes
         acum = 0
 
-        # Iterar sobre las líneas seleccionadas
+        # Iterar sobre las líneas seleccionada    s
         for brw_line in self.saving_line_ids:
             pendiente = brw_line.pendiente
             aplicado = min(pendiente,
@@ -190,3 +342,6 @@ class AccountSavingPaymentLineWizard(models.TransientModel):
     line_id=fields.Integer(string="# ID")
     pendiente=fields.Monetary(related="saving_line_id.pendiente",string="Pendiente",digits=(16,2))
     aplicado = fields.Float(string="Aplicado", digits=(16, 2))
+    sequence=fields.Integer("#")
+
+    _order="sequence asc"

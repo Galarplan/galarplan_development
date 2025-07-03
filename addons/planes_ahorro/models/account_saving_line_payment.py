@@ -64,14 +64,41 @@ class AccountSavingLines(models.Model):
             payment_lines = payment.move_id.line_ids.filtered(
                 lambda line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id==partner_account)
             #print("pago", payment_lines)
-            if not invoice_lines or not payment_lines:
+            if not invoice_lines and not payment_lines:
+                invoice_lines = invoice.line_ids.filtered(
+                    lambda
+                        line: line.account_id.reconcile and line.account_id != partner_account and line.account_id.prepayment_account)
+                # print("factura",invoice_lines)
+                payment_lines = payment.move_id.line_ids.filtered(
+                    lambda
+                        line: line.account_id.reconcile and line.account_id != partner_account and line.account_id.prepayment_account)
+
+                lines_to_reconcile = invoice_lines + payment_lines
+                lines_to_reconcile.reconcile()
                 return True
                 #raise ValueError(_("No se encontraron líneas contables para conciliar."))
-
+            if invoice and not payment_lines:
+                payment_lines = payment.move_id.line_ids.filtered(
+                    lambda
+                        line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id != partner_account and line.account_id.prepayment_account)
+                for each_prepayment in payment_lines:
+                    print("dddddddddd")
+                    print(each_prepayment.amount_residual)
+                    print(invoice.amount_residual)
+                    reconcile_amount=min(abs( each_prepayment.amount_residual),abs(invoice.amount_residual))
+                    brw_assignment = self.env["account.prepayment.assignment"].create({
+                        "move_id": invoice.id,
+                        "prepayment_aml_id": each_prepayment.id,
+                        "amount": reconcile_amount,
+                        "date": fields.Date.context_today(self),
+                        "company_id": invoice.company_id.id,
+                        "new_journal_id": payment.journal_id.id
+                    })
+                    brw_assignment.button_confirm()
+                return True
             # Realizar la conciliación
             lines_to_reconcile = invoice_lines + payment_lines
             lines_to_reconcile.reconcile()
-
             return True
         except Exception as e:
             raise ValidationError(_("Error conciliando factura y cobro: %s", str(e)))

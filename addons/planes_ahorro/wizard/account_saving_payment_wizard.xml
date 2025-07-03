@@ -19,8 +19,9 @@
                             options="{'no_create':True,'no_open':True,'no_edit':True}"
                         />
                         <field name="payment_method_id" invisible="1" />
+                        <field name="to_date"  />
                         <field name="amount" required="1" />
-
+<field name="quotas_for_payment" readonly="1" force_save="1"/>
                     </group>
 
                 </group>
@@ -28,11 +29,12 @@
                     context="{'hide_invoice':True,'tree_view_ref':'planes_ahorro.account_saving_lines_main_tree_view'}"
                     domain="[('saving_id','=',saving_id),('estado_pago','=','pendiente'),('pendiente','&gt;',0.00)]" />
                 <newline />
-                <field name="payment_ids">
-                    <tree create="false" delete="false" edit="true"
+                <field name="payment_ids" readonly="1" force_save="1">
+                    <tree create="false" delete="false" edit="false"
                         decoration-bf="not saving_line_id"
                         decoration-it="pendiente!=aplicado"
                     >
+                        <field name="sequence" optional="hide" />
                         <field name="number" />
                         <field name="date" optional="hide" />
                         <field name="saving_line_id" optional="hide" />

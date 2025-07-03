@@ -170,14 +170,32 @@ class ImportJournalEntryWizard(models.TransientModel):
                                         vals = {}
                                         domain = []
                                         if row[2] not in [None, ""]:
-                                            search_account = self.env['account.account'].sudo().search(
-                                                [('code', '=', row[2]), ('company_id', '=', self.company_id.id)], limit=1)
-                                            if search_account:
-                                                vals.update(
-                                                    {'account_id': search_account.id})
+                                            # search_account = self.env['account.account'].sudo().search(
+                                            #     [('code', '=', row[2]), ('company_id', '=', self.company_id.id)], limit=1)
+                                            
+                                            
+
+                                            # if search_account:
+                                            #     vals.update(
+                                            #         {'account_id': search_account.id})
+                                            # else:
+                                            #     skipped_line_no[str(
+                                            #         counter)] = " - Account not found. "
+                                            #     counter = counter + 1
+                                            #     continue
+                                            self._cr.execute("""
+                                                SELECT id 
+                                                FROM account_account 
+                                                WHERE code = %s AND company_id = %s 
+                                                LIMIT 1
+                                            """, (row[2], self.company_id.id))
+                                            
+                                            account_result = self._cr.fetchone()
+                                            print('================================',row[2],account_result)
+                                            if account_result:
+                                                vals.update({'account_id': account_result[0]})
                                             else:
-                                                skipped_line_no[str(
-                                                    counter)] = " - Account not found. "
+                                                skipped_line_no[str(counter)] = f" - Account not found. {row[2]} " 
                                                 counter = counter + 1
                                                 continue
                                         if row[3] not in [None, ""]:

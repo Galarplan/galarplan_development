@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_journal_form_inherit_sobregiro" model="ir.ui.view">
+        <field name="name">account.journal.form.sobregiro</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='loss_account_id']" position="after">
+                <field name="cuenta_giro_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

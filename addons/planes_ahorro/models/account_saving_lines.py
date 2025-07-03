@@ -465,3 +465,5 @@ class AccountSavingLines(models.Model):
         action = self.env.ref('planes_ahorro.action_account_saving_line_wizard').read()[0]
         action['context'] = {'active_ids': self.ids}
         return action
+
+    _order="id asc,number asc,date asc"

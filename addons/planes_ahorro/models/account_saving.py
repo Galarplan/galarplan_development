@@ -44,7 +44,9 @@ class AccountSaving(models.Model):
         ('anulled', 'Anulado'),
         ('disabled', 'Desactivado'),
         ('retired', 'Retirado'),
+        ('precanceled','Pre-Cancelado'),
         ('cancelled', 'Cancelado'),
+        ('moved','Traspaso'),
         ('closed', 'Cerrado'),
     ], string='Estado del Plan', default='draft',tracking=True)
 
@@ -429,7 +431,7 @@ class AccountSaving(models.Model):
             for each_range in range(0, brw_each.periods):
                 # print( brw_each.periods)
                 quota = each_range +1
-                new_date_process_temp =brw_each.start_date+ relativedelta(months=quota)
+                new_date_process_temp =brw_each.start_date+ relativedelta(months=each_range)
                 datevalue =new_date_process_temp
                 total += round_excel(principal_amount)
                 principal_amount= brw_each.fixed_amount

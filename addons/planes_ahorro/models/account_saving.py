@@ -91,7 +91,7 @@ class AccountSaving(models.Model):
     pendiente = fields.Monetary(string='Pendiente', compute="_compute_documents", store=True, readonly=False,tracking=True)
     periods = fields.Integer(string='Periodo',default=0,tracking=True)
     serv_inscription_amount=fields.Monetary(string='Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True)
-    rate_inscription_plan = fields.Float(string='(%)Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True)
+    rate_inscription_plan = fields.Float(string='(%)Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True, default = 5.5)
     old_id = fields.Integer("Antiguo ID",tracking=True)
     old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 
@@ -108,19 +108,22 @@ class AccountSaving(models.Model):
         string="Cuenta De Anticipo",
         compute="_compute_receivable_account",
         store=True,
-        help="Cuenta contable seleccionada Para Pagos y Facturacion del cliente.",
+        help="Cuenta contable seleccionada Para Pagos.",
+        default = lambda self: self.env.company.payment_account_1
     )
 
     property_account_adjudicate_id = fields.Many2one(
         "account.account",
         string="Cuenta por Cobrar Adjudicado",
         help="Cuenta contable seleccionada si el cliente es adjudicado",
+        default = lambda self: self.env.company.payment_account_2
     )
 
     property_account_unadjudicated_id = fields.Many2one(
         "account.account",
         string="Cuenta por Cobrar No Adjudicado",
         help="Cuenta contable seleccionada si el cliente no es adjudicado",
+        default = lambda self: self.env.company.payment_account_3
     )
 
     state_plan_description = fields.Char(

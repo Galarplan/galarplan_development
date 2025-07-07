@@ -16,6 +16,9 @@
                     <field name="seguro_id"/>
                     <field name="ahorro_account_id"/>
                     <field name="ahorro_journal_id"/>
+                    <field name="payment_account_1" />
+                    <field name="payment_account_2" />
+                    <field name="payment_account_3" />
                 </group>
             </page>
         </xpath>

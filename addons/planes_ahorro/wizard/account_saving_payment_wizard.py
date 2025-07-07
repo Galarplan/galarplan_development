@@ -67,7 +67,17 @@ class AccountSavingPaymentWizard(models.TransientModel):
         cantidad = int(math.ceil(self.quotas_for_payment or 0))  # Lo dejamos si necesitas usarlo luego
         monto_total = float(self.amount or 0.0)
 
-        lineas_filtradas = self.saving_id.line_ids.filtered(lambda x: x.pendiente > 0.0).ids
+        lineas_filtradas = self.saving_id.line_ids.filtered(lambda x: x.pendiente > 0.0)
+
+        hay_pagadas = any(line.estado_pago == 'pagado' for line in self.saving_id.line_ids)
+
+        if hay_pagadas:
+            # Excluir las líneas con number = 0 si hay pagadas
+            lineas_filtradas = lineas_filtradas.filtered(lambda x: x.number != 0)
+        
+        lineas_filtradas = lineas_filtradas.ids
+
+
         if not lineas_filtradas:
             self.saving_line_ids = [(5,)]
             self.payment_ids = [(5,)]

@@ -12,3 +12,6 @@ class ResCompany(models.Model):
     seguro_id = fields.Many2one("product.product", "Gasto de Seguro por Defecto")
     ahorro_account_id = fields.Many2one("account.account", "Cuenta para Ahorros por Defecto")
     ahorro_journal_id= fields.Many2one("account.journal", "Diario para Ahorros por Defecto")
+    payment_account_1 = fields.Many2one('account.account','cuenta por defecto banco')
+    payment_account_2 = fields.Many2one('account.account','cuenta por defecto adjudicado')
+    payment_account_3 = fields.Many2one('account.account','cuenta por defecto no adjudicado')

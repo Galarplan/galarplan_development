@@ -64,117 +64,215 @@ class report_view_general_ledger(models.Model):
     #                                string='Journals', required=True)
     line_ids = fields.One2many('report.view.general.ledger.line', 'report_id', string='Lines', readonly=True)
 
-    def action_process_init_sql(self, date_start, date_end):
-        for each in self:
-            if not date_start:
-                date_start = '1990-01-01'
-            company_id = each.company_id.id
-            account_id = each.account_id.id
-            partner_id = each.partner_id.id
-            journal_id = each.journal_id and each.journal_id.id or 0
-            filter_state = each.target_move
-            # sort_By = (each.sortby == "sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
-            self._cr.execute(f"""WITH variables AS (
-            SELECT 
-                {company_id}::int AS company_id,
-                {account_id}::int AS account_id,
-                {partner_id}::int AS partner_id,
-                {journal_id}::int AS journal_id,
-                '{date_start}'::date AS date_start,
-                '{date_end}'::date AS date_end,
-                '{filter_state}'::varchar AS filter_state
-                )
+    # def action_process_init_sql(self, date_start, date_end):
+    #     for each in self:
+    #         if not date_start:
+    #             date_start = '1990-01-01'
+    #         company_id = each.company_id.id
+    #         account_id = each.account_id.id
+    #         partner_id = each.partner_id.id
+    #         journal_id = each.journal_id and each.journal_id.id or 0
+    #         filter_state = each.target_move
+    #         # sort_By = (each.sortby == "sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
+    #         self._cr.execute(f"""WITH variables AS (
+    #         SELECT 
+    #             {company_id}::int AS company_id,
+    #             {account_id}::int AS account_id,
+    #             {partner_id}::int AS partner_id,
+    #             {journal_id}::int AS journal_id,
+    #             '{date_start}'::date AS date_start,
+    #             '{date_end}'::date AS date_end,
+    #             '{filter_state}'::varchar AS filter_state
+    #             )
         
-                SELECT 
-                    SUM(l.debit - l.credit) AS balance
-                FROM account_move am 
-                inner join account_journal aj on aj.id=am.journal_id 
-                INNER JOIN account_move_line l ON l.move_id = am.id
-                INNER JOIN variables ON am.company_id = variables.company_id  
-                WHERE 
-                    (am.date < variables.date_end)
-                    AND (
-                        variables.filter_state = 'all' 
-                        OR (variables.filter_state = 'posted' AND am.state = 'posted')
-                    )
-                    AND (variables.account_id = 0 OR l.account_id = variables.account_id)
-                    AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
-                    AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
-            """)
-            accounts_res = self._cr.dictfetchall()
-            return accounts_res
+    #             SELECT 
+    #                 SUM(l.debit - l.credit) AS balance
+    #             FROM account_move am 
+    #             inner join account_journal aj on aj.id=am.journal_id 
+    #             INNER JOIN account_move_line l ON l.move_id = am.id
+    #             INNER JOIN variables ON am.company_id = variables.company_id  
+    #             WHERE 
+    #                 (am.date < variables.date_end)
+    #                 AND (
+    #                     variables.filter_state = 'all' 
+    #                     OR (variables.filter_state = 'posted' AND am.state = 'posted')
+    #                 )
+    #                 AND (variables.account_id = 0 OR l.account_id = variables.account_id)
+    #                 AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
+    #                 AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
+    #         """)
+    #         accounts_res = self._cr.dictfetchall()
+    #         return accounts_res
+
+    # def action_process_sql(self):
+    #     for each in self:
+    #         company_id = each.company_id.id
+    #         account_id = each.account_id.id
+    #         partner_id = each.partner_id.id
+    #         journal_id = each.journal_id and each.journal_id.id or 0
+    #         date_start = each.date_from
+    #         date_end = each.date_to
+    #         filter_state = each.target_move
+
+    #         sort_By = (each.sortby == "sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
+    #         self._cr.execute(f"""WITH variables AS (
+    #         SELECT 
+    #             {company_id}::int AS company_id,
+    #             {account_id}::int AS account_id,
+    #             {partner_id}::int AS partner_id,
+    #             {journal_id}::int AS journal_id,
+    #             '{date_start}'::date AS date_start,
+    #             '{date_end}'::date AS date_end,
+    #             '{filter_state}'::varchar AS filter_state
+    #             )
+
+    #             SELECT 
+    #                 l.id AS move_line_id,
+    #                 am.id as move_id,
+    #                 l.company_id,
+    #                 l.partner_id,
+    #                 l.ref AS referencia,
+    #                 am.name as lname,
+    #                 l.debit AS debit,
+    #                 l.credit AS credit,
+    #                 (l.debit - l.credit) AS balance,
+    #                 coalesce(l.date_maturity,am.date) as ldate,
+    #                 aj.id as journal_id 
+    #             FROM account_move am 
+    #             inner join account_journal aj on aj.id=am.journal_id 
+    #             INNER JOIN account_move_line l ON l.move_id = am.id
+    #             INNER JOIN variables ON am.company_id = variables.company_id  
+    #             WHERE 
+    #                 (am.date BETWEEN variables.date_start AND variables.date_end)
+    #                 AND (
+    #                     variables.filter_state = 'all' 
+    #                     OR (variables.filter_state = 'posted' AND am.state = 'posted')
+    #                 )
+    #                 AND (variables.account_id = 0 OR l.account_id = variables.account_id)
+    #                 AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
+    #                 AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
+    #             {sort_By}
+    #         """)
+    #         accounts_res = self._cr.dictfetchall()
+    #         return accounts_res
+    def action_process_init_sql(self, date_start, date_end):
+        self.ensure_one()
+        if not date_start:
+            date_start = '1990-01-01'
+        
+        query = """
+            SELECT 
+                SUM(l.debit - l.credit) AS balance
+            FROM account_move_line l
+            JOIN account_move am ON l.move_id = am.id
+            JOIN account_journal aj ON am.journal_id = aj.id
+            WHERE am.company_id = %s
+            AND am.date < %s
+            AND (%s = 'all' OR (%s = 'posted' AND am.state = 'posted'))
+            AND (%s = 0 OR l.account_id = %s)
+            AND (%s = 0 OR l.partner_id = %s)
+            AND (%s = 0 OR am.journal_id = %s)
+        """
+        params = (
+            self.company_id.id,
+            date_end,
+            self.target_move, self.target_move,
+            0 if not self.account_id else self.account_id.id,
+            0 if not self.account_id else self.account_id.id,
+            0 if not self.partner_id else self.partner_id.id,
+            0 if not self.partner_id else self.partner_id.id,
+            0 if not self.journal_id else self.journal_id.id,
+            0 if not self.journal_id else self.journal_id.id,
+        )
+        
+        self._cr.execute(query, params)
+        return self._cr.dictfetchall()
 
     def action_process_sql(self):
-        for each in self:
-            company_id = each.company_id.id
-            account_id = each.account_id.id
-            partner_id = each.partner_id.id
-            journal_id = each.journal_id and each.journal_id.id or 0
-            date_start = each.date_from
-            date_end = each.date_to
-            filter_state = each.target_move
-
-            sort_By = (each.sortby == "sort_date" and " order by coalesce(l.date_maturity,am.date) asc" or " order by aj.name asc ")
-            self._cr.execute(f"""WITH variables AS (
+        self.ensure_one()
+        sort_order = "coalesce(l.date_maturity, am.date)" if self.sortby == "sort_date" else "aj.name"
+        
+        query = f"""
             SELECT 
-                {company_id}::int AS company_id,
-                {account_id}::int AS account_id,
-                {partner_id}::int AS partner_id,
-                {journal_id}::int AS journal_id,
-                '{date_start}'::date AS date_start,
-                '{date_end}'::date AS date_end,
-                '{filter_state}'::varchar AS filter_state
-                )
-
-                SELECT 
-                    l.id AS move_line_id,
-                    am.id as move_id,
-                    l.company_id,
-                    l.partner_id,
-                    l.ref AS referencia,
-                    am.name as lname,
-                    l.debit AS debit,
-                    l.credit AS credit,
-                    (l.debit - l.credit) AS balance,
-                    coalesce(l.date_maturity,am.date) as ldate,
-                    aj.id as journal_id 
-                FROM account_move am 
-                inner join account_journal aj on aj.id=am.journal_id 
-                INNER JOIN account_move_line l ON l.move_id = am.id
-                INNER JOIN variables ON am.company_id = variables.company_id  
-                WHERE 
-                    (am.date BETWEEN variables.date_start AND variables.date_end)
-                    AND (
-                        variables.filter_state = 'all' 
-                        OR (variables.filter_state = 'posted' AND am.state = 'posted')
-                    )
-                    AND (variables.account_id = 0 OR l.account_id = variables.account_id)
-                    AND (variables.partner_id = 0 OR l.partner_id = variables.partner_id)
-                    AND (variables.journal_id = 0 OR am.journal_id = variables.journal_id)
-                {sort_By}
-            """)
-            accounts_res = self._cr.dictfetchall()
-            return accounts_res
+                l.id AS move_line_id,
+                am.id as move_id,
+                l.company_id,
+                l.partner_id,
+                l.ref AS referencia,
+                am.name as lname,
+                l.debit AS debit,
+                l.credit AS credit,
+                (l.debit - l.credit) AS balance,
+                coalesce(l.date_maturity, am.date) as ldate,
+                aj.id as journal_id 
+            FROM account_move_line l
+            JOIN account_move am ON l.move_id = am.id
+            JOIN account_journal aj ON am.journal_id = aj.id
+            WHERE am.company_id = %s
+            AND am.date BETWEEN %s AND %s
+            AND (%s = 'all' OR (%s = 'posted' AND am.state = 'posted'))
+            AND (%s = 0 OR l.account_id = %s)
+            AND (%s = 0 OR l.partner_id = %s)
+            AND (%s = 0 OR am.journal_id = %s)
+            ORDER BY {sort_order}
+        """
+        params = (
+            self.company_id.id,
+            self.date_from,
+            self.date_to,
+            self.target_move, self.target_move,
+            0 if not self.account_id else self.account_id.id,
+            0 if not self.account_id else self.account_id.id,
+            0 if not self.partner_id else self.partner_id.id,
+            0 if not self.partner_id else self.partner_id.id,
+            0 if not self.journal_id else self.journal_id.id,
+            0 if not self.journal_id else self.journal_id.id,
+        )
+        
+        self._cr.execute(query, params)
+        return self._cr.dictfetchall()
 
     def action_process(self):
-        for each in self:
-            accounts_res = each.action_process_sql()
-            lines_move = [(5,)]
+        for report in self:
+            # Limpiar líneas existentes de manera eficiente
+            report.line_ids.unlink()
+            
+            accounts_res = report.action_process_sql()
+            if not accounts_res:
+                continue
+                
+            # Pre-cargar datos relacionados para evitar N+1 queries
+            move_line_ids = [res['move_line_id'] for res in accounts_res if res.get('move_line_id')]
+            move_lines = self.env['account.move.line'].browse(move_line_ids)
+            move_line_data = {ml.id: ml.move_id.id for ml in move_lines}
+            
             balance = 0.00
             DEC = 2
+            lines_to_create = []
+            
             for move in accounts_res:
-                # Iterar sobre la lista de 'move_lines'
-                balance += move.get('balance')
-                lines_move.append((0, 0, {'date': move.get('ldate'),
-                                          'partner_id': move.get('partner_id', None),
-                                          'name': move.get('lname'),
-                                          'journal_id': move.get('journal_id', None),
-                                          'debit': move.get('debit'),
-                                          'credit': move.get('credit'),
-                                          'amount_accumulated': round(balance, DEC),
-                                          'move_id': move.get('move_line_id') and self.env['account.move.line'].browse(move.get('move_line_id')).move_id.id or False,
-                                          }))
-                each.write({'line_ids': lines_move})
+                balance += move.get('balance', 0.0)
+                lines_to_create.append({
+                    'date': move.get('ldate'),
+                    'partner_id': move.get('partner_id'),
+                    'name': move.get('lname') or '',
+                    'journal_id': move.get('journal_id'),
+                    'debit': move.get('debit', 0.0),
+                    'credit': move.get('credit', 0.0),
+                    'amount_accumulated': round(balance, DEC),
+                    'move_id': move_line_data.get(move.get('move_line_id')),
+                    'report_id': report.id,
+                })
+                
+                # Crear en lotes para mejorar rendimiento
+                if len(lines_to_create) >= 100:
+                    self.env['report.view.general.ledger.line'].create(lines_to_create)
+                    lines_to_create = []
+            
+            # Crear las líneas restantes
+            if lines_to_create:
+                self.env['report.view.general.ledger.line'].create(lines_to_create)
+        
         return True
 
     def print_general_ledger(self):

@@ -58,6 +58,6 @@ class account_invoice(models.Model):
   _inherit = 'account.move'
   
   beneficiario_id = fields.Many2one('res.partner', string='Beneficiario')
-  vehiculo_id = fields.Many2one('fleet.vehicle', 'Vehiculo')
+  # vehiculo_id = fields.Many2one('fleet.vehicle', 'Vehiculo')
   journal_name = fields.Char(related = "journal_id.name", string="Diario Nombre", store=True)
  

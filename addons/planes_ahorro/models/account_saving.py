@@ -45,7 +45,7 @@ class AccountSaving(models.Model):
         ('disabled', 'Desactivado'),
         ('retired', 'Retirado'),
         ('precanceled','Pre-Cancelado'),
-        ('estructured','Re-estructurado')
+        ('estructured','Re-estructurado'),
         ('cancelled', 'Cancelado'),
         ('moved','Traspaso'),
         ('closed', 'Cerrado'),

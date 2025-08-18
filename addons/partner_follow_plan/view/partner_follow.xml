@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Partner Follow Views -->
+    <record id="view_partner_follow_tree" model="ir.ui.view">
+        <field name="name">partner.follow.tree</field>
+        <field name="model">partner.follow</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="nombre_cliente" />
+                <field name="document_number" />
+                <field name="fecha_solicitud" />
+                <field name="plan_id" />
+                <field name="asesor" />
+                <field name="agencia" />
+                <field name="monto" />
+                <field name="cxc_mount" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_partner_follow_form" model="ir.ui.view">
+        <field name="name">partner.follow.form</field>
+        <field name="model">partner.follow</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <header>
+                        
+                        <!-- Botones en la cabecera -->
+                        <button name="draft_state" string="Borrador"
+                            type="object" class="oe_highlight"
+                            attrs="{'invisible': [('solicitud_status', '!=', 'confirmed')]}" />
+
+                        <button name="confirmed_state" string="Confirmar"
+                            type="object" class="oe_highlight"
+                            attrs="{'invisible': [('solicitud_status', '!=', 'draft')]}" />
+
+                        <button name="creater_partner_plan" string="Crear Plan"
+                            type="object" class="oe_highlight"
+                            attrs="{'invisible': [('solicitud_status', '!=', 'confirmed')]}" />
+                        
+                        <field name="solicitud_status" widget="statusbar"
+                            statusbar_visible="draft,confirmed,approved"
+                            options='{"clickable": "1"}' />
+                    </header>
+                    
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="nombre_cliente" />
+                            <field name="document_number" />
+                            <field name="fecha_solicitud" />
+                            <field name="fecha_recepcion" />
+                            <field name="phone" />
+                            <field name="correo" />
+                            <field name="total_requisitos" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="calle" />
+                            <field name="fecha_pago" />
+                            <field name="codigo_plan" />
+                            <field name="fecha_contrato" />
+                            <field name="tipo_plan" />
+                            <field name="plan_id" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Datos de Venta">
+                            <group>
+                                <field name="asesor" />
+                                <field name="jefe" />
+                                <field name="agencia" />
+                                <field name="gerente_comercial" />
+                                <field name="gerente_general" />
+                            </group>
+                        </page>
+                        <page string="Datos Financieros">
+                            <group>
+                                <group>
+                                    <field name="monto" />
+                                    <field name="plazo" />
+                                    <field name="inscripcion" />
+                                    <field name="inscripcion_si" />
+                                    <field name="iva" />
+                                </group>
+                                <group>
+                                    <field name="first_pay" />
+                                    <field name="total_first_pay" />
+                                    <field name="payment_amount" />
+                                    <field name="adicional" />
+                                    <field name="cxc_mount" />
+                                    <field name="quota_calc" />
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Requisitos Presentados">
+                            <group>
+                                <field name="solicitud_admision" widget="boolean_button"
+                                    options='{"terminator": "true"}' />
+                                <field name="documentos_personales" widget="boolean_button"
+                                    options='{"terminator": "true"}' />
+                                <field name="pagina_control" widget="boolean_button"
+                                    options='{"terminator": "true"}' />
+                                <field name="pago_completado" widget="boolean_button"
+                                    options='{"terminator": "true"}' />
+                                <field name="contrato_firmado" widget="boolean_button"
+                                    options='{"terminator": "true"}' />
+                            </group>
+                        </page>
+                        <page string="Seguimiento Cliente">
+                            <group>
+                                <field name="preq1" />
+                                <field name="preq2" />
+                                <field name="preq3" />
+                            </group>
+
+                        </page>
+                        <page string='Informacion del plan'>
+                            <group>
+                                <field name="partner_id" />
+                                <field name="saving_id" />
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_partner_follow" model="ir.actions.act_window">
+        <field name="name">Planes de Clientes</field>
+        <field name="res_model">partner.follow</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form view for the wizard -->
+    <record id="view_print_receipt_wizard_form" model="ir.ui.view">
+        <field name="name">print.receipt.wz.form</field>
+        <field name="model">print.receipt.wz</field>
+        <field name="arch" type="xml">
+            <form string="Impresión de Recibo">
+                <sheet>
+                    <group>
+                        <field name="receipt_id" invisible="1"/>
+                        <field name="usuario" required="1"/>
+                        <field name="password" password="True" required="1"/>
+                    </group>
+                    <footer>
+                        <button name="print_receipt" string="Imprimir" type="object" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard -->
+    <record id="action_print_receipt_wizard" model="ir.actions.act_window">
+        <field name="name">Imprimir Recibo</field>
+        <field name="res_model">print.receipt.wz</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <!-- <field name="binding_model_id" ref="model_receipt_validation"/>
+        <field name="binding_type">action</field> -->
+    </record>
+
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Menu Structure -->
+    <menuitem id="menu_root" name="Registro de planes Nuevo" sequence="10" />
+
+    <menuitem id="menu_partner_follow" name="Planes" parent="menu_root"
+        action="action_partner_follow" sequence="10" />
+
+    <menuitem id="menu_configuration" name="Configuración" parent="menu_root" sequence="20" />
+
+    <menuitem id="menu_location_places" name="Localizaciones" parent="menu_configuration"
+        action="action_location_places" sequence="10" />
+
+    <menuitem id="menu_sale_channel_plan" name="Canales de Venta" parent="menu_configuration"
+        action="action_sale_channel_plan" sequence="20" />
+
+</odoo>

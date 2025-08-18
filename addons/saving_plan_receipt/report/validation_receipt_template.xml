@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_receipt_validation">
+        <t t-call="web.html_container">
+            <!-- Header Personalizado -->
+            <div class="header" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <!-- Logo a la derecha - Versión CORREGIDA -->
+                    <div style="width: 120px; margin-left: 20px;">
+                        <img t-if="docs.company_id.logo_web"
+                            t-att-src="'data:image/png;base64,' + docs.company_id.logo_web.decode('utf-8')"
+                            style="max-width: 100%; height: auto;" />
+                    </div>
+                    <!-- Información centrada -->
+                    <div style="flex: 1; text-align: center;">
+                        <h1>GALARPLAN S.A.</h1>
+                        <p>Av. Leon Febres Cordero Ribadenerya Km 18 C.C. Palmona local 9</p>
+                        <p>Servicio de atención al cliente: 0982728588 | Email:
+                            servicio@galarplan.com</p>
+                        <h2>
+                            <strong>COMPROBANTE DE PAGO</strong>
+                        </h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Principal -->
+            <div class="page" style="font-family: Arial; font-size: 12px;">
+                <!-- Estado del Documento -->
+                <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-xs-6">
+                        <h3 t-if="docs.state == 'draft'" style="color: red;">BORRADOR</h3>
+                        <h3 t-if="docs.state == 'posted'" style="color: orange;">DOCUMENTO
+                            PRELIMINAR - EN CONFIRMACIÓN</h3>
+                        <h3 t-if="docs.state == 'verified'" style="color: green;">DOCUMENTO
+                            VERIFICADO</h3>
+                    </div>
+                    <div class="col-xs-6" style="text-align: right;">
+                        <p>
+                            <strong>No.</strong>
+                            <span t-field="docs.name" />
+                        </p>
+                        <!-- <p>
+                            <strong>Fecha:</strong>
+                            <span t-field="docs.date" />
+                        </p> -->
+                    </div>
+                </div>
+
+                <!-- Datos del Cliente -->
+                <div class="row" style="margin-bottom: 15px;text-align: right;">
+                    <p>
+                        <strong>Valor Pagado:</strong>
+                        <strong>US$</strong>
+                        <span t-field="docs.amount" />
+                    </p>
+
+                </div>
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-2">
+                        <p>
+                            <strong>Fecha:</strong>
+                            <span t-field="docs.date" />
+                        </p>
+                    </div>
+                    <div class="col-4">
+                        <p>
+                            <strong>Agencia:</strong>
+                            <span t-field="docs.location_id.name" />
+                        </p>
+
+                    </div>
+                    <div class="col-6">
+                        <p>
+                            <strong>Asesor:</strong>
+                            <span t-field="docs.asesor_id.name" />
+                        </p>
+
+                    </div>
+
+                </div>
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-xs-12">
+                        <p>
+                            <strong>Cliente:</strong>
+                            <span t-field="docs.partner_id" />
+                        </p>
+                    </div>
+                    <div class="col-6">
+                        <p>
+                            <strong>Identificación:</strong>
+                            <span t-field="docs.partner_id.vat" />
+                        </p>
+                    </div>
+                    <div class="col-6">
+                        <p>
+                            <strong>Dirección:</strong>
+                            <span t-field="docs.partner_id.street" />
+                        </p>
+
+                    </div>
+                    <div class="col-6">
+                        <p>
+                            <strong>Email:</strong>
+                            <span t-field="docs.mail_partner" />
+                        </p>
+
+                    </div>
+                    <div class="col-6">
+                        <p>
+                            <strong>Teléfono:</strong>
+                            <span t-field="docs.partner_id.phone" />
+                        </p>
+
+                    </div>
+
+
+                </div>
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-12">
+                         <p>
+                            <strong>Observacion:</strong>
+                            <span t-field="docs.description" />
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Detalles del Pago -->
+                <div class="row" style="margin-bottom: 15px; display: flex; flex-wrap: wrap;">
+                    <!-- Segunda columna - Forma de Pago -->
+                    <div style="width: 30%; padding-right: 10px;">
+                        <p>
+                            <strong>Forma de Pago:</strong>
+                            <br />
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <span
+                                    t-foreach="[
+                                        ('cash', 'Efectivo'),
+                                        ('check', 'Cheque'),
+                                        ('card', 'Tarjeta de Credito'),
+                                        ('transfer', 'Transferencia'),
+                                        ('deposit','Deposito'),
+                                        ('other','Otros')
+                                    ]"
+                                    t-as="option">
+                                    <span t-if="docs.payment_form == option[0]"
+                                        style="font-weight: bold; border: 1px solid black; padding: 2px 5px; background-color: #e6e6e6;">
+                                        ✓ <t t-esc="option[1]" />
+                                    </span>
+                                    <span t-else=""
+                                        style="border: 1px solid black; padding: 2px 5px;">
+                                        <t t-esc="option[1]" />
+                                    </span>
+                                </span>
+                            </div>
+                        </p>
+                    </div>
+
+                    <!-- Tercera columna - Motivo de pago -->
+                    <div style="width: 30%;">
+                        <p>
+                            <strong>Motivo de pago:</strong>
+                            <br />
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <span
+                                    t-foreach="[
+                                        ('inscrip', 'Inscripcion'),
+                                        ('quota', 'Cuota Plan'),
+                                        ('lici', 'Licitación'),
+                                        ('save', 'Seguro Vehicular'),
+                                        ('disp', 'Dispositivo'),
+                                        ('legal_waste', 'Gastos Legales'),
+                                        ('other', 'Otros')
+                                    ]"
+                                    t-as="option">
+                                    <span t-if="docs.payment_reason == option[0]"
+                                        style="font-weight: bold; border: 1px solid black; padding: 2px 5px; background-color: #e6e6e6;">
+                                        ✓ <t t-esc="option[1]" />
+                                    </span>
+                                    <span t-else=""
+                                        style="border: 1px solid black; padding: 2px 5px;">
+                                        <t t-esc="option[1]" />
+                                    </span>
+                                </span>
+                            </div>
+                        </p>
+                    </div>
+                    <!-- Primera columna - Valor Pagado -->
+                    <div style="width: 30%; padding-right: 10px;">
+                        <p>
+                            <strong>Aplicacion del Pago:</strong>
+                            <br />
+                            <strong>Monto:</strong>US$<span
+                                t-field="docs.amount" />
+
+                        </p>
+                        <t t-if="docs.saving_plan_payment">
+                            <br />
+                            <span>
+                                <strong>Inscripcion:</strong> US$ <span
+                                    t-field="docs.serv_admin_amount" /><br />
+                                <strong>Cuotas:</strong> <span
+                                    t-field="docs.paid_installments_str" /><br />
+                                <strong>Capital:</strong>
+                                US$<span t-field="docs.principal_amount" /> <br />
+                                <strong>Cuota:</strong>
+                                US$ <span t-field="docs.saving_amount" /><br />
+                                <strong>Gasto Adm.:</strong>
+                                US$<span t-field="docs.admin_expense_amount" /><br />
+                                <strong>Seguro:</strong>
+                                US$<span t-field="docs.insurance_amount" />
+                            </span>
+                        </t>
+                    </div>
+                </div>
+                <!-- Nota Preliminar (si aplica) -->
+                <div t-if="docs.state == 'posted'" class="row" style="margin-top: 30px;">
+                    <div class="col-xs-12" style="background-color: #FFF3CD; padding: 10px;">
+                        <strong>NOTA:</strong> Este documento es preliminar y está en proceso de
+                        verificación. </div>
+                </div>
+            </div>
+
+            <!-- Footer Personalizado -->
+            <div class="footer" style="font-size: 10px; text-align: justify; margin-top: 50px;">
+                <!-- <p><strong>Observaciones:</strong> <span t-field="docs.notes"/></p> -->
+                <hr />
+                <p>
+                    CONOCEDOR(A) DE LAS PENAS DE PERJUICIO. DECLARO BAJO JURAMENTO QUE EL ORIGEN DE LOS FONDOS
+                    ENTREGADOS ES LICITO.
+                </p>
+                <p>
+                    CONOCEDOR(A) DE LAS DISPOCISIONES DE LA LEY PARA REPRIMIR EL LAVADO DE ACTIVOS, 
+                    AUTORIZO EXPRESAMENTE A REALIZAR ANALISIS Y VERIFICACIONES QUE SE CONSIDEREN 
+                    NECESARIOS: ASI COMO A LAS AUTORIDADES COMPETENTES EN CASO DE LLEGAR A DETERMINAR
+                    LA EXISTENCIA DE OPERACIONES INUSUALES JUSTIFICADAS EN VIRTUD DE LO AUTORIZADO.
+                    RENUNCIO A INSTALAR POR ESTE MOTIVO CUALQUIER TIPO DE ACCION CIVIL, PENAL O ADMINISTRATIVA
+                    EN CONTRA DE <span t-field="docs.company_id.name" />
+                </p>
+                <div style="margin-top: 20px; overflow: hidden;">
+                    <div style="width: 45%; float: left;">
+                        <p>_________________________</p>
+                        <p>
+                            <span t-field="docs.partner_id.name" />
+                        </p>
+                        <p>
+                            <span t-field="docs.partner_id.vat" />
+                        </p>
+                        <p>
+                            <strong>Firma del Cliente</strong>
+                        </p>
+                    </div>
+                    <div style="width: 45%; float: right; text-align: right;">
+                        <p>_________________________</p>
+                        <p>
+                            <span t-field="docs.printed_by.name" />
+                        </p>
+                        <p>
+                            <strong>Firma del Cajero</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

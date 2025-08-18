@@ -10,7 +10,8 @@
     'depends': [
         'base',
         'account',
-        'planes_ahorro'
+        'planes_ahorro',
+        'partner_follow_plan'
     ],
     'data': [
         'security/groups.xml',
@@ -20,8 +21,10 @@
         'view_sql/receipt_plan.xml',
         'report/receipt_paperformat.xml',
         'report/receipt_template.xml',
-        'report/validation_rceipt_template.xml',
+        # 'report/validation_rceipt_template.xml',
+        'report/validation_receipt_template.xml',
         'report/receipt_report.xml',
+        'wizard/print_receipt.xml',
         'views/receipt_validation_views.xml',
         'views/menus.xml',
     ],

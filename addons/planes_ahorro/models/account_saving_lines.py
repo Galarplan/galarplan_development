@@ -129,7 +129,7 @@ class AccountSavingLines(models.Model):
     @api.depends('saving_id','number')
     def _compute_name(self):
         for brw_each in self:
-            brw_each.name="Plan %s ,cuota %s" % (brw_each.saving_id.id,brw_each.number)
+            brw_each.name="Plan %s ,cuota %s" % (brw_each.saving_id.name,brw_each.number)
 
     #@api.depends('saving_id.state', 'invoice_id' )
     def _compute_facturable(self):

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <report 
+    <report
         id="action_report_receipt_saving_plan"
         name="saving_plan_receipt.report_receipt_saving_plan"
         model="receipt.saving.plan.view"
@@ -9,14 +9,23 @@
         paperformat="saving_plan_receipt.receipt_paperformat"
     />
 
-    <report
+    <!-- <report
         id="action_report_receipt_validation"
         name="saving_plan_receipt.report_receipt_validation"
         model="receipt.validation"
         string="Reporte de Validación"
         report_type="qweb-html"
         paperformat="saving_plan_receipt.paperformat_receipt"
-    />
+    /> -->
+
+    <record id="action_report_receipt_validation" model="ir.actions.report">
+        <field name="name">Recibo de cobro</field>
+        <field name="model">receipt.validation</field>  <!-- Cambiado a tu modelo wizard -->
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">saving_plan_receipt.report_receipt_validation</field>
+        <field name="paperformat_id" ref="saving_plan_receipt.paperformat_receipt" />
+        <field name="binding_model_id" eval="False" />  <!-- Elimina el binding directo -->
+    </record>
 
 
 </odoo>

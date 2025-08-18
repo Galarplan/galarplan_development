@@ -4,3 +4,4 @@ access_receipt_saving_plan_view_manager,receipt.saving.plan.view.manager,model_r
 access_receipt_validation_user,receipt.validation.user,model_receipt_validation,group_validator_receipt_user,1,1,1,0
 access_receipt_validation_auditor,receipt.validation.auditor,model_receipt_validation,group_validator_receipt_auditor,1,1,1,0
 access_receipt_validation_manager,receipt.validation.manager,model_receipt_validation,group_validator_receipt_admin,1,1,1,1
+access_print_receipt_wz,print.receipt.wz,model_print_receipt_wz,base.group_user,1,0,1,0

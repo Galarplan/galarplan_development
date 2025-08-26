@@ -1,10 +1,10 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
-class AccountMoveLine(models.Model):
-  _inherit = 'account.move.line'
+# class AccountMoveLine(models.Model):
+#   _inherit = 'account.move.line'
   
-  reembolso_id = fields.Many2one('hr.registro.reembolsos')
+#   reembolso_id = fields.Many2one('hr.registro.reembolsos')
     
 
 class ThRecordRefund(models.Model):

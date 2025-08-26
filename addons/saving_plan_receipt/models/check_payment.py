@@ -58,6 +58,12 @@ class ReceiptValidation(models.Model):
         tracking=True
     )
 
+    payment_other_desc = fields.Char(
+        string='Descripción de Otro Medio de Pago',
+        tracking=True,
+        help="Especifique el medio de pago cuando seleccione 'Otros'"
+    )
+
     payment_reason = fields.Selection(
         selection='_compute_payment_reason',
         string='Motivo de pago',

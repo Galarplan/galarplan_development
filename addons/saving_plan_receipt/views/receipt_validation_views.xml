@@ -64,7 +64,7 @@
                         <h1>
                             <field name="name" class="oe_inline"
                                 style="font-size: 1.5em; font-weight: bold;"
-                                readonly = "1" />
+                                readonly="1" />
                         </h1>
                     </div>
                     <group>
@@ -83,6 +83,7 @@
                             <field name="payment_form" widget='radio'
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
 
+
                         </group>
                         <group>
                             <field name="state" readonly="1" />
@@ -96,6 +97,13 @@
                                 attrs="{'readonly': ['|', ('state', '=', 'posted'), ('saving_plan_payment', '=', True)]}" />
                         </group>
                         <group>
+                            <field name="payment_other_desc"
+                                attrs="{
+                                    'invisible': [('payment_form', '!=', 'other')],
+                                    'readonly': [('state', '=', 'posted')]
+                                }"
+                                placeholder="Especifique el medio de pago..."
+                            />
                             <field name="description"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                         </group>
@@ -132,19 +140,26 @@
                             <group>
                                 <group string="Resumen de Cuotas">
                                     <field name="paid_installments_str" readonly="1" />
-                                    <field name="saving_amount" attrs="{'readonly': [('state', '=', 'posted')]}" />
+                                    <field name="saving_amount"
+                                        attrs="{'readonly': [('state', '=', 'posted')]}" />
                                 </group>
                                 <group string="Desglose de Valores">
-                                    <field name="serv_admin_amount"  attrs="{'readonly': [('state', '=', 'posted')]}"
+                                    <field name="serv_admin_amount"
+                                        attrs="{'readonly': [('state', '=', 'posted')]}"
                                         string="Inscripción" />
-                                    <field name="principal_amount"  attrs="{'readonly': [('state', '=', 'posted')]}" string="Capital" />
-                                    <field name="admin_expense_amount" 
+                                    <field name="principal_amount"
+                                        attrs="{'readonly': [('state', '=', 'posted')]}"
+                                        string="Capital" />
+                                    <field name="admin_expense_amount"
                                         string="Gasto Administrativo"
                                         attrs="{'invisible': [('saving_amount', '=', 0)],'readonly': [('state', '=', 'posted')]}" />
-                                    <field name="insurance_amount"  string="Seguro" attrs="{'readonly': [('state', '=', 'posted')]}" />
+                                    <field name="insurance_amount" string="Seguro"
+                                        attrs="{'readonly': [('state', '=', 'posted')]}" />
                                     <!-- <field name="amount" readonly="1" string="Total"
                                     class="oe_subtotal_footer oe_right" /> -->
-                                    <field name="amount" attrs="{'readonly': [('state', '=', 'posted')]}" string="Total" />
+                                    <field name="amount"
+                                        attrs="{'readonly': [('state', '=', 'posted')]}"
+                                        string="Total" />
                                 </group>
                             </group>
                         </page>

@@ -25,6 +25,7 @@
         'report/validation_receipt_template.xml',
         'report/receipt_report.xml',
         'wizard/print_receipt.xml',
+        'wizard/access_wizard.xml',
         'views/receipt_validation_views.xml',
         'views/menus.xml',
     ],

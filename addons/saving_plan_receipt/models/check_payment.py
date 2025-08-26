@@ -15,7 +15,7 @@ class ReceiptValidation(models.Model):
         readonly=True,
         default=lambda self: _('Borrador'),
     )
-    partner_id = fields.Many2one('res.partner', 'Cliente', required=True, tracking=True)
+    partner_id = fields.Many2one('res.partner', 'Cliente', tracking=True)
     
     document_number = fields.Char(
         string='Documento',
@@ -82,32 +82,38 @@ class ReceiptValidation(models.Model):
     paid_installments_str = fields.Char(
         string="Cuotas Pagadas",
         compute="_compute_installment_data",
-        store=True
+        store=True,
+        tracking = True
     )
     saving_amount = fields.Float(
         string="Valor Cuotas",
         compute="_compute_installment_data",
-        store=True
+        store=True,
+        tracking = True
     )
     serv_admin_amount = fields.Float(
         string="Valor Inscripción",
         compute="_compute_installment_data",
-        store=True
+        store=True,
+        tracking = True
     )
     principal_amount = fields.Float(
         string="Valor Capital",
         compute="_compute_installment_data",
-        store=True
+        store=True,
+        tracking = True
     )
     admin_expense_amount = fields.Float(
         string="Gasto Administrativo",
         compute="_compute_installment_data",
-        store=True
+        store=True,
+        tracking = True
     )
     insurance_amount = fields.Float(
         string="Valor Seguro",
         compute="_compute_installment_data",
-        store=True
+        store=True,
+        tracking = True
     )
     
     printed_by = fields.Many2one('res.users', 'Impreso por', readonly=True)
@@ -253,7 +259,7 @@ class ReceiptValidation(models.Model):
     def action_reset_to_draft(self):
         for rec in self:
             rec.state = 'draft'
-    
+            rec.validated_by = ''
     
 
     def get_report_data(self):

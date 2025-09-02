@@ -4,7 +4,7 @@
         <field name="name">receipt.validation.tree</field>
         <field name="model">receipt.validation</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree create="false">
                 <field name="name" />
                 <field name="partner_id" />
                 <field name="date" />
@@ -50,9 +50,13 @@
                     <button name="action_verify" string="Verificar" type="object"
                         class="oe_highlight" states="posted"
                         groups="saving_plan_receipt.group_validator_receipt_auditor" />
-                    <button name="action_open_print_wizard" string="Imprimir Recibo" states="posted"
+                    <!-- <button name="action_open_print_wizard" string="Imprimir Recibo" states="posted"
+                        type="object" class="btn-primary"
+                        groups="saving_plan_receipt.group_validator_receipt_user" /> -->
+                        <button name="print_receipt" string="Imprimir Recibo" states="posted"
                         type="object" class="btn-primary"
                         groups="saving_plan_receipt.group_validator_receipt_user" />
+                        
                     <button name="action_reject" string="Rechazar" type="object" states="posted"
                         groups="saving_plan_receipt.group_validator_receipt_auditor" />
                     <button name="action_reset_to_draft" string="Volver a Borrador" type="object"

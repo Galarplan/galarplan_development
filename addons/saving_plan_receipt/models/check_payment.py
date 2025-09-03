@@ -37,6 +37,7 @@ class ReceiptValidation(models.Model):
     )
     
     date = fields.Date('Fecha', default=fields.Date.context_today, tracking=True)
+    date_payment = fields.Date('Fecha Pago', default=fields.Date.context_today, tracking=True)
     amount = fields.Float('Monto', tracking=True)
     description = fields.Text('Descripción')
     attachment_id = fields.Many2many(comodel_name='ir.attachment', relation='receipt_documents', string='Adjuntar Documentos')

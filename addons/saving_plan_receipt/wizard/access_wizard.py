@@ -47,6 +47,7 @@ class ReceiptAccessWizard(models.TransientModel):
         receipt_vals = {
             'location_id': self.location_id.id,
             'company_id': self.company_id.id,
+            'printed_by': self.env['res.user'].search([('login','=',self.usuario)],limit=1).id
             # 'partner_id': self.partner_id.id if self.partner_id else False,
             # 'saving_plan_payment': self.saving_plan_payment,
         }

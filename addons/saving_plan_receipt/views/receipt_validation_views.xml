@@ -81,6 +81,7 @@
                             <field name="mail_partner"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="date" attrs="{'readonly': [('state', '=', 'posted')]}" />
+                            <field name="date_payment" attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="saving_plan_payment"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="amount" attrs="{'readonly': [('state', '=', 'posted')]}" />

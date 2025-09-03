@@ -174,6 +174,7 @@ class ReceiptValidation(models.Model):
             ('save', 'Seguro Vehicular'),
             ('disp','Dispositivo'),
             ('legal_waste','Gastos Legales')
+            
         ]
         
         # Aquí puedes añadir lógica para obtener opciones adicionales dinámicamente

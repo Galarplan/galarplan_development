@@ -105,7 +105,8 @@
                             <field name="payment_other_desc"
                                 attrs="{
                                     'invisible': [('payment_form', '!=', 'other')],
-                                    'readonly': [('state', '=', 'posted')]
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'other')]
                                 }"
                                 placeholder="Especifique el medio de pago..."
                             />

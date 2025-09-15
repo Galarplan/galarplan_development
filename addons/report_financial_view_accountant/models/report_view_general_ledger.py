@@ -203,7 +203,7 @@ class report_view_general_ledger(models.Model):
                 l.debit AS debit,
                 l.credit AS credit,
                 (l.debit - l.credit) AS balance,
-                coalesce(l.date_maturity, am.date) as ldate,
+                am.date as ldate,
                 aj.id as journal_id 
             FROM account_move_line l
             JOIN account_move am ON l.move_id = am.id

@@ -50,18 +50,19 @@
                     <button name="action_verify" string="Verificar" type="object"
                         class="oe_highlight" states="posted"
                         groups="saving_plan_receipt.group_validator_receipt_auditor" />
-                    <!-- <button name="action_open_print_wizard" string="Imprimir Recibo" states="posted"
-                        type="object" class="btn-primary"
-                        groups="saving_plan_receipt.group_validator_receipt_user" /> -->
-                        <button name="print_receipt" string="Imprimir Recibo" states="posted"
+                    <button name="print_receipt" string="Imprimir Recibo" states="posted,verified"
                         type="object" class="btn-primary"
                         groups="saving_plan_receipt.group_validator_receipt_user" />
-                        
                     <button name="action_reject" string="Rechazar" type="object" states="posted"
                         groups="saving_plan_receipt.group_validator_receipt_auditor" />
                     <button name="action_reset_to_draft" string="Volver a Borrador" type="object"
                         states="posted,verified,rejected"
                         groups="saving_plan_receipt.group_validator_receipt_admin" />
+                    <button name="action_update_partner_data" string="Actualizar Datos"
+                        type="object"
+                        class="oe_highlight" states="draft,posted,verified"
+                        groups="saving_plan_receipt.group_validator_receipt_admin"
+                        attrs="{'invisible': [('is_data_updated', '=', True)]}" />
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -73,6 +74,7 @@
                     </div>
                     <group>
                         <group>
+                            <field name="is_data_updated" readonly="1" string="Datos Actualizados" invisible='1' />
                             <field name="partner_id"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="document_number"
@@ -81,14 +83,13 @@
                             <field name="mail_partner"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="date" attrs="{'readonly': [('state', '=', 'posted')]}" />
-                            <field name="date_payment" attrs="{'readonly': [('state', '=', 'posted')]}" />
+                            <field name="date_payment"
+                                attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="saving_plan_payment"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="amount" attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="payment_form" widget='radio'
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
-
-
                         </group>
                         <group>
                             <field name="state" readonly="1" />
@@ -114,8 +115,108 @@
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                         </group>
                     </group>
+
+                    <!-- Campos adicionales para formas de pago específicas -->
+                    <group>
+                        <!-- Campos para Cheque -->
+                        <group string="Detalles de Cheque"
+                            attrs="{'invisible': [('payment_form', '!=', 'check')]}">
+                            <field name="banco_emisor"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'check')]
+                                }" />
+                            <field name="number_check"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'check')]
+                                }" />
+                            <field name="account_check"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'check')]
+                                }" />
+                            <field name="date_check"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'check')]
+                                }" />
+                        </group>
+
+                        <!-- Campos para Tarjeta de Crédito -->
+                        <group string="Detalles de Tarjeta"
+                            attrs="{'invisible': [('payment_form', '!=', 'card')]}">
+                            <field name="credit_card" invisible="1" />
+                            <field name="lote_card"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'card')]
+                                }" />
+                            <field name="card_number"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'card')]
+                                }" />
+                        </group>
+
+                        <!-- Campos para Transferencia -->
+                        <group string="Detalles de Transferencia"
+                            attrs="{'invisible': [('payment_form', '!=', 'transfer')]}">
+                            <field name="banco_emisor"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'transfer')]
+                                }" />
+                            <field name="banco_receptor"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'transfer')]
+                                }" />
+                            <field name="comp_number"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'transfer')]
+                                }" />
+                            <field name="acc_number"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'transfer')]
+                                }" />
+                        </group>
+
+                        <!-- Campos para Depósito -->
+                        <group string="Detalles de Depósito"
+                            attrs="{'invisible': [('payment_form', '!=', 'deposit')]}">
+                            <field name="banco_receptor"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'deposit')]
+                                }" />
+                            <field name="comp_number"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'deposit')]
+                                }" />
+                        </group>
+
+                        <!-- Campos para Otros -->
+                        <group string="Detalles Adicionales"
+                            attrs="{'invisible': [('payment_form', '!=', 'other')]}">
+                            <field name="cruce_cuentas"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'other')]
+                                }" />
+                            <field name="vehiculo_usado"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'other')]
+                                }" />
+                        </group>
+                    </group>
+
                     <notebook>
-                        <page string="Detalles">
+                        <page string="Documentos">
                             <field name="attachment_id" widget="many2many_binary"
                                 options="{'no_create': True, 'no_open': False}"
                                 attrs="{'readonly': [('state', '=', 'posted')]}">
@@ -126,7 +227,6 @@
                                     <sheet>
                                         <group>
                                             <field name="name" />
-                                            <!-- <field name="datas" filename="datas_fname"/> -->
                                         </group>
                                     </sheet>
                                 </form>
@@ -161,8 +261,6 @@
                                         attrs="{'invisible': [('saving_amount', '=', 0)],'readonly': [('state', '=', 'posted')]}" />
                                     <field name="insurance_amount" string="Seguro"
                                         attrs="{'readonly': [('state', '=', 'posted')]}" />
-                                    <!-- <field name="amount" readonly="1" string="Total"
-                                    class="oe_subtotal_footer oe_right" /> -->
                                     <field name="amount"
                                         attrs="{'readonly': [('state', '=', 'posted')]}"
                                         string="Total" />
@@ -180,12 +278,10 @@
         </field>
     </record>
 
-
     <record id="action_receipt_validation" model="ir.actions.act_window">
         <field name="name">Validación de Comprobantes</field>
         <field name="res_model">receipt.validation</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_receipt_validation_search" />
     </record>
-
 </odoo>

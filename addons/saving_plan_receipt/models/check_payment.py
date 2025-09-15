@@ -35,6 +35,8 @@ class ReceiptValidation(models.Model):
         compute='_compute_mail',
         store=True  # Permite edición manual si es necesario
     )
+
+    is_data_updated = fields.Boolean('Datos Actualizados', default=False, tracking=True)
     
     date = fields.Date('Fecha', default=fields.Date.context_today, tracking=True)
     date_payment = fields.Date('Fecha Pago', default=fields.Date.context_today, tracking=True)
@@ -74,7 +76,33 @@ class ReceiptValidation(models.Model):
 
     saving_plan_payment = fields.Boolean('Plan de ahorro?',default=False)
 
+    #campos adicionales para cheque, transferencia,deposito
+    banco_emisor = fields.Many2one('res.bank','Banco Emisor')
+    banco_receptor = fields.Many2one('res.bank','Banco Receptor')
     
+    #campos adicionales cuando payment_from es cheque
+    number_check = fields.Char('Numero de Cheque')
+    account_check = fields.Char('Cuenta')
+    date_check = fields.Date('fecha del cheque')
+    
+    #campos adicionales para tarjeta de credito
+    credit_card = fields.Boolean('Es Tarjeta de credito')
+    lote_card = fields.Char('# lote')
+    card_number = fields.Char('# Tarjeta')
+
+
+    #campos adicionales para transferencia y deposito
+    comp_number = fields.Char('Numero de Comprobante')
+    
+    #campos adicional para transferencia
+    acc_number = fields.Char('Numero de cuenta')
+
+    #campos adicionales para otros
+    cruce_cuentas = fields.Char('Cruce Cuentas')
+    vehiculo_usado = fields.Text('Vehiculo Usado')
+
+
+
     # Campos relacionados con el plan de ahorros
     saving_plan_id = fields.Many2one(
         'account.saving', 
@@ -182,6 +210,102 @@ class ReceiptValidation(models.Model):
         
         
         return base_options
+    
+    def action_update_partner_data(self):
+        """
+        Actualiza los datos del contacto con la información del comprobante
+        Solo accesible para administradores del módulo
+        """
+        self.ensure_one()
+        
+        # Verificar permisos - solo administradores del módulo pueden ejecutar esta acción
+        if not self.env.user.has_group('saving_plan_receipt.group_validator_receipt_admin'):
+            raise UserError(_('No tienes permisos para ejecutar esta acción. Solo los administradores pueden actualizar datos de contactos.'))
+        
+        if not self.partner_id:
+            raise UserError(_('No hay un contacto asociado a este comprobante.'))
+        
+        # Guardar valores antiguos para el registro
+        old_values = {
+            'vat': self.partner_id.vat or '',
+            'street': self.partner_id.street or '',
+            'email': self.partner_id.email or ''
+        }
+        
+        new_values = {
+            'vat': self.document_number or '',
+            'street': self.street or '',
+            'email': self.mail_partner or ''
+        }
+        
+        # Actualizar el contacto
+        update_data = {}
+        if self.document_number and self.document_number != self.partner_id.vat:
+            update_data['vat'] = self.document_number
+        
+        if self.street and self.street != self.partner_id.street:
+            update_data['street'] = self.street
+        
+        if self.mail_partner and self.mail_partner != self.partner_id.email:
+            update_data['email'] = self.mail_partner
+        
+        if update_data:
+            self.partner_id.write(update_data)
+            
+            # Crear mensaje para el chatter con los cambios
+            change_messages = []
+            for field, value in update_data.items():
+                field_name = {
+                    'vat': 'Documento',
+                    'street': 'Dirección',
+                    'email': 'Email'
+                }.get(field, field)
+                
+                old_value = old_values.get(field, '')
+                change_messages.append(
+                    f"{field_name}: '{old_value}' → '{value}'"
+                )
+            
+            # Mensaje para el chatter del comprobante
+            message_body = _(
+                "<b>Datos actualizados en el contacto:</b><br/>%s<br/>"
+                "<b>Actualizado por:</b> %s"
+            ) % ("<br/>".join(change_messages), self.env.user.name)
+            
+            self.message_post(body=message_body)
+            
+            # Mensaje para el chatter del contacto
+            partner_message_body = _(
+                "<b>Datos actualizados desde comprobante:</b> %s<br/>%s<br/>"
+                "<b>Actualizado por:</b> %s"
+            ) % (self.name, "<br/>".join(change_messages), self.env.user.name)
+            
+            self.partner_id.message_post(body=partner_message_body)
+            
+            # Marcar como actualizado
+            self.is_data_updated = True
+            
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Datos Actualizados'),
+                    'message': _('Los datos del contacto han sido actualizados correctamente.'),
+                    'type': 'success',
+                    'sticky': False,
+                }
+            }
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Sin Cambios'),
+                    'message': _('No se detectaron cambios en los datos para actualizar.'),
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
     
     def print_receipt(self):
         self.ensure_one()

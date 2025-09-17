@@ -263,7 +263,11 @@ class grl_ledger_xlsx(models.AbstractModel):
             # FILA DE 1ERA SUMATORIA
             row_pos += 1
             worksheet.write(row_pos, 0, 'SUBTOTAL', f_string_bold_header_left)
-            worksheet.write(row_pos, 1, obj.account_id.code + ' ' + obj.account_id.name, f_string_bold_header_left)
+            account_code = str(obj.account_id.code) if obj.account_id.code else ""
+            account_name = str(obj.account_id.name) if obj.account_id.name else ""
+            account_display = f"{account_code} {account_name}".strip()
+
+            worksheet.write(row_pos, 1, account_display, f_string_bold_header_left)
             worksheet.write(row_pos, 2, '', f_string_bold_header_left)
             worksheet.write(row_pos, 3, '', f_string_bold_header_left)
             worksheet.write(row_pos, 4, '', f_string_bold_header_left)

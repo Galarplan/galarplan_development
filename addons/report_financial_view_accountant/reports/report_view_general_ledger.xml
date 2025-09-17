@@ -26,7 +26,7 @@
         <td style="width: 15%; border: none;"><strong>Diario:</strong></td>
         <td style="width: 35%; border: none;"><t t-esc="doc.journal_id and doc.journal_id.name or 'TODOS'"/></td>
         <td style="width: 15%; border: none;"><strong>Cuenta:</strong></td>
-        <td style="width: 35%; border: none;"><t t-esc="doc.account_id.code"/> / <t t-esc="doc.account_id.name"/></td>
+        <td style="width: 35%; border: none;"><t t-esc="doc.account_id.code or 'Todos' "/> / <t t-esc="doc.account_id.name or 'Mov'"/></td>
     </tr>
 </table>
 </div>

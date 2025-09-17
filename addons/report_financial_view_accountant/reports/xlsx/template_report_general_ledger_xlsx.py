@@ -167,7 +167,12 @@ class grl_ledger_xlsx(models.AbstractModel):
             worksheet.merge_range(2, 4, 2, 10, 'REPORTE MAYOR', f_string_title_center)
             worksheet.merge_range(3, 4, 3, 10, (obj.date_from and str(obj.date_from) or '') + ' al ' + (obj.date_to and str(obj.date_to) or ''),
                                   f_string_title_center)
-            worksheet.merge_range(4, 4, 4, 10, obj.account_id.code + ' ' + obj.account_id.name, f_string_title_center)
+            
+            account_code = str(obj.account_id.code) if obj.account_id.code else ""
+            account_name = str(obj.account_id.name) if obj.account_id.name else ""
+            account_display = f"{account_code} {account_name}".strip()
+            
+            worksheet.merge_range(4, 4, 4, 10, account_display, f_string_title_center)
             # worksheet.write(1, 0, 'DESDE: %s - HASTA: %s' % (start_date, end_date), f_string_subtitle_left)
 
             # Diccionario de cabeceras

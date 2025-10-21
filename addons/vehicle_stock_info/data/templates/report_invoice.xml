@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <data>
+    
+    <data noupdate="1">
         <template id="custom_report_invoice_header">
             <div class="row" name="info_electronic_data" style="font-size:24px ;">
                     <div class="col-12 text-center" t-att-style="'border-top: 1px solid {0}; background: {1}; color: {2}; margin-left: 12px; width:98%;'.format('#C1C1C1', '#C1C1C1', '#000000')">

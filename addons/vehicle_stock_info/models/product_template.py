@@ -62,6 +62,7 @@ class ProductTemplate(models.Model):
     co2_emissions = fields.Float(string="Emisiones de CO2")
     horsepower = fields.Float(string="Caballos de Fuerza")
     power_kw = fields.Float(string="Potencia (kW)")
+    pbv = fields.Float(string="Peso Bruto Vehicular (KG)")
 
     vehicle_brand_id = fields.Many2one('vehicle.brand', string="Marca del Vehículo")
     vehicle_model_id = fields.Many2one('vehicle.model', string="Modelo del Vehículo")

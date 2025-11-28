@@ -25,7 +25,5 @@ class AccountSavingLineWizard(models.TransientModel):
         for brw_each in self:
             if not brw_each.saving_line_ids:
                 raise ValidationError(_("Debes seleccionar al menos una cuota para facturar"))
-            brw_each.saving_line_ids.action_invoice(date=brw_each.date)
-            
-            
+            brw_each.saving_line_ids.action_invoice(date=brw_each.date)  
         return True

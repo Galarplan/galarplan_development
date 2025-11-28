@@ -2,6 +2,12 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+import logging
+
+
+_logger = logging.getLogger(__name__)
+
+
 
 
 class AccountSavingLines(models.Model):
@@ -44,61 +50,116 @@ class AccountSavingLines(models.Model):
             invoice = self.env['account.move'].browse(invoice_id)
             payment = self.env['account.payment'].browse(payment_id)
 
-            if not invoice or invoice.move_type not in ('out_invoice','entry'):
+            # Validaciones de existencia
+            if not invoice.exists():
+                raise ValueError(_("La factura con ID %s no existe.") % invoice_id)
+                
+            if not payment.exists():
+                raise ValueError(_("El pago con ID %s no existe.") % payment_id)
+
+            # Validar tipo de factura
+            if invoice.move_type not in ('out_invoice', 'entry'):
                 raise ValueError(_("El ID proporcionado no corresponde a una factura de venta o asiento de ahorro."))
 
-            if not payment or payment.payment_type != 'inbound':
+            # Validar tipo de pago
+            if payment.payment_type != 'inbound':
                 raise ValueError(_("El ID proporcionado no corresponde a un cobro válido."))
 
-            # Verificar que ambos tengan asientos contables publicados
-            if invoice.state != 'posted' or not invoice.line_ids:
-                raise ValueError(_("La factura o asiento no está publicada o no tiene líneas contables."))
+            # Verificar estado de la factura
+            if invoice.state != 'posted':
+                raise ValueError(_("La factura no está publicada. Estado actual: %s") % invoice.state)
+                
+            if not invoice.line_ids:
+                raise ValueError(_("La factura no tiene líneas contables."))
 
-            if payment.state != 'posted' or not payment.move_id.line_ids:
-                raise ValueError(_("El cobro no está publicado o no tiene líneas contables."))
-            partner_account=invoice.saving_id.property_account_receivable_id or invoice.partner_id.property_account_receivable_id
+            # Verificar estado del pago
+            if payment.state != 'posted':
+                raise ValueError(_("El cobro no está publicado. %s Estado actual: %s") % (payment.move_id.name,payment.state))
+                
+            if not payment.move_id:
+                raise ValueError(_("El cobro no tiene asiento contable asociado."))
+                
+            if not payment.move_id.line_ids:
+                raise ValueError(_("El cobro no tiene líneas contables."))
+
+            # Obtener cuenta del partner
+            partner_account = invoice.saving_id.property_account_receivable_id or invoice.partner_id.property_account_receivable_id
+            
+            if not partner_account:
+                raise ValueError(_("No se pudo determinar la cuenta por cobrar del partner."))
+
             # Obtener las líneas contables a conciliar
             invoice_lines = invoice.line_ids.filtered(
-                lambda line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id==partner_account)
-            #print("factura",invoice_lines)
+                lambda line: line.account_id.reconcile 
+                and line.amount_residual != 0 
+                and line.account_id == partner_account
+            )
+
             payment_lines = payment.move_id.line_ids.filtered(
-                lambda line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id==partner_account)
-            #print("pago", payment_lines)
+                lambda line: line.account_id.reconcile 
+                and line.amount_residual != 0 
+                and line.account_id == partner_account
+            )
+
+            # Si no hay líneas regulares, buscar líneas de prepago
             if not invoice_lines and not payment_lines:
                 invoice_lines = invoice.line_ids.filtered(
-                    lambda
-                        line: line.account_id.reconcile and line.account_id != partner_account and line.account_id.prepayment_account)
-                # print("factura",invoice_lines)
+                    lambda line: line.account_id.reconcile 
+                    and line.account_id != partner_account 
+                    and line.account_id.prepayment_account
+                )
+                
                 payment_lines = payment.move_id.line_ids.filtered(
-                    lambda
-                        line: line.account_id.reconcile and line.account_id != partner_account and line.account_id.prepayment_account)
+                    lambda line: line.account_id.reconcile 
+                    and line.account_id != partner_account 
+                    and line.account_id.prepayment_account
+                )
+
+                if not invoice_lines or not payment_lines:
+                    raise ValueError(_("No se encontraron líneas contables para conciliar."))
 
                 lines_to_reconcile = invoice_lines + payment_lines
                 lines_to_reconcile.reconcile()
                 return True
-                #raise ValueError(_("No se encontraron líneas contables para conciliar."))
-            if invoice and not payment_lines:
+
+            # Manejo de prepagos si hay factura pero no líneas de pago regulares
+            if invoice_lines and not payment_lines:
                 payment_lines = payment.move_id.line_ids.filtered(
-                    lambda
-                        line: line.account_id.reconcile and line.amount_residual != 0 and line.account_id != partner_account and line.account_id.prepayment_account)
-                for each_prepayment in payment_lines:
-                    print("dddddddddd")
-                    print(each_prepayment.amount_residual)
-                    print(invoice.amount_residual)
-                    reconcile_amount=min(abs( each_prepayment.amount_residual),abs(invoice.amount_residual))
-                    brw_assignment = self.env["account.prepayment.assignment"].create({
-                        "move_id": invoice.id,
-                        "prepayment_aml_id": each_prepayment.id,
-                        "amount": reconcile_amount,
-                        "date": fields.Date.context_today(self),
-                        "company_id": invoice.company_id.id,
-                        "new_journal_id": payment.journal_id.id
-                    })
-                    brw_assignment.button_confirm()
-                return True
-            # Realizar la conciliación
+                    lambda line: line.account_id.reconcile 
+                    and line.amount_residual != 0 
+                    and line.account_id != partner_account 
+                    and line.account_id.prepayment_account
+                )
+                
+                if payment_lines:
+                    for prepayment_line in payment_lines:
+                        reconcile_amount = min(abs(prepayment_line.amount_residual), abs(invoice.amount_residual))
+                        
+                        brw_assignment = self.env["account.prepayment.assignment"].create({
+                            "move_id": invoice.id,
+                            "prepayment_aml_id": prepayment_line.id,
+                            "amount": reconcile_amount,
+                            "date": fields.Date.context_today(self),
+                            "company_id": invoice.company_id.id,
+                            "new_journal_id": payment.journal_id.id
+                        })
+                        brw_assignment.button_confirm()
+                    return True
+
+            # Validar que tenemos líneas para conciliar
+            if not invoice_lines:
+                raise ValueError(_("No se encontraron líneas conciliables en la factura."))
+                
+            if not payment_lines:
+                raise ValueError(_("No se encontraron líneas conciliables en el pago."))
+
+            # Realizar la conciliación regular
             lines_to_reconcile = invoice_lines + payment_lines
             lines_to_reconcile.reconcile()
+            
             return True
+            
         except Exception as e:
-            raise ValidationError(_("Error conciliando factura y cobro: %s", str(e)))
+            # Log del error para debugging
+            _logger.error("Error conciliando factura %s con pago %s: %s", invoice_id, payment_id, str(e))
+            raise ValidationError(_("Error conciliando factura y cobro: %s") % str(e))

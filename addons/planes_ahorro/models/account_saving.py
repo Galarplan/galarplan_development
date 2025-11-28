@@ -429,8 +429,7 @@ class AccountSaving(models.Model):
             anios=brw_each.periods/12
             decremento_seguro=anios!=0 and (valor_fijo_seguro/anios) or 0
             total_decremento=0
-            serv_admin_fijo=round_excel(
-                            principal_amount * brw_each.saving_plan_id.rate_expense / 100.00)
+            serv_admin_fijo=round_excel(principal_amount * brw_each.saving_plan_id.rate_expense / 100.00)
             min_saving_amount=0.00
             for each_range in range(0, brw_each.periods):
                 # print( brw_each.periods)

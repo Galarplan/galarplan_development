@@ -420,16 +420,17 @@ class AccountSavingLines(models.Model):
                         brw_process_doc.action_post()
                     if post:
                         for brw_payment in brw_each.payment_line_ids:
-                            if brw_payment.type!='historic':
-                                self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
-                                        brw_process_doc.id, brw_payment.payment_id.id)
-                                if brw_process_doc.plan_ahorro_move_id:
-                                    #####
-                                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
-                                brw_each.write({"invoice_id": brw_process_doc.id,
-                                    "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False,
-                                    'enabled_for_invoice': False
-                                })
+                            if brw_payment.payment_id.move_id.state == 'posted':
+                                if brw_payment.type!='historic':
+                                    self.env["account.saving.line.payment"].reconcile_invoice_with_payment(
+                                            brw_process_doc.id, brw_payment.payment_id.id)
+                                    if brw_process_doc.plan_ahorro_move_id:
+                                        #####
+                                        self.env["account.saving.line.payment"].reconcile_invoice_with_payment(brw_process_doc.plan_ahorro_move_id.id, brw_payment.payment_id.id)
+                                    brw_each.write({"invoice_id": brw_process_doc.id,
+                                        "plan_ahorro_move_id": brw_process_doc.plan_ahorro_move_id and brw_process_doc.plan_ahorro_move_id.id or False,
+                                        'enabled_for_invoice': False
+                                    })
                 # else:
                 #     if len(srch_invoice)==1:
                 #         if srch_invoice.state=='draft':

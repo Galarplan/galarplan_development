@@ -242,7 +242,7 @@ class grl_ledger_xlsx(models.AbstractModel):
                 worksheet.write(row_pos, 0, move.get('ldate'), f_date)
                 worksheet.write(row_pos, 1, brw_move_line.account_id.code + ' ' + brw_move_line.account_id.name, f_string_plain_left)
                 worksheet.write(row_pos, 2, move.get('lname'), f_string_plain_left)
-                worksheet.write(row_pos, 3, brw_move_line.partner_id.name, f_string_plain_left)
+                worksheet.write(row_pos, 3, brw_move_line.partner_id.sudo().name, f_string_plain_left)
                 worksheet.write(row_pos, 4, move.get('referencia', ''), f_string_plain_left)
                 worksheet.write(row_pos, 5, '', f_string_plain_left)
                 worksheet.write(row_pos, 6, '', f_string_plain_left)

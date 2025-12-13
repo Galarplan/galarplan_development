@@ -59,6 +59,7 @@ class IrActionsReport(models.Model):
 
         context = {
             "spelled_out": self._spelled_out,
+            "round_number": self._round_number,
             "parsehtml": self._parse_html,
             "formatdate": self._formatdate,
             "company": self.env.company,
@@ -216,6 +217,11 @@ class IrActionsReport(models.Model):
     @staticmethod
     def _convert_currency(number, currency_field, locale='id_ID', **kwargs):
         return format_currency(number=number, currency=currency_field.name, locale=locale, **kwargs)
+    
+
+    @staticmethod
+    def _round_number(number, decimal_places ,**kwargs):
+        return round(number,decimal_places)
 
     @staticmethod
     def _render_html_as_subdoc(tpl, html_code=None):

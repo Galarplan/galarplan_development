@@ -15,6 +15,7 @@ from num2words import num2words
 from babel.dates import format_date
 from babel.numbers import format_currency
 from htmldocx import HtmlToDocx
+from datetime import datetime
 
 from odoo import _, api, fields, models
 from odoo.tools.safe_eval import safe_eval, time
@@ -59,6 +60,7 @@ class IrActionsReport(models.Model):
 
         context = {
             "spelled_out": self._spelled_out,
+            "spelled_date": self._spellout_date,
             "round_number": self._round_number,
             "parsehtml": self._parse_html,
             "formatdate": self._formatdate,
@@ -218,7 +220,6 @@ class IrActionsReport(models.Model):
     def _convert_currency(number, currency_field, locale='id_ID', **kwargs):
         return format_currency(number=number, currency=currency_field.name, locale=locale, **kwargs)
     
-
     @staticmethod
     def _round_number(number, decimal_places ,**kwargs):
         return round(number,decimal_places)
@@ -238,3 +239,76 @@ class IrActionsReport(models.Model):
         desc_document.save(temp)
         temp.seek(0)
         return tpl.new_subdoc(temp)
+    
+
+    @staticmethod
+    def _spellout_date(date_input=None, date_format='%d/%m/%Y', lang='es_ES'):
+        """
+        Convert a date string or datetime object to a spelled-out date string.
+        
+        Args:
+            date_input (str/datetime/date): Input date. If None, uses current date.
+            date_format (str): Format of input string if date_input is string.
+            lang (str): Language code for the output.
+        
+        Returns:
+            str: Spelled-out date (e.g., "25 de octubre del 2025").
+        
+        Examples:
+            {{ spellout_date("25/10/2025") }}
+            {{ spellout_date(docs.create_date, '%Y-%m-%d %H:%M:%S') }}
+            {{ spellout_date(fields.Datetime.now()) }}
+        """
+        # Handle empty input
+        if not date_input:
+            return ""
+        
+        # Convert string to datetime object if needed
+        if isinstance(date_input, str):
+            try:
+                date_obj = datetime.strptime(date_input, date_format)
+            except ValueError:
+                # Try Odoo's default datetime format as fallback
+                try:
+                    date_obj = datetime.strptime(date_input, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    # Try date-only format
+                    try:
+                        date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+                    except ValueError:
+                        return date_input  # Return original if can't parse
+        elif hasattr(date_input, 'strftime'):  # Already a datetime/date object
+            date_obj = date_input
+        else:
+            return str(date_input)
+        
+        # Extract day, month, year
+        day = date_obj.day
+        month = date_obj.month
+        year = date_obj.year
+        
+        # Spanish month names
+        months_es = {
+            1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+            5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+            9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
+        }
+        
+        # English month names (optional, for multilingual support)
+        months_en = {
+            1: "January", 2: "February", 3: "March", 4: "April",
+            5: "May", 6: "June", 7: "July", 8: "August",
+            9: "September", 10: "October", 11: "November", 12: "December"
+        }
+        
+        # Select month names based on language
+        if lang.startswith('es'):
+            month_name = months_es.get(month, "")
+            return f"{day} de {month_name} del {year}"
+        elif lang.startswith('en'):
+            month_name = months_en.get(month, "")
+            # English format: "October 25, 2025"
+            return f"{month_name} {day}, {year}"
+        else:
+            # Fallback to default format
+            return date_obj.strftime('%d/%m/%Y')

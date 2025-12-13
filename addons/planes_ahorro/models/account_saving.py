@@ -92,7 +92,7 @@ class AccountSaving(models.Model):
     pendiente = fields.Monetary(string='Pendiente', compute="_compute_documents", store=True, readonly=False,tracking=True)
     periods = fields.Integer(string='Periodo',default=0,tracking=True)
     serv_inscription_amount=fields.Monetary(string='Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True)
-    rate_inscription_plan = fields.Float(string='(%)Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True, default = 5.5)
+    rate_inscription_plan = fields.Float(string='(%)Inscripción',compute="compute_inscription",store=True,readonly=True,tracking=True, default = 5.5, digits=(16, 4))
     old_id = fields.Integer("Antiguo ID",tracking=True)
     old_ref_id = fields.Char("Antiguo REF ID", tracking=True)
 

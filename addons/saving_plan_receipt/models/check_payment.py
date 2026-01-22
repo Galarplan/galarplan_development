@@ -87,6 +87,7 @@ class ReceiptValidation(models.Model):
     
     #campos adicionales para tarjeta de credito
     credit_card = fields.Boolean('Es Tarjeta de credito')
+    debit_card = fields.Boolean('Es Tarjeta de debito')
     lote_card = fields.Char('# lote')
     card_number = fields.Char('# Tarjeta')
 
@@ -110,9 +111,16 @@ class ReceiptValidation(models.Model):
         domain="[('partner_id', '=', partner_id)]"
     )
     
-    saving_line_id = fields.Many2many(
-        'account.saving.lines', 
-        domain="[('saving_id', '=', saving_plan_id), ('estado_pago', '=', 'pendiente')]"
+    # saving_line_id = fields.Many2many(
+    #     'account.saving.lines', 
+    #     domain="[('saving_id', '=', saving_plan_id), ('estado_pago', '=', 'pendiente')]"
+    # )
+
+    # Reemplazar en el modelo ReceiptValidation:
+    saving_line_id = fields.One2many(
+        'receipt.validation.savings',
+        'receipt_id',
+        string='Cuotas a Pagar',
     )
 
     paid_installments_str = fields.Char(
@@ -181,10 +189,12 @@ class ReceiptValidation(models.Model):
         base_options = [
             ('cash', 'Efectivo'),
             ('check', 'Cheque'),
-            ('card', 'Tarjeta de Credito'),
+            ('card_credit', 'Tarjeta de Credito'),
+            ('card_debit','Tarjeta de Debito'),
             ('transfer', 'Transferencia'),
             ('deposit','Deposito'),
             ('other','Otros')
+
         ]
         
         # Aquí puedes añadir lógica para obtener opciones adicionales dinámicamente
@@ -388,38 +398,265 @@ class ReceiptValidation(models.Model):
                 value += line.serv_admin_amount
         return value
 
+
+
+    @api.onchange('amount', 'saving_plan_id')
+    def _onchange_amount_auto_select_installments(self):
+        """Selecciona automáticamente las cuotas basadas en el monto ingresado"""
+        for record in self:
+            
+            if not record.amount or record.amount <= 0:
+                record.saving_line_id = [(5, 0, 0)]
+                return
+            
+            if not record.amount or not record.saving_plan_id or not record.saving_plan_payment:
+                return
+            
+            # Limpiar cuotas existentes
+            record.saving_line_id = [(5, 0, 0)]
+            
+            # Obtener cuotas pendientes ordenadas
+            pending_installments = self.env['account.saving.lines'].search([
+                ('estado_pago', '=', 'pendiente'),
+                ('saving_id', '=', record.saving_plan_id.id)
+            ], order='date asc, number asc')
+            
+            if not pending_installments:
+                return
+            
+            remaining_amount = record.amount
+            selected_installments = []
+            
+            # Verificar estado del plan
+            plan_state = record.saving_plan_id.state
+            
+            if plan_state == 'adjudicated_with_assets':
+                # Para adjudicados con activos: seleccionar cronológicamente
+                selected_installments = self._select_chronological_installments(
+                    pending_installments, remaining_amount
+                )
+            else:
+                # Para otros estados: máximo 2 cuotas del inicio y el resto del final
+                selected_installments = self._select_mixed_installments(
+                    pending_installments, remaining_amount
+                )
+            
+            # Crear las líneas seleccionadas
+            for installment in selected_installments:
+                record.saving_line_id = [(0, 0, {
+                    'saving_line_id': installment.id,
+                    'amount_to_pay': min(installment.pendiente, remaining_amount),
+                    'is_full_payment': True
+                })]
+                remaining_amount -= installment.pendiente
     
-    @api.depends('saving_line_id')
+    def _select_chronological_installments(self, pending_installments, amount):
+        """Seleccionar cuotas cronológicamente (más antiguas primero)"""
+        selected = []
+        remaining = amount
+        
+        for installment in pending_installments:
+            if remaining <= 0:
+                break
+            
+            selected.append(installment)
+            remaining -= installment.pendiente
+        
+        return selected
+    
+    def _select_mixed_installments(self, pending_installments, amount):
+        """Seleccionar máximo 2 cuotas del inicio y el resto del final"""
+        selected = []
+        remaining = amount
+        
+        if not pending_installments:
+            return selected
+        
+        # Convertir a lista para mejor manipulación
+        installments_list = list(pending_installments)
+        
+        # Tomar máximo 2 cuotas del inicio
+        start_count = min(2, len(installments_list))
+        for i in range(start_count):
+            if remaining <= 0:
+                break
+            
+            installment = installments_list[i]
+            selected.append(installment)
+            remaining -= installment.pendiente
+        
+        # Si aún queda monto, tomar del final
+        if remaining > 0 and len(installments_list) > start_count:
+            # Tomar cuotas del final (más recientes)
+            end_installments = installments_list[start_count:]
+            # Ordenar descendente para tomar las más recientes primero
+            end_installments_sorted = sorted(
+                end_installments, 
+                key=lambda x: (x.date or fields.Date.today(), x.number), 
+                reverse=True
+            )
+            
+            for installment in end_installments_sorted:
+                if remaining <= 0:
+                    break
+                
+                selected.append(installment)
+                remaining -= installment.pendiente
+        
+        return selected
+    
+    @api.onchange('saving_line_id')
+    def _onchange_saving_line_id_recalculate_amount(self):
+        """Recalcular el monto total cuando se modifican las cuotas"""
+        for record in self:
+            if record.saving_line_id:
+                total = sum(line.amount_to_pay for line in record.saving_line_id)
+                record.amount = total
+    
+    # @api.depends('saving_line_id')
+    # def _compute_installment_data(self):
+    #     for record in self:
+    #         # Números de cuotas pagadas como string
+    #         paid_installments = record.saving_line_id.mapped('number')  # Ajusta 'numero_cuota' al nombre real del campo
+    #         record.paid_installments_str = ", ".join(sorted(str(i) for i in paid_installments))
+            
+    #         # Sumar los valores de todas las cuotas seleccionadas
+    #         record.saving_amount = sum(line.saving_amount for line in record.saving_line_id)  # Ajusta 'valor_cuota'
+            
+    #         # Valor de inscripción (si saving_amount es cero)
+    #         # record.serv_admin_amount = sum(line.serv_admin_amount if record.saving_amount == 0 else 0
+    #         record.serv_admin_amount = self.sum_inscription(record.saving_line_id)
+    #         # Valor capital (principal)
+    #         record.principal_amount = sum(line.principal_amount for line in record.saving_line_id)  # Ajusta 'principal_amount'
+            
+    #         # Gasto administrativo (si saving_amount no es cero)
+    #         record.admin_expense_amount = self.sum_admin_expense(record.saving_line_id)
+            
+    #         # Valor del seguro
+    #         record.insurance_amount = sum(line.seguro_amount for line in record.saving_line_id)  # Ajusta 'seguro_amount'
+            
+    #         # El amount debería ser la suma de todos estos valores
+    #         record.amount = (
+    #             record.saving_amount + 
+    #             record.serv_admin_amount + 
+    #             record.principal_amount + 
+    #             record.admin_expense_amount + 
+    #             record.insurance_amount
+    #         )
+
+    # @api.depends('saving_line_id')
+    # def _compute_installment_data(self):
+    #     for record in self:
+    #         # Números de cuotas pagadas como string
+    #         paid_installments = record.saving_line_id.mapped('installment_number')
+    #         record.paid_installments_str = ", ".join(sorted(str(i) for i in paid_installments))
+            
+    #         # Sumar los valores de todas las cuotas seleccionadas
+    #         record.saving_amount = sum(line.saving_line_id.saving_amount for line in record.saving_line_id)
+            
+    #         # Valor de inscripción (si saving_amount es cero)
+    #         record.serv_admin_amount = sum(
+    #             line.saving_line_id.serv_admin_amount 
+    #             for line in record.saving_line_id 
+    #             if line.saving_line_id.saving_amount == 0
+    #         )
+            
+    #         # Valor capital (principal)
+    #         record.principal_amount = sum(line.saving_line_id.principal_amount for line in record.saving_line_id)
+            
+    #         # Gasto administrativo (si saving_amount no es cero)
+    #         record.admin_expense_amount = sum(
+    #             line.saving_line_id.serv_admin_amount 
+    #             for line in record.saving_line_id 
+    #             if line.saving_line_id.saving_amount != 0
+    #         )
+            
+    #         # Valor del seguro
+    #         record.insurance_amount = sum(line.saving_line_id.seguro_amount for line in record.saving_line_id)
+            
+    #         # El amount debería ser la suma de todos estos valores
+    #         # record.amount = (
+    #         #     record.saving_amount + 
+    #         #     record.serv_admin_amount + 
+    #         #     record.principal_amount + 
+    #         #     record.admin_expense_amount + 
+    #         #     record.insurance_amount
+    #         # )
+    #         record.amount = (
+    #             record.serv_admin_amount + 
+    #             record.principal_amount + 
+    #             record.admin_expense_amount + 
+    #             record.insurance_amount
+    #         )
+
+    @api.depends('saving_line_id', 'saving_line_id.amount_to_pay', 
+             'saving_line_id.is_full_payment',
+             'saving_line_id.partial_serv_admin_amount',
+             'saving_line_id.partial_principal_amount',
+             'saving_line_id.partial_seguro_amount')
     def _compute_installment_data(self):
         for record in self:
+            if not record.saving_line_id:
+                record.paid_installments_str = ""
+                record.saving_amount = 0
+                record.serv_admin_amount = 0
+                record.principal_amount = 0
+                record.admin_expense_amount = 0
+                record.insurance_amount = 0
+                # No resetear record.amount aquí para que pueda ser ingresado manualmente
+                continue
+            
             # Números de cuotas pagadas como string
-            paid_installments = record.saving_line_id.mapped('number')  # Ajusta 'numero_cuota' al nombre real del campo
+            paid_installments = record.saving_line_id.mapped('installment_number')
             record.paid_installments_str = ", ".join(sorted(str(i) for i in paid_installments))
             
-            # Sumar los valores de todas las cuotas seleccionadas
-            record.saving_amount = sum(line.saving_amount for line in record.saving_line_id)  # Ajusta 'valor_cuota'
+            # Sumar saving_amount (valor cuota) de todas las cuotas
+            record.saving_amount = sum(line.saving_line_id.saving_amount for line in record.saving_line_id)
             
-            # Valor de inscripción (si saving_amount es cero)
-            # record.serv_admin_amount = sum(line.serv_admin_amount if record.saving_amount == 0 else 0
-            record.serv_admin_amount = self.sum_inscription(record.saving_line_id)
-            # Valor capital (principal)
-            record.principal_amount = sum(line.principal_amount for line in record.saving_line_id)  # Ajusta 'principal_amount'
+            # Inicializar totales
+            total_inscription = 0
+            total_admin_expense = 0
+            total_principal = 0
+            total_insurance = 0
             
-            # Gasto administrativo (si saving_amount no es cero)
-            record.admin_expense_amount = self.sum_admin_expense(record.saving_line_id)
+            for line in record.saving_line_id:
+                if line.is_full_payment:
+                    # Pago completo: usar montos completos
+                    if line.saving_line_id.saving_amount == 0:
+                        # Es inscripción
+                        total_inscription += line.serv_admin_amount
+                    else:
+                        # Es gasto administrativo regular
+                        total_admin_expense += line.serv_admin_amount
+                    
+                    total_principal += line.principal_amount
+                    total_insurance += line.seguro_amount
+                else:
+                    # Pago parcial: usar montos proporcionales
+                    if line.saving_line_id.saving_amount == 0:
+                        # Es inscripción
+                        total_inscription += line.partial_serv_admin_amount
+                    else:
+                        # Es gasto administrativo regular
+                        total_admin_expense += line.partial_serv_admin_amount
+                    
+                    total_principal += line.partial_principal_amount
+                    total_insurance += line.partial_seguro_amount
             
-            # Valor del seguro
-            record.insurance_amount = sum(line.seguro_amount for line in record.saving_line_id)  # Ajusta 'seguro_amount'
+            record.serv_admin_amount = total_inscription
+            record.admin_expense_amount = total_admin_expense
+            record.principal_amount = total_principal
+            record.insurance_amount = total_insurance
             
-            # El amount debería ser la suma de todos estos valores
-            record.amount = (
-                record.saving_amount + 
-                record.serv_admin_amount + 
-                record.principal_amount + 
-                record.admin_expense_amount + 
-                record.insurance_amount
-            )
-
+            # IMPORTANTE: Actualizar el monto total con la suma de componentes
+            # Pero solo si hay cuotas seleccionadas
+            if record.saving_line_id:
+                record.amount = (
+                    record.serv_admin_amount + 
+                    record.principal_amount + 
+                    record.admin_expense_amount + 
+                    record.insurance_amount
+                )
    
 
 
@@ -492,3 +729,288 @@ class ReceiptValidation(models.Model):
                 raise UserError('Debes Colocar la ubicacion donde se hace el cobro ')
         
         return super(ReceiptValidation, self).create(vals)
+    
+    def action_open_add_installments_wizard(self):
+        self.ensure_one()
+        return {
+            'name': _('Seleccionar Cuotas'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'add.installments.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_receipt_id': self.id,
+                'active_id': self.id,
+            }
+        }
+    
+    def action_clear_installments(self):
+        """Limpiar todas las cuotas seleccionadas"""
+        self.ensure_one()
+        if self.saving_line_id:
+            self.saving_line_id.unlink()
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Cuotas Eliminadas'),
+                    'message': _('Todas las cuotas han sido eliminadas correctamente.'),
+                    'type': 'success',
+                    'sticky': False,
+                }
+            }
+    
+
+class ReceiptValidationSavings(models.Model):
+    _name = 'receipt.validation.savings'
+    _description = 'Líneas de pagos de planes'
+    
+    receipt_id = fields.Many2one(
+        'receipt.validation',
+        string='Comprobante',
+        ondelete='cascade',
+        required=True
+    )
+    
+    company_id = fields.Many2one(
+        'res.company',
+        string='Compañía',
+        related='receipt_id.company_id',
+        store=True,
+        readonly=True
+    )
+    
+    # Otra opción: usar currency_id directamente
+    currency_id = fields.Many2one(
+        'res.currency',
+        string='Moneda',
+        related='receipt_id.company_id.currency_id',
+        store=True,
+        readonly=True
+    )
+    
+    saving_line_id = fields.Many2one(
+        'account.saving.lines',
+        string='Cuota del Plan',
+        domain="[('estado_pago', '=', 'pendiente'), ('saving_id.partner_id', '=', parent.partner_id)]",
+        required=True
+    )
+    
+    # Datos de la cuota (copiados para referencia)
+    installment_number = fields.Integer(
+        string='Número de Cuota',
+        related='saving_line_id.number',
+        store=True,
+        readonly=True
+    )
+    
+    due_date = fields.Date(
+        string='Fecha Vencimiento',
+        related='saving_line_id.date',
+        store=True,
+        readonly=True
+    )
+    
+    # Valores de la cuota
+    saving_amount = fields.Monetary(
+        string='Valor Cuota',
+        related='saving_line_id.saving_amount',
+        store=True,
+        readonly=True
+    )
+    
+    principal_amount = fields.Monetary(
+        string='Valor Capital',
+        related='saving_line_id.principal_amount',
+        store=True,
+        readonly=True
+    )
+    
+    serv_admin_amount = fields.Monetary(
+        string='Servicio Administrativo',
+        related='saving_line_id.serv_admin_amount',
+        store=True,
+        readonly=True
+    )
+    
+    seguro_amount = fields.Monetary(
+        string='Valor Seguro',
+        related='saving_line_id.seguro_amount',
+        store=True,
+        readonly=True
+    )
+    
+    por_pagar = fields.Monetary(
+        string='Por Pagar',
+        related='saving_line_id.por_pagar',
+        store=True,
+        readonly=True
+    )
+    
+    pendiente = fields.Monetary(
+        string='Pendiente',
+        related='saving_line_id.pendiente',
+        store=True,
+        readonly=True
+    )
+    
+    pagos = fields.Monetary(
+        string='Pagos Realizados',
+        related='saving_line_id.pagos',
+        store=True,
+        readonly=True
+    )
+    
+    estado_pago = fields.Selection(
+        string='Estado de Pago',
+        related='saving_line_id.estado_pago',
+        store=True,
+        readonly=True
+    )
+    
+    # Campos para registro del pago
+    amount_to_pay = fields.Monetary(
+        string='Monto a Pagar',
+        required=True,
+        default=0.0,
+        help='Monto específico a pagar de esta cuota'
+    )
+    
+    is_full_payment = fields.Boolean(
+        string='Pago Completo',
+        default=True,
+        help='Si es True, se paga el monto total pendiente. Si es False, se paga un monto parcial.'
+    )
+    
+    # Campo para mostrar información de la cuota
+    display_name = fields.Char(
+        string='Descripción',
+        compute='_compute_display_name',
+        store=True
+    )
+    
+    # Relación con el plan de ahorros
+    saving_id = fields.Many2one(
+        'account.saving',
+        string='Plan de Ahorros',
+        related='saving_line_id.saving_id',
+        store=True,
+        readonly=True
+    )
+    
+    # Campos para diferenciar tipo de pago (cuota vs inscripción)
+    is_inscription = fields.Boolean(
+        string='Es Inscripción',
+        compute='_compute_is_inscription',
+        store=True
+    )
+    
+    # Campos computados para pagos parciales
+    partial_serv_admin_amount = fields.Monetary(
+        string='Admin. Parcial',
+        compute='_compute_partial_amounts',
+        store=True
+    )
+    
+    partial_principal_amount = fields.Monetary(
+        string='Capital Parcial',
+        compute='_compute_partial_amounts',
+        store=True
+    )
+    
+    partial_seguro_amount = fields.Monetary(
+        string='Seguro Parcial',
+        compute='_compute_partial_amounts',
+        store=True
+    )
+    
+    @api.depends('saving_line_id')
+    def _compute_display_name(self):
+        for record in self:
+            if record.saving_line_id:
+                plan_name = record.saving_line_id.saving_id.name or 'Sin Plan'
+                cuota_num = record.saving_line_id.number or 'N/A'
+                pendiente = record.saving_line_id.pendiente
+                record.display_name = f"Plan: {plan_name} - Cuota {cuota_num} (Pendiente: {pendiente:.2f})"
+            else:
+                record.display_name = False
+    
+    @api.depends('saving_amount')
+    def _compute_is_inscription(self):
+        for record in self:
+            # Si saving_amount es 0, es una inscripción
+            record.is_inscription = record.saving_amount == 0
+    
+    @api.depends('amount_to_pay', 'pendiente', 'serv_admin_amount', 'principal_amount', 'seguro_amount', 'is_full_payment')
+    def _compute_partial_amounts(self):
+        """Calcula los montos proporcionales para pagos parciales"""
+        for record in self:
+            if not record.saving_line_id:
+                record.partial_serv_admin_amount = 0
+                record.partial_principal_amount = 0
+                record.partial_seguro_amount = 0
+                continue
+            
+            # Si es pago completo o pendiente es 0, usar los montos completos
+            if record.is_full_payment or record.pendiente == 0:
+                record.partial_serv_admin_amount = record.serv_admin_amount
+                record.partial_principal_amount = record.principal_amount
+                record.partial_seguro_amount = record.seguro_amount
+            else:
+                # Calcular proporción del pago
+                if record.pendiente > 0:
+                    proportion = record.amount_to_pay / record.pendiente
+                    
+                    # Aplicar proporción a cada componente
+                    record.partial_serv_admin_amount = record.serv_admin_amount * proportion
+                    record.partial_principal_amount = record.principal_amount * proportion
+                    record.partial_seguro_amount = record.seguro_amount * proportion
+                else:
+                    record.partial_serv_admin_amount = 0
+                    record.partial_principal_amount = 0
+                    record.partial_seguro_amount = 0
+    
+    @api.onchange('saving_line_id')
+    def _onchange_saving_line_id(self):
+        """Al seleccionar una cuota, establecer el monto a pagar por defecto"""
+        for record in self:
+            if record.saving_line_id:
+                # Por defecto, se paga el monto total pendiente
+                record.amount_to_pay = record.saving_line_id.pendiente
+                record.is_full_payment = True
+    
+    @api.onchange('is_full_payment', 'amount_to_pay')
+    def _onchange_payment_details(self):
+        """Validar que el monto a pagar no exceda el pendiente"""
+        for record in self:
+            if record.saving_line_id:
+                if record.is_full_payment:
+                    # Si es pago completo, establecer al pendiente total
+                    record.amount_to_pay = record.saving_line_id.pendiente
+                elif record.amount_to_pay > record.saving_line_id.pendiente:
+                    record.amount_to_pay = record.saving_line_id.pendiente
+    
+    @api.constrains('amount_to_pay')
+    def _check_amount_to_pay(self):
+        """Validar que el monto a pagar sea válido"""
+        for record in self:
+            if record.amount_to_pay < 0:
+                raise ValidationError('El monto a pagar no puede ser negativo')
+            
+            if record.saving_line_id and record.amount_to_pay > record.saving_line_id.pendiente:
+                raise ValidationError(
+                    f'El monto a pagar ({record.amount_to_pay}) no puede exceder '
+                    f'el monto pendiente de la cuota ({record.saving_line_id.pendiente})'
+                )
+    
+    def action_view_saving_line(self):
+        """Abrir la vista de la cuota del plan"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Cuota del Plan',
+            'res_model': 'account.saving.lines',
+            'res_id': self.saving_line_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }

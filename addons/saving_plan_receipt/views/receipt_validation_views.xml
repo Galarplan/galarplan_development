@@ -74,7 +74,8 @@
                     </div>
                     <group>
                         <group>
-                            <field name="is_data_updated" readonly="1" string="Datos Actualizados" invisible='1' />
+                            <field name="is_data_updated" readonly="1" string="Datos Actualizados"
+                                invisible='1' />
                             <field name="partner_id"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="document_number"
@@ -144,18 +145,43 @@
                         </group>
 
                         <!-- Campos para Tarjeta de Crédito -->
-                        <group string="Detalles de Tarjeta"
-                            attrs="{'invisible': [('payment_form', '!=', 'card')]}">
+                        <group string="Detalles de Tarjeta de credito"
+                            attrs="{'invisible': [('payment_form', '!=', 'card_credit')]}">
                             <field name="credit_card" invisible="1" />
                             <field name="lote_card"
                                 attrs="{
                                     'readonly': [('state', '=', 'posted')],
-                                    'required': [('payment_form', '=', 'card')]
+                                    'required': [('payment_form', '=', 'card_credit')]
                                 }" />
                             <field name="card_number"
                                 attrs="{
                                     'readonly': [('state', '=', 'posted')],
-                                    'required': [('payment_form', '=', 'card')]
+                                    'required': [('payment_form', '=', 'card_credit')]
+                                }" />
+                            <field name="banco_emisor"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'card_credit')]
+                                }" />
+                        </group>
+
+                        <group string="Detalles de Tarjeta de Debito"
+                            attrs="{'invisible': [('payment_form', '!=', 'card_debit')]}">
+                            <field name="credit_card" invisible="1" />
+                            <field name="lote_card"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'card_debit')]
+                                }" />
+                            <field name="card_number"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'card_debit')]
+                                }" />
+                            <field name="banco_emisor"
+                                attrs="{
+                                    'readonly': [('state', '=', 'posted')],
+                                    'required': [('payment_form', '=', 'card_debit')]
                                 }" />
                         </group>
 
@@ -237,8 +263,49 @@
                             <group>
                                 <field name="saving_plan_id"
                                     attrs="{'readonly': [('state', '=', 'posted')]}" />
-                                <field name="saving_line_id" widget="many2many_tags" string="Cuotas"
-                                    attrs="{'readonly': [('state', '=', 'posted')]}" />
+
+
+                                <!-- Cambiar many2many_tags por One2many con vista tree -->
+                                <!-- <field name="saving_line_id" attrs="{'readonly': [('state', '=', 'posted')]}"> -->
+                                <field name="saving_line_id" readonly="1">
+                                    <tree string="Cuotas a Pagar" editable="bottom">
+                                        <field name="saving_line_id" widget="many2one"
+                                            domain="[('estado_pago', '=', 'pendiente'), ('saving_id', '=', parent.saving_plan_id)]" />
+                                        <field name="installment_number" string="Cuota"
+                                            invisible='1' />
+                                        <field name="due_date" string="Vencimiento" optional='hide' />
+                                        <field name="pendiente" string="Pendiente" />
+                                        <field name="amount_to_pay" string="Monto a Pagar" />
+                                        <field name="is_full_payment" string="Pago Completo"  optional='hide'/>
+                                        <field name="is_inscription" string="Es Inscripción" />
+                                        <!-- Campos para mostrar valores -->
+                                        <field name="saving_amount" string="Valor Cuota"
+                                            widget="monetary" />
+                                        <field name="principal_amount" string="Capital"
+                                            widget="monetary" />
+                                        <field name="serv_admin_amount" string="Admin."
+                                            widget="monetary" />
+                                        <field name="seguro_amount" string="Seguro"
+                                            widget="monetary" />
+                                    </tree>
+                                </field>
+
+                                <!-- Mostrar resumen de montos -->
+                                <group string="Resumen de Pagos">
+                                    <field name="paid_installments_str" widget="text" readonly="1" />
+                                    <field name="saving_amount" string="Total Cuotas"
+                                        widget="monetary" readonly="1" />
+                                    <field name="serv_admin_amount" string="Inscripción"
+                                        widget="monetary" readonly="1" />
+                                    <field name="principal_amount" string="Capital"
+                                        widget="monetary" readonly="1" />
+                                    <field name="admin_expense_amount" string="Gasto Admin."
+                                        widget="monetary" readonly="1" />
+                                    <field name="insurance_amount" string="Seguro" widget="monetary"
+                                        readonly="1" />
+                                    <field name="amount" string="Monto Total" widget="monetary"
+                                        readonly="1" />
+                                </group>
                             </group>
                         </page>
                         <page string="Detalles de Pago"

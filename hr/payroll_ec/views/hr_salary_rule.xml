@@ -38,6 +38,26 @@
                             </group>
                         </group>
                     </page>
+                <page name="general_finiquito" string="Finiquito"  >
+                        <group name="process_finiquito_conditions" coslpan="4" cols="2">
+
+                            <field name="domain_liquidation_select" nolabel="1" colspan="4"
+                                   widget="ace"
+                                   options="{'mode': 'python'}"
+                                   attrs="{'required':[('type','=','liquidation')]}"
+                                   placeholder="CODIGO PARA CONDICION EN CALCULO DE LIQUIDACION (SI o NO)"/>
+                            <separator colspan="4" string="Calculo"/>
+                            <newline/>
+                            <field name="process_liquidation_select" nolabel="1" colspan="4"
+                                   placeholder="CODIGO PARA CALCULO EN LIQUIDACION"
+                                   widget="ace"
+                                   options="{'mode': 'python'}"
+attrs="{'required':[('type','=','liquidation')]}"
+/>
+
+                        </group>
+                     </page>
+
                 </xpath>
 
 

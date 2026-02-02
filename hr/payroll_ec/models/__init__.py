@@ -32,8 +32,11 @@ from . import hr_leave_type
 from . import hr_payslip_worked_days
 
 from . import hr_employee_liquidation
+from . import hr_employee_liquidation_line
+from . import hr_employee_liquidation_account
 from . import hr_employee_historic_lines
 
 from . import hr_leave
 from  . import hr_vacation_period
 from  . import hr_vacation_period_line
+

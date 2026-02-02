@@ -72,7 +72,7 @@
 
         "views/hr_employee_historic_lines.xml",
 
-        "views/hr_employee_liquidation.xml",
+        #"views/hr_employee_liquidation.xml",
 
         #'views/hr_deductible_expenses_contract_period_template.xml',
 

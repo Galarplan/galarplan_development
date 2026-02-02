@@ -6,6 +6,7 @@ from odoo.exceptions import ValidationError
 
 class HrEmployeeDocument(models.AbstractModel):
     _name = "hr.employee.document"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = "Plantilla de Documentos de Empleados"
 
     @api.model

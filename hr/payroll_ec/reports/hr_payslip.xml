@@ -114,6 +114,7 @@
                             <div class="my-1">Cargo del aprobador</div>
                         </div>
                     </div>
+                     <div style="page-break-after:always;"/>
                 </div>
             </t>
         </t>
@@ -121,10 +122,10 @@
 
     <template id="report_payslip_lang_new">
         <t t-call="web.html_container">
-            <t t-foreach="docs" t-as="o">
-                <t t-set="o" t-value="o.with_context(lang=o.employee_id.sudo().address_home_id.lang or o.env.lang)"/>
-                <t t-call="payroll_ec.report_payslip_new" t-lang="o.env.lang"/>
-            </t>
+           <t t-call="web.html_container">
+            <t t-set="docs" t-value="docs.mapped(lambda x: x.with_context(lang=x.employee_id.sudo().address_home_id.lang or x.env.lang))"/>
+           <t t-call="payroll_ec.report_payslip_new"/>
+        </t>
         </t>
     </template>
 </odoo>

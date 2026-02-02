@@ -15,6 +15,7 @@
                 <group cols="2" coslpan="4">
                     <group cols="1">
                         <field name="name" coslpan="2" />
+                                                <field name="code" coslpan="2" />
                         <field name="rule_id" coslpan="2" options="{'no_create':True,'no_edit':True,'no_open':True}"
                                 />
 <field name="movement_ref_id" coslpan="2" />

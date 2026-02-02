@@ -75,6 +75,7 @@ class ReceiptValidation(models.Model):
     )
 
     saving_plan_payment = fields.Boolean('Plan de ahorro?',default=False)
+    payment_verification = fields.Boolean('En Verificacion?',default=False)
 
     #campos adicionales para cheque, transferencia,deposito
     banco_emisor = fields.Many2one('res.bank','Banco Emisor')

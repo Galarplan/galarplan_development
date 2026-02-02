@@ -50,12 +50,12 @@
               action="hr_employee_movement_view_provision_action" parent="hr_other_process_menu"
               sequence="1" />
 
- <menuitem name="Finiquito de Empleados" id="hr_employee_movement_view_liquidation_menu"
-              action="hr_employee_liquidation_view_action" parent="hr_other_process_menu"
-              sequence="2" />
+
+<menuitem name="Liquidación de Haberes" id="hr_employee_finiquito_view_menu"
+          action="hr_employee_finiquito_view_action" parent="hr_other_process_menu" sequence="2"/>
 
      <menuitem name="Liquidación de Vacaciones" id="hr_employee_movement_view_vacation_menu"
-              action="hr_employee_vacation_view_action" parent="hr_other_process_menu"
+              action="hr_employee_liquidation_view_action" parent="hr_other_process_menu"
               sequence="3" />
 
 

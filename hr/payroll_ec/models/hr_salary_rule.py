@@ -25,12 +25,13 @@ class HrSalaryRule(models.Model):
     locked_compute = fields.Boolean("Bloquear Cálculos", default=True)
 
     category_code=fields.Char(related="category_id.code",string="Código de Categoría")
-    
-    type=fields.Selection([("payslip","Solo Nómina"),
-                           ("discount","Descuento Diferido"),
-                           ("batch","Lote Manual"),
-                           ("batch_automatic","Lote Automático")], "Tipo",required=True,default="payslip")    
-    
+
+    type = fields.Selection([("payslip", "Solo Nómina"),
+                             ("discount", "Descuento Diferido"),
+                             ("batch", "Lote Manual"),
+                             ("batch_automatic", "Lote Automático"),
+                             ("liquidation", "Finiquito")], "Tipo", required=True, default="payslip")
+
     force_payslip=fields.Boolean("Forzar en Rol",default=False)
     show_print=fields.Boolean("Mostrar en Impresión de Rol",default=True)
     
@@ -45,6 +46,11 @@ class HrSalaryRule(models.Model):
     provision_rule_ids = fields.Many2many("hr.salary.rule", "provision_hr_salary_rule_rel", "rule_id", "provision_id",
                                           string="Reglas de Provision")
     enable_for_documents = fields.Boolean("Habilitar para generar Documentos", default=False)
+
+    process_liquidation_select = fields.Text("Calculo de Liquidación", default="""result=amount_factor""")
+    domain_liquidation_select = fields.Text("Condición de Liquidación",
+                                            default="""amount,amount_factor,result=brw_liquidation.sum_by_rules(brw_rule)""")
+
 
     @api.onchange('payment')
     def onchange_payment(self):
@@ -145,3 +151,12 @@ class HrSalaryRule(models.Model):
         result = OBJ_FX.execute(self.amount_python_compute, localdict)
         return result.get("result", 0.00),1.00,100.00
 
+    def _new_satisfy_liquidation_condition(self, localdict):
+        OBJ_FX = self.env["dynamic.function"].sudo()
+        result = OBJ_FX.execute(self.domain_liquidation_select, localdict)
+        return result.get("result", False), result.get("amount", 0.00), result.get("amount_factor", 0.00)
+
+    def _new_compute_liquidation_rule(self, localdict):
+        OBJ_FX = self.env["dynamic.function"].sudo()
+        result = OBJ_FX.execute(self.process_liquidation_select, localdict)
+        return result.get("result", 0.00), 1.00, 100.00

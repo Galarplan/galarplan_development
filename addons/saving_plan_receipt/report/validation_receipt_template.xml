@@ -4,7 +4,8 @@
         <t t-call="web.html_container">
             <!-- Header Personalizado -->
             <div class="header" style="margin-bottom: 20px;">
-                <div style="display: flex; /* align-items: center; justify-content: space-between;*/">
+                <div
+                    style="display: flex; /* align-items: center; justify-content: space-between;*/">
                     <!-- Logo a la derecha - Versión CORREGIDA -->
                     <div style="width: 125px; height: 135px; /* margin-left: 20px;*/">
                         <img t-if="docs.company_id.logo_web"
@@ -12,7 +13,8 @@
                             style="width: 170%; height: 130%;" />
                     </div>
                     <!-- Información centrada -->
-                    <div style="flex: 1; text-align: center; margin: 0px 50px; padding: 0px 50px; font-size:12px;">
+                    <div
+                        style="flex: 1; text-align: center; margin: 0px 50px; padding: 0px 50px; font-size:12px;">
                         <h1>GALARPLAN S.A.</h1>
                         <p>Av. Leon Febres Cordero Ribadenerya Km 18 C.C. Palmora local 9</p>
                         <p>Servicio de atención al cliente: 0982728588 | Email:
@@ -61,6 +63,12 @@
                         <p>
                             <strong>Fecha:</strong>
                             <span t-field="docs.date" />
+                        </p>
+                    </div>
+                    <div class="col-2">
+                        <p>
+                            <strong>Fecha de Pago:</strong>
+                            <span t-field="docs.date_payment" />
                         </p>
                     </div>
                     <div class="col-4">
@@ -118,7 +126,7 @@
                 </div>
                 <div class="row" style="margin-bottom: 15px;">
                     <div class="col-12">
-                         <p>
+                        <p>
                             <strong>Observacion:</strong>
                             <span t-field="docs.description" />
                         </p>
@@ -138,7 +146,8 @@
                                     t-foreach="[
                                         ('cash', 'Efectivo'),
                                         ('check', 'Cheque'),
-                                        ('card', 'Tarjeta de Credito'),
+                                        ('card_credit', 'Tarjeta de Credito'),
+                                        ('card_debit','Tarjeta de Debito'),
                                         ('transfer', 'Transferencia'),
                                         ('deposit','Deposito'),
                                         ('other','Otros')
@@ -192,7 +201,8 @@
                             <strong>Aplicacion del Pago:</strong>
                             <br />
                             <strong>Monto:</strong>US$<span
-                                t-field="docs.amount" />
+                                t-field="docs.amount"
+                                t-options="{'widget': 'float', 'precision': 2}" />
 
                         </p>
                         <t t-if="docs.saving_plan_payment">
@@ -216,9 +226,13 @@
                 </div>
                 <!-- Nota Preliminar (si aplica) -->
                 <div t-if="docs.state == 'posted'" class="row" style="margin-top: 30px;">
-                    <div class="col-xs-12" style="background-color: #FFF3CD; padding: 10px;">
-                        <strong>NOTA:</strong> Este documento es preliminar y está en proceso de
-                        verificación. </div>
+                    <t t-if="docs.payment_verification">
+                        <div class="col-xs-12" style="background-color: #FFF3CD; padding: 10px;">
+                            <strong>NOTA:</strong> Este documento es preliminar y está en proceso de
+                            verificación. </div>
+
+                    </t>
+
                 </div>
             </div>
 
@@ -227,16 +241,16 @@
                 <!-- <p><strong>Observaciones:</strong> <span t-field="docs.notes"/></p> -->
                 <hr />
                 <p>
-                    CONOCEDOR(A) DE LAS PENAS DE PERJUICIO. DECLARO BAJO JURAMENTO QUE EL ORIGEN DE LOS FONDOS
+                    CONOCEDOR(A) DE LAS PENAS DE PERJUICIO. DECLARO BAJO JURAMENTO QUE EL ORIGEN DE
+                    LOS FONDOS
                     ENTREGADOS ES LICITO.
                 </p>
-                <p>
-                    CONOCEDOR(A) DE LAS DISPOCISIONES DE LA LEY PARA REPRIMIR EL LAVADO DE ACTIVOS, 
-                    AUTORIZO EXPRESAMENTE A REALIZAR ANALISIS Y VERIFICACIONES QUE SE CONSIDEREN 
-                    NECESARIOS: ASI COMO A LAS AUTORIDADES COMPETENTES EN CASO DE LLEGAR A DETERMINAR
-                    LA EXISTENCIA DE OPERACIONES INUSUALES JUSTIFICADAS EN VIRTUD DE LO AUTORIZADO.
-                    RENUNCIO A INSTALAR POR ESTE MOTIVO CUALQUIER TIPO DE ACCION CIVIL, PENAL O ADMINISTRATIVA
-                    EN CONTRA DE <span t-field="docs.company_id.name" />
+                <p> CONOCEDOR(A) DE LAS DISPOCISIONES DE LA LEY PARA REPRIMIR EL LAVADO DE ACTIVOS,
+                    AUTORIZO EXPRESAMENTE A REALIZAR ANALISIS Y VERIFICACIONES QUE SE CONSIDEREN
+                    NECESARIOS: ASI COMO A LAS AUTORIDADES COMPETENTES EN CASO DE LLEGAR A
+                    DETERMINAR LA EXISTENCIA DE OPERACIONES INUSUALES JUSTIFICADAS EN VIRTUD DE LO
+                    AUTORIZADO. RENUNCIO A INSTALAR POR ESTE MOTIVO CUALQUIER TIPO DE ACCION CIVIL,
+                    PENAL O ADMINISTRATIVA EN CONTRA DE <span t-field="docs.company_id.name" />
                 </p>
                 <div style="margin-top: 20px; overflow: hidden;">
                     <div style="width: 45%; float: left;">

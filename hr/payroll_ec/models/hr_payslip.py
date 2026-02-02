@@ -8,6 +8,7 @@ from odoo.tools import float_round, date_utils, convert_file, html2plaintext, is
 
 dtObj = DateManager()
 
+SALARY_STATIC_CODES=["SALARIO","SUBSIDIO_50","SUBSIDIO_75","SUBSIDIO_100"]
 
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
@@ -25,6 +26,9 @@ class HrPayslip(models.Model):
     total_provision = fields.Monetary("Provisión", digits=(16, 2), required=False, default=0.00, store=True,
                                       compute="_compute_total")
     total_payslip = fields.Monetary("Total", digits=(16, 2), required=False, default=0.00, store=True,
+                                    compute="_compute_total")
+
+    total_salario = fields.Monetary("Total Salario", digits=(16, 2), required=False, default=0.00, store=True,
                                     compute="_compute_total")
 
     job_id = fields.Many2one("hr.job", string="Cargo", required=False)
@@ -106,19 +110,22 @@ class HrPayslip(models.Model):
     def update_total(self):
         DEC = 2
         for brw_each in self:
-            total_in, total_out, total_provision, total_payslip = 0.00, 0.00, 0.00, 0.00
+            total_in, total_out, total_provision, total_payslip ,total_salario= 0.00, 0.00, 0.00, 0.00,0.00
             for brw_line in brw_each.line_ids:
                 if brw_line.category_id.code == "PRO":
                     total_provision += brw_line.total
                 if brw_line.category_id.code == "IN":
                     total_in += brw_line.total
+                    if brw_line.code in SALARY_STATIC_CODES or (brw_line.salary_rule_id.legal_iess and brw_line.salary_rule_id.add_iess):
+                        total_salario+=  brw_line.total
                 if brw_line.category_id.code == "OUT":
-                    total_out += abs(brw_line.total)
-            total_payslip = total_in - total_out
+                    total_out += brw_line.total
+            total_payslip = total_in + total_out
             brw_each.total_in = round(total_in, DEC)
             brw_each.total_out = round(total_out, DEC)
             brw_each.total_provision = round(total_provision, DEC)
             brw_each.total_payslip = round(total_payslip, DEC)
+            brw_each.total_salario=round(total_salario, DEC)
 
     @api.depends('line_ids.total')
     def _compute_basic_net(self):

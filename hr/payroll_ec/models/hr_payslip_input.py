@@ -34,6 +34,24 @@ class HrPayslipInput(models.Model):
 
     currency_id=fields.Many2one(string="Moneda",related="payslip_id.currency_id",store=False,readonly=True)
 
+    liquidation_id=fields.Many2one('hr.employee.liquidation','Liq. de Haberes',ondelete="cascade",required=False)
+
+    new_liquidation_id = fields.Many2one('hr.employee.liquidation', 'Liq. de Haberes', ondelete="cascade", required=False)
+
+    payslip_id = fields.Many2one('hr.payslip', 'Nomina', ondelete="cascade",required=False)
+
+    cross_movement_id = fields.Many2one("hr.employee.movement.line", "Movimiento Cruce", required=False)
+
+    @api.onchange('rule_id')
+    def onchange_rule_id(self):
+        name=None
+        code=None
+        if self.rule_id:
+            name=self.rule_id.name
+            code=self.rule_id.code
+        self.name=name
+        self.code=code
+
     def unlink(self):
         move_lines = self.env["hr.employee.movement.line"]
         # Mapeo de movement_id de todos los registros
@@ -45,19 +63,38 @@ class HrPayslipInput(models.Model):
             move_lines._compute_total()
         return values
 
-    @api.onchange('amount')
+    @api.onchange('rule_id')
+    def _onchange_rule_id(self):
+        for record in self:
+            if record.rule_id:
+                record.category_id = record.rule_id.category_id
+                record.movement_ref_id=(record.rule_id.name).upper()
+            else:
+                record.category_id = False
+                record.movement_ref_id=None
+
+    @api.onchange('amount','movement_id')
     def onchange_amount(self):
         warning={}
-        if not self.amount or self.amount<=0:
-            self.amount=self.original_pending
-            warning={"title":_("Advertencia"),
-                     "message":_("El monto aplicado debe ser mayor a 0.00 ,referencia %s") % (self.movement_ref_id,)
-                     }
-        if self.amount>self.original_pending:
-            self.amount=self.original_pending
-            warning={"title":_("Advertencia"),
-                     "message":_("El monto aplicado NO puede ser mayor al valor pendiente original %s ,referencia %s") % (self.original_pending,self.movement_ref_id,)
-                     }
+        #print(self.movement_id,self.movement_id._origin)
+        if self.movement_id:
+            print('1')
+            if not self.amount or self.amount<=0:
+                self.amount=self.original_pending
+                warning={"title":_("Advertencia"),
+                         "message":_("El monto aplicado debe ser mayor a 0.00 ,referencia %s") % (self.movement_ref_id or '',)
+                         }
+            if self.amount>self.original_pending:
+                self.amount=self.original_pending
+                warning={"title":_("Advertencia"),
+                         "message":_("El monto aplicado NO puede ser mayor al valor pendiente original %s ,referencia %s") % (self.original_pending,self.movement_ref_id,)
+                         }
+            if self.amount<=0:
+                warning = {"title": _("Advertencia"),
+                           "message": _(
+                               "El monto aplicado debe ser mayor a 0.00 .El valor es %s ") % (
+                                          self.original_pending,)
+                           }
         if warning:
             return {"warning":warning}
 
@@ -66,8 +103,8 @@ class HrPayslipInput(models.Model):
         OBJ_MOVE_LINE=self.env["account.move.line"].sudo()
         for brw_each in self:
             move_line_id=False
-            if brw_each.movement_id.account:
-                if brw_each.movement_id:##linea de asientos
+            if brw_each.movement_id:
+                if brw_each.movement_id.account:##linea de asientos
                     brw_move = brw_each.movement_id.process_id.move_id  #
                     lines_srch=OBJ_MOVE_LINE.search([('move_id','=',brw_move.id),
                                                         ('move_id.state','=','posted'),

@@ -301,7 +301,7 @@ result=amount>0.00</field>
 			<field name='type'>payslip</field>
 			<field name='condition_python'>DEC = 2
 total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids if line.code==brw_rule.code )
-amount = round(((brw_payslip.wage / 30.00) * total_days), DEC)
+amount = round(((brw_payslip.wage / 30.00) * total_days)*0.75, DEC)
 amount_factor=-amount
 result=amount&gt;0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>
@@ -319,7 +319,7 @@ result=amount&gt;0.00</field>
 			<field name='type'>payslip</field>
 			<field name='condition_python'>DEC = 2
 total_days = sum(line.number_of_days for line in brw_payslip.worked_days_line_ids if line.code==brw_rule.code )
-amount = round(((brw_payslip.wage / 30.00) * total_days), DEC)
+amount = round(((brw_payslip.wage / 30.00) * total_days)*0.75, DEC)
 amount_factor=-amount
 result=amount&gt;0.00</field>
 			<field name='amount_python_compute'>result=amount_factor</field>
@@ -704,6 +704,60 @@ result=amount>0.00</field>
 			<field name="add_iess" eval="False" />
 			<field name="legal_iess" eval="False" />
 		</record> -->
+
+	<record model='hr.salary.rule' id='rule_DESAHUCIO'>
+			<field name='name'>DESAHUCIO</field>
+			<field name='code'>DESAHUCIO</field>
+			<field name='active' eval="True" />
+			<field name='force_payslip' eval="0" />
+			<field name='category_id' ref='payroll_ec.type_income' />
+            <field name='sequence'>99</field>
+			<field name='type'>liquidation</field>
+			<field name='condition_python'>amount=0.00
+amount_factor=amount
+result=False</field>
+			<field name='amount_python_compute'>result=amount_factor</field>
+		<field name="process_liquidation_select">result=amount_factor</field>
+		<field name="domain_liquidation_select">DEC=2
+valor = brw_liquidation.last_payslip_id and brw_liquidation.last_payslip_id.total_salario or 0.00  # Este es el valor de la celda B21
+anios = brw_liquidation.anios_contrato         # Ya tienes el número de años completos
+# Cálculo equivalente a: =B21 * ROUNDDOWN(años, 0) * 0.25
+amount = round(valor * anios * 0.25,DEC)
+amount_factor=amount
+result=(amount_factor>0.00)</field>
+			<field name="add_iess" eval="False" />
+			<field name="legal_iess" eval="True" />
+		</record>
+
+
+
+	<record model='hr.salary.rule' id='rule_DESPIDO'>
+			<field name='name'>DESPIDO</field>
+			<field name='code'>DESPIDO</field>
+			<field name='active' eval="True" />
+			<field name='force_payslip' eval="0" />
+			<field name='category_id' ref='payroll_ec.type_income' />
+            <field name='sequence'>9999998</field>
+			<field name='type'>liquidation</field>
+			<field name='condition_python'>amount=0.00
+amount_factor=amount
+result=False</field>
+			<field name='amount_python_compute'>result=amount_factor</field>
+		<field name="process_liquidation_select">result=amount_factor</field>
+		<field name="domain_liquidation_select">DEC=2
+amount=0.00
+if brw_liquidation.type_liquidation=='despido_intepestivo':
+    valor = brw_liquidation.last_payslip_id and brw_liquidation.last_payslip_id.total_salario or 0.00  # Este es el valor de la celda B21
+    anios = brw_liquidation.anios_contrato         # Ya tienes el número de años completos
+    # Cálculo equivalente a: =B21 * ROUNDDOWN(años, 0) * 0.25
+    factor_despido=	(3 if anios &lt;3 else anios)
+    amount = round(valor * factor_despido,DEC)
+amount_factor=amount
+result=(amount_factor>0.00)</field>
+			<field name="add_iess" eval="False" />
+			<field name="legal_iess" eval="True" />
+		</record>
+
 
 
 </data>

@@ -11,3 +11,5 @@ class AccountMoveLine(models.Model):
     movement_line_id=fields.Many2one("hr.employee.movement.line","Linea de Descuento",copy=False)
     movement_payment_id = fields.Many2one("hr.employee.payment.move", "Detalle de Pago",copy=False)
     rule_id=fields.Many2one("hr.salary.rule","Rubro",copy=False)
+
+    liquidation_payment_id = fields.Many2one("hr.employee.liquidation.account", "Detalle de Linea de Liq", copy=False)

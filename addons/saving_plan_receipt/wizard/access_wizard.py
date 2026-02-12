@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError,ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 class ReceiptAccessWizard(models.TransientModel):
     _name = 'receipt.access.wizard'
@@ -16,40 +16,35 @@ class ReceiptAccessWizard(models.TransientModel):
         string='Compañía', 
         default=lambda self: self.env.company
     )
-    # partner_id = fields.Many2one('res.partner', string='Cliente')
-    # saving_plan_payment = fields.Boolean('Plan de ahorro?', default=False)
-    usuario = fields.Char('Usuario')
-    password = fields.Char('Contraseña')
+    usuario = fields.Char('Usuario', required=True)
+    password_receipt = fields.Char(
+        string='Contraseña de Recibo',
+        required=True,
+        widget='password'
+    )
 
     def action_open_receipt_form(self):
         self.ensure_one()
         
-        try:
-            # Método seguro para Odoo 16
-            uid = self.env['res.users'].authenticate(
-                self.env.cr.dbname,
-                self.usuario,
-                self.password,
-                {}
-            )
-            if not uid:
-                raise ValidationError(_('Usuario o contraseña incorrectos'))
-                
-            user = self.env['res.users'].browse(uid)
-        except Exception as e:
-            # raise ValidationError(_('Error de autenticación: %s') % str(e))
-            raise ValidationError('Error de autenticación vuelve a cerrar la venta e ingresa nuevamente tus credenciales')
+        # Buscar el usuario por login
+        user = self.env['res.users'].sudo().search([('login', '=', self.usuario)], limit=1)
         
+        if not user:
+            raise ValidationError(_('Usuario no encontrado'))
         
+        # Verificar si tiene contraseña de recibo configurada
+        if not user.password_receipt:
+            raise ValidationError(_('Este usuario no tiene configurada una contraseña de recibo'))
         
+        # Verificar que la contraseña coincida
+        if user.password_receipt != self.password_receipt:
+            raise ValidationError(_('Contraseña de recibo incorrecta'))
         
         # Crear un nuevo registro de validación de comprobante
         receipt_vals = {
             'location_id': self.location_id.id,
             'company_id': self.company_id.id,
-            'printed_by': self.env['res.users'].sudo().search([('login','=',self.usuario)],limit=1).id
-            # 'partner_id': self.partner_id.id if self.partner_id else False,
-            # 'saving_plan_payment': self.saving_plan_payment,
+            'printed_by': user.id,
         }
         
         new_receipt = self.env['receipt.validation'].create(receipt_vals)

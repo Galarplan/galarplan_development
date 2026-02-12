@@ -27,6 +27,7 @@
         'wizard/print_receipt.xml',
         'wizard/access_wizard.xml',
         'views/receipt_validation_views.xml',
+        'views/res_users_views.xml',
         'views/menus.xml',
     ],
     # 'demo': [

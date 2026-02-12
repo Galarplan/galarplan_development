@@ -76,8 +76,11 @@
                         <group>
                             <field name="is_data_updated" readonly="1" string="Datos Actualizados"
                                 invisible='1' />
+                            <field name="company_id" readonly="1" />
                             <field name="partner_id"
-                                attrs="{'readonly': [('state', '=', 'posted')]}" required="1" />
+                                attrs="{'readonly': [('state', '=', 'posted')]}"
+                                required="1"
+                                domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]" />
                             <field name="document_number"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="street" attrs="{'readonly': [('state', '=', 'posted')]}" />
@@ -101,7 +104,6 @@
                             <field name="validated_by" readonly="1" />
                             <field name="asesor_id" readonly="1" />
                             <field name="validation_date" readonly="1" />
-                            <field name="company_id" readonly="1" />
                             <field name="location_id"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="payment_reason" widget='radio'

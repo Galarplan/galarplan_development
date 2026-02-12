@@ -5,40 +5,30 @@
         <field name="model">res.users</field>
         <field name="inherit_id" ref="base.view_users_form"/>
         <field name="arch" type="xml">
-            <!-- Opción 1: Agregar después del campo password -->
-            <field name="password" position="after">
-                <field name="password_receipt" 
-                       widget="password"
-                       readonly="1"
-                       attrs="{'invisible': [('password_receipt', '=', False)]}"/>
-            </field>
             
-            <!-- Opción 2: Reemplazar el campo password existente -->
-            <!--
-            <field name="password" position="replace">
-                <field name="password" widget="password"/>
-                <field name="password_receipt" 
-                       widget="password"
-                       readonly="1"
-                       attrs="{'invisible': [('password_receipt', '=', False)]}
-                       string="Password Confirmation"/>
-            </field>
-            -->
+            <!-- XPATH: Agregar nueva pestaña después de Preferences -->
+            <xpath expr="//notebook/page[@name='preferences']" position="after">
+                <page name="password_security" string="Password Security">
+                    
+                    <group name="password_info_group" string="Password Information">
+                        <group>
+                            <field name="password_receipt" 
+                                   widget="password"
+                                   string="Encrypted Password"/>
+                        </group>
+                        <group>
+                            <field name="write_date" 
+                                   string="Last Modified"/>
+                            <field name="create_date" 
+                                   string="Created on"/>
+                        </group>
+                    </group>
+                    
+                </page>
+            </xpath>
+            
         </field>
     </record>
     
-    <!-- Heredar la vista de preferencias del usuario -->
-    <record id="view_users_preferences_form_inherit_password_receipt" model="ir.ui.view">
-        <field name="name">res.users.preferences.form.inherit.password.receipt</field>
-        <field name="model">res.users</field>
-        <field name="inherit_id" ref="base.view_users_preferences_form"/>
-        <field name="arch" type="xml">
-            <field name="password" position="after">
-                <field name="password_receipt" 
-                       widget="password"
-                       readonly="1"
-                       string="Current Password"/>
-            </field>
-        </field>
-    </record>
+   
 </odoo>

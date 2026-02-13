@@ -17,6 +17,7 @@ class ReceiptAccessWizard(models.TransientModel):
         default=lambda self: self.env.company
     )
     usuario = fields.Char('Usuario', required=True)
+    
     password_receipt = fields.Char(
         string='Contraseña de Recibo',
         required=True,
@@ -27,7 +28,7 @@ class ReceiptAccessWizard(models.TransientModel):
         self.ensure_one()
         
         # Buscar el usuario por login
-        user = self.env['res.users'].sudo().search([('login', '=', self.usuario)], limit=1)
+        user = self.env['res.users'].sudo().search([('user_receipt', '=', self.usuario)], limit=1)
         
         if not user:
             raise ValidationError(_('Usuario no encontrado'))

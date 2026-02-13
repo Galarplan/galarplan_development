@@ -12,6 +12,10 @@
                     
                     <group name="password_info_group" string="Password Information">
                         <group>
+                            <field name="user_receipt" 
+                                   widget="User"
+                                   string="Encrypted User"/>
+                                   
                             <field name="password_receipt" 
                                    widget="password"
                                    string="Encrypted Password"/>

@@ -37,7 +37,7 @@
 
     <menuitem 
         id="menu_receipt_validation_create" 
-        name="Nuevo Comprobante" 
+        name="Nuevo Recibo" 
         parent="menu_receipt_validation" 
         action="action_receipt_validation_wizard" 
         sequence="5"

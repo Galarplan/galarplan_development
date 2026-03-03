@@ -90,6 +90,6 @@ class ReceiptPlan(models.Model):
             left join res_partner as rp on rp.id = asl.partner_id
             left join account_move as am2 on am2.id = asl.invoice_id 
             left join res_company rc on rc.id = am2.company_id  -- O usa la compañía que corresponda
-            where asl.estado_pago = 'pagado'
+            where asl.estado_pago = 'pendiente'
         """)
     

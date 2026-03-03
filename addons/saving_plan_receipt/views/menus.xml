@@ -6,11 +6,25 @@
     <!-- Submenú -->
     <menuitem id="menu_receipt_saving_management" name="Gestión de Ahorros" parent="menu_receipt_saving_root" sequence="10"/>
 
-    <!-- Menú para los recibos -->
-    <menuitem id="menu_receipt_saving_plan_view" name="Recibos de Pago" parent="menu_receipt_saving_management" action="action_receipt_saving_plan_view" sequence="10"/>
+    <!-- Menú para los recibos (ALEX: antes Recibos de Pago)-->
+    <menuitem id="menu_receipt_saving_plan_view" name="Consulta de Planes" parent="menu_receipt_saving_management" action="action_receipt_saving_plan_view" sequence="10"/>
 
     <!-- Nuevo menú de validación de comprobantes integrado en tu estructura -->
-    <menuitem id="menu_receipt_validation" name="Validación de Comprobantes" parent="menu_receipt_saving_root" sequence="20"/>
+    <menuitem id="menu_receipt_validation" name="Validación de Recibos" parent="menu_receipt_saving_root" sequence="20"/>
     
-    <menuitem id="menu_receipt_validation_list" name="Listado de Comprobantes" parent="menu_receipt_validation" action="action_receipt_validation" sequence="10"/>
+    <menuitem id="menu_receipt_validation_list" name="Listado de Recibos" parent="menu_receipt_validation" action="action_receipt_validation" sequence="10"/>
+
+    <menuitem id="menu_receipt_configuration"
+              name="Configuración"
+              parent="menu_receipt_saving_root"
+              sequence="90"
+              groups="group_receipt_manager"/>
+
+    <menuitem id="menu_receipt_payment_reason"
+              name="Razones de Pago"
+              parent="menu_receipt_configuration"
+              action="action_receipt_payment_reason"
+              sequence="10"
+              groups="group_receipt_manager"/>
+    
 </odoo>

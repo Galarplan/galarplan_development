@@ -1,281 +1,581 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- =============================== -->
+    <!-- TEMPLATE PRINCIPAL (DUPLICADO) -->
+    <!-- =============================== -->
     <template id="report_receipt_validation">
         <t t-call="web.html_container">
-            <!-- Header Personalizado -->
-            <div class="header" style="margin-bottom: 20px;">
-                <div
-                    style="display: flex; /* align-items: center; justify-content: space-between;*/">
-                    <!-- Logo a la derecha - Versión CORREGIDA -->
-                    <div style="width: 125px; height: 135px; /* margin-left: 20px;*/">
-                        <img t-if="docs.company_id.logo_web"
-                            t-att-src="'data:image/png;base64,' + docs.company_id.logo_web.decode('utf-8')"
-                            style="width: 170%; height: 130%;" />
-                    </div>
-                    <!-- Información centrada -->
+            <t t-foreach="docs" t-as="o">
+                <t t-set="company" t-value="o.company_id" />
+                <div class="page"
+                    style="width:21cm; height:29.7cm; margin:0; box-sizing:border-box;">
+
+                    <!-- PRIMER COMPROBANTE -->
                     <div
-                        style="flex: 1; text-align: center; margin: 0px 50px; padding: 0px 50px; font-size:12px;">
-                        <h1>GALARPLAN S.A.</h1>
-                        <p>Av. Leon Febres Cordero Ribadenerya Km 18 C.C. Palmora local 9</p>
-                        <p>Servicio de atención al cliente: 0982728588 | Email:
-                            servicioalcliente@galarplan.com</p>
-                        <h2>
-                            <strong>COMPROBANTE DE PAGO</strong>
-                        </h2>
+                        style="
+                    page-break-inside:avoid;
+                    border-bottom:1px dashed black;
+                    padding:0 0.7cm;
+                    padding-bottom:0.5cm;
+                    margin-bottom:1cm;
+                    box-sizing:border-box;
+                ">
+                        <t t-call="saving_plan_receipt.report_receipt_validation_document" />
                     </div>
-                </div>
-            </div>
 
-            <!-- Contenido Principal -->
-            <div class="page" style="font-family: Arial; font-size: 12px;">
-                <!-- Estado del Documento -->
-                <div class="row" style="margin-bottom: 20px;">
-                    <!-- <div class="col-xs-6">
-                        <h3 t-if="docs.state == 'draft'" style="color: red;">BORRADOR</h3>
-                        <h3 t-if="docs.state == 'posted'" style="color: orange;">DOCUMENTO
-                            PRELIMINAR - EN CONFIRMACIÓN</h3>
-                        <h3 t-if="docs.state == 'verified'" style="color: green;">DOCUMENTO
-                            VERIFICADO</h3>
-                    </div> -->
-                    <div class="col-xs-6" style="text-align: right;">
-                        <p>
-                            <strong>No.</strong>
-                            <span t-field="docs.name" />
-                        </p>
-                        <!-- <p>
-                            <strong>Fecha:</strong>
-                            <span t-field="docs.date" />
-                        </p> -->
-                    </div>
-                </div>
-
-                <!-- Datos del Cliente -->
-                <div class="row" style="margin-bottom: 15px;text-align: right;font-size :20px;">
-                    <p>
-                        <strong>Valor Pagado:</strong>
-                        <strong>US$</strong>
-                        <span t-field="docs.amount" />
-                    </p>
-
-                </div>
-                <div class="row" style="margin-bottom: 15px;">
-                    <div class="col-2">
-                        <p>
-                            <strong>Fecha:</strong>
-                            <span t-field="docs.date" />
-                        </p>
-                    </div>
-                    <div class="col-2">
-                        <p>
-                            <strong>Fecha de Pago:</strong>
-                            <span t-field="docs.date_payment" />
-                        </p>
-                    </div>
-                    <div class="col-4">
-                        <p>
-                            <strong>Agencia:</strong>
-                            <span t-field="docs.location_id.name" />
-                        </p>
-
-                    </div>
-                    <div class="col-6">
-                        <p>
-                            <strong>Asesor:</strong>
-                            <span t-field="docs.asesor_id.name" />
-                        </p>
-
+                    <!-- SEGUNDO COMPROBANTE -->
+                    <div
+                        style="
+                    position:relative;
+                    page-break-inside:avoid;
+                    padding:0 0.7cm;
+                    box-sizing:border-box;
+                ">
+                        <t t-call="saving_plan_receipt.report_receipt_validation_document" />
                     </div>
 
                 </div>
-                <div class="row" style="margin-bottom: 15px;">
-                    <div class="col-xs-12">
-                        <p>
-                            <strong>Cliente:</strong>
-                            <span t-field="docs.partner_id" />
-                        </p>
-                    </div>
-                    <div class="col-6">
-                        <p>
-                            <strong>Identificación:</strong>
-                            <span t-field="docs.partner_id.vat" />
-                        </p>
-                    </div>
-                    <div class="col-6">
-                        <p>
-                            <strong>Dirección:</strong>
-                            <span t-field="docs.partner_id.street" />
-                        </p>
-
-                    </div>
-                    <div class="col-6">
-                        <p>
-                            <strong>Email:</strong>
-                            <span t-field="docs.mail_partner" />
-                        </p>
-
-                    </div>
-                    <div class="col-6">
-                        <p>
-                            <strong>Teléfono:</strong>
-                            <span t-field="docs.partner_id.phone" />
-                        </p>
-
-                    </div>
+            </t>
+        </t>
+    </template>
 
 
-                </div>
-                <div class="row" style="margin-bottom: 15px;">
-                    <div class="col-12">
-                        <p>
-                            <strong>Observacion:</strong>
-                            <span t-field="docs.description" />
-                        </p>
-                    </div>
+    <!-- ===================================== -->
+    <!-- TEMPLATE ORIGINAL (SIN MODIFICAR) -->
+    <!-- ===================================== -->
+    <template id="report_receipt_validation_document">
+        <t t-set="company" t-value="docs.company_id" />
+        <!-- ================= HEADER ================= -->
+        <div style="margin-bottom:10px;">
+            <div style="display:flex; align-items:center;">
 
+                <div style="width:110px;">
+                    <img t-if="docs.company_id.logo_web"
+                        t-att-src="'data:image/png;base64,' + docs.company_id.logo_web.decode('utf-8')"
+                        style="width:90%; height:auto;" />
+                    <!-- <div>RUC: 1291780276001</div>     -->
+                    <div> RUC: <t t-esc="company.vat" /></div>
                 </div>
 
-                <!-- Detalles del Pago -->
-                <div class="row" style="margin-bottom: 15px; display: flex; flex-wrap: wrap;">
-                    <!-- Segunda columna - Forma de Pago -->
-                    <div style="width: 30%; padding-right: 10px;">
-                        <p>
-                            <strong>Forma de Pago:</strong>
-                            <br />
-                            <div style="display: flex; flex-direction: column; gap: 5px;">
-                                <span
-                                    t-foreach="[
-                                        ('cash', 'Efectivo'),
-                                        ('check', 'Cheque'),
-                                        ('card_credit', 'Tarjeta de Credito'),
-                                        ('card_debit','Tarjeta de Debito'),
-                                        ('transfer', 'Transferencia'),
-                                        ('deposit','Deposito'),
-                                        ('other','Otros')
-                                    ]"
-                                    t-as="option">
-                                    <span t-if="docs.payment_form == option[0]"
-                                        style="font-weight: bold; border: 1px solid black; padding: 2px 5px; background-color: #e6e6e6;">
-                                        ✓ <t t-esc="option[1]" />
-                                    </span>
-                                    <!-- <span t-else=""
-                                        style="border: 1px solid black; padding: 2px 5px;">
-                                        <t t-esc="option[1]" />
-                                    </span> -->
-                                </span>
-                            </div>
-                        </p>
+                <div style="flex:1; text-align:center; font-size:11px; line-height:1.2;">
+                    <!-- <div>Company actual: <t t-esc="company.name"/></div> -->
+                    <div style="font-size:16px; font-weight:bold;">
+                        <t t-esc="company.name" />
                     </div>
+                    <!-- <div style="font-size:16px; font-weight:bold;">GALARPLAN S.A.</div> -->
+                    <t t-if="company.name == 'GALARPLAN S.A.'">
+                        <!-- <div style="font-size:16px; font-weight:bold;">GALARPLAN S.A.</div> -->
+                        <div>Av. Leon Febres Cordero Ribadeneyra Km 18 C.C. Palmora local 9</div>
+                        <div>Servicio al cliente: 0982728588 | servicioalcliente@galarplan.com</div>
+                    </t>
+                    <t t-elif="company.name == 'MOSINVEST S.A.'">
+                        <!-- <div style="font-size:16px; font-weight:bold;">MOSINVEST S.A.</div> -->
+                        <div>Av. Benjamín Rosales Aspiazu Cdla. Santa Leonor Mz 5 Intersección 1
+                            Esquina (Frente a Fedex)</div>
+                        <div>Servicio al cliente: 0990155228 | administracion@mosinvest.com.ec</div>
+                    </t>
 
-                    <!-- Tercera columna - Motivo de pago -->
-                    <div style="width: 30%;">
-                        <p>
-                            <strong>Motivo de pago:</strong>
-                            <br />
-                            <div style="display: flex; flex-direction: column; gap: 5px;">
-                                <span
-                                    t-foreach="[
-                                        ('inscrip', 'Inscripcion'),
-                                        ('quota', 'Cuota Plan'),
-                                        ('lici', 'Licitación'),
-                                        ('save', 'Seguro Vehicular'),
-                                        ('disp', 'Dispositivo'),
-                                        ('legal_waste', 'Gastos Legales'),
-                                        ('other', 'Otros')
-                                    ]"
-                                    t-as="option">
-                                    <span t-if="docs.payment_reason == option[0]"
-                                        style="font-weight: bold; border: 1px solid black; padding: 2px 5px; background-color: #e6e6e6;">
-                                        ✓ <t t-esc="option[1]" />
-                                    </span>
-                                    <!-- <span t-else=""
-                                        style="border: 1px solid black; padding: 2px 5px;">
-                                        <t t-esc="option[1]" />
-                                    </span> -->
-                                </span>
-                            </div>
-                        </p>
-                    </div>
-                    <!-- Primera columna - Valor Pagado -->
-                    <div style="width: 30%; padding-right: 10px;">
-                        <p>
-                            <strong>Aplicacion del Pago:</strong>
-                            <br />
-                            <strong>Monto:</strong>US$<span
-                                t-field="docs.amount"
-                                t-options="{'widget': 'float', 'precision': 2}" />
-
-                        </p>
-                        <t t-if="docs.saving_plan_payment">
-                            <br />
-                            <span>
-                                <strong>Inscripcion:</strong> US$ <span
-                                    t-field="docs.serv_admin_amount" /><br />
-                                <strong>Cuotas:</strong> <span
-                                    t-field="docs.paid_installments_str" /><br />
-                                <strong>Capital:</strong>
-                                US$<span t-field="docs.principal_amount" /> <br />
-                                <strong>Cuota:</strong>
-                                US$ <span t-field="docs.saving_amount" /><br />
-                                <strong>Gasto Adm.:</strong>
-                                US$<span t-field="docs.admin_expense_amount" /><br />
-                                <strong>Seguro:</strong>
-                                US$<span t-field="docs.insurance_amount" />
-                            </span>
-                        </t>
-                    </div>
-                </div>
-                <!-- Nota Preliminar (si aplica) -->
-                <div t-if="docs.state == 'posted'" class="row" style="margin-top: 30px;">
-                    <t t-if="docs.payment_verification">
-                        <div class="col-xs-12" style="background-color: #FFF3CD; padding: 10px;">
-                            <strong>NOTA:</strong> Este documento es preliminar y está en proceso de
-                            verificación. </div>
-
+                    <div style="margin-top:4px; font-weight:bold;">COMPROBANTE DE PAGO</div>
+                    <t t-if="company.name == 'GALARPLAN S.A.'">
+                        <div style="font-size:11px;">Plan de compra Programada</div>
                     </t>
 
                 </div>
             </div>
+        </div>
 
-            <!-- Footer Personalizado -->
-            <div class="footer" style="font-size: 10px; text-align: justify; margin-top: 35px;">
-                <!-- <p><strong>Observaciones:</strong> <span t-field="docs.notes"/></p> -->
-                <hr />
-                <p>
-                    CONOCEDOR(A) DE LAS PENAS DE PERJUICIO. DECLARO BAJO JURAMENTO QUE EL ORIGEN DE
-                    LOS FONDOS
-                    ENTREGADOS ES LICITO.
-                </p>
-                <p> CONOCEDOR(A) DE LAS DISPOCISIONES DE LA LEY PARA REPRIMIR EL LAVADO DE ACTIVOS,
-                    AUTORIZO EXPRESAMENTE A REALIZAR ANALISIS Y VERIFICACIONES QUE SE CONSIDEREN
-                    NECESARIOS: ASI COMO A LAS AUTORIDADES COMPETENTES EN CASO DE LLEGAR A
-                    DETERMINAR LA EXISTENCIA DE OPERACIONES INUSUALES JUSTIFICADAS EN VIRTUD DE LO
-                    AUTORIZADO. RENUNCIO A INSTALAR POR ESTE MOTIVO CUALQUIER TIPO DE ACCION CIVIL,
-                    PENAL O ADMINISTRATIVA EN CONTRA DE <span t-field="docs.company_id.name" />
-                </p>
-                <div style="margin-top: 20px; overflow: hidden;">
-                    <div style="width: 45%; float: left;">
-                        <p>_________________________</p>
-                        <p>
-                            <span t-field="docs.partner_id.name" />
-                        </p>
-                        <p>
-                            <span t-field="docs.partner_id.vat" />
-                        </p>
-                        <p>
-                            <strong>Firma del Cliente</strong>
-                        </p>
-                    </div>
-                    <div style="width: 45%; float: right; text-align: right;">
-                        <p>_________________________</p>
-                        <p>
-                            <span t-field="docs.printed_by.name" />
-                        </p>
-                        <p>
-                            <strong>Firma del Cajero</strong>
-                        </p>
-                    </div>
+        <!-- ================= CONTENIDO ================= -->
+        <div style="font-family:Arial; font-size:11px; line-height:1.25;">
+
+            <!-- Número -->
+            <div style="text-align:right; margin-bottom:5px;">
+                <strong>No.</strong>
+                <span t-field="docs.name" />
+            </div>
+
+            <!-- Valor Pagado -->
+            <div style="text-align:right; font-size:16px; margin-bottom:8px;">
+                <strong>Valor Pagado:</strong> US$ <span t-field="docs.amount"
+                    t-options="{'widget':'float','precision':2}" />
+            </div>
+
+            <!-- DATOS -->
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:33%;">
+                    <strong>Fecha:</strong>
+                    <br />
+                    <span t-field="docs.date" />
+                    <br />
+                    <br />
+
+                    <strong>Cliente:</strong>
+                    <br />
+                    <span t-field="docs.partner_id" />
+                    <br />
+                    <br />
+
+                    <strong>Dirección:</strong>
+                    <br />
+                    <span t-field="docs.partner_id.street" />
                 </div>
+
+                <div style="width:33%;">
+                    <strong>Fecha Pago:</strong>
+                    <br />
+                    <span t-field="docs.date_payment" />
+                    <br />
+                    <br />
+
+                    <strong>Identificación:</strong>
+                    <br />
+                    <span t-field="docs.partner_id.vat" />
+                    <br />
+                    <br />
+
+                    <strong>Email:</strong>
+                    <br />
+                    <span t-field="docs.mail_partner" />
+                </div>
+
+                <div style="width:33%;">
+                    <strong>Agencia:</strong>
+                    <br />
+                    <span t-field="docs.location_id.name" />
+                    <br />
+                    <br />
+
+                    <strong>Asesor:</strong>
+                    <br />
+                    <span t-field="docs.asesor_id.name" />
+                    <br />
+                    <br />
+
+                    <strong>Teléfono:</strong>
+                    <br />
+                    <span t-field="docs.partner_id.phone" />
+                </div>
+
+            </div>
+
+            <!-- Observación -->
+            <div style="margin-bottom:8px;">
+                <strong>Observación:</strong>
+                <span t-field="docs.description" />
+            </div>
+
+            <!-- Detalle Pago -->
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <!-- <div style="width:32%;">
+                    <strong>Forma de Pago:</strong>
+                    <br />
+                    <span
+                        t-foreach="[('cash','Efectivo'),('check','Cheque'),('card_credit','Tarjeta
+                Credito'),('card_debit','Tarjeta
+                Debito'),('transfer','Transferencia'),('deposit','Deposito'),('other','Otros')]"
+                        t-as="option">
+                        <span t-if="docs.payment_form == option[0]"
+                            style="display:block; border:1px solid #000; padding:2px 4px; margin-top:3px;">
+                            ✓ <t t-esc="option[1]" />
+                        </span>
+                    </span>
+                </div> -->
+
+                <div style="width:32%; font-family: Arial; font-size: 10px;">
+                    <strong>Forma de Pago:</strong>
+                    <br />
+                    <span
+                        t-foreach="[('cash','Efectivo'),('check','Cheque'),('card_credit','Tarjeta Credito'),('card_debit','Tarjeta Debito'),('transfer','Transferencia'),('deposit','Deposito'),('other','Otros')]"
+                        t-as="option">
+                        <span t-if="docs.payment_form == option[0]"
+                            style="display:block; margin-top:3px;">
+                            <t t-esc="option[1]" />
+                        </span>
+                    </span>
+                </div>
+
+                <!-- <div style="width:32%;">
+                    <strong>Motivo:</strong>
+                    <br />
+                    <span
+                        t-foreach="[('inscrip','Inscripcion'),('quota','Cuota
+                Plan'),('lici','Licitación'),('save','Seguro'),('disp','Dispositivo'),('legal_waste','Gastos
+                Legales'),('other','Otros')]"
+                        t-as="option">
+                        <span t-if="docs.payment_reason == option[0]"
+                            style="display:block; border:1px solid #000; padding:2px 4px; margin-top:3px;">
+                            ✓ <t t-esc="option[1]" />
+                        </span>
+                    </span>
+                </div> -->
+
+                <div style="width:32%; font-family: Arial; font-size: 10px;">
+                    <strong>Motivo:</strong>
+                    <br />
+                    <span t-if="docs.payment_reason"
+                        style="display:block; margin-top:3px;">
+                        <t t-esc="docs.payment_reason.name" />
+                    </span>
+                </div>
+
+                <div style="width:32%;">
+                    <strong>Aplicación:</strong><br /> Valor: US$ <span t-field="docs.amount"
+                        t-options="{'widget':'float','precision':2}" />
+
+                <t
+                        t-if="docs.saving_plan_payment">
+                        <div style="margin-top:5px; font-size:10px;"> Inscripción: US$ <span
+                                t-field="docs.serv_admin_amount" /><br /> Cuotas: <span
+                                t-field="docs.paid_installments_str" /><br /> Capital: US$ <span
+                                t-field="docs.principal_amount" /><br /> Cuota: US$ <span
+                                t-field="docs.saving_amount" /><br /> Gasto Adm.: US$ <span
+                                t-field="docs.admin_expense_amount" /><br /> Seguro: US$ <span
+                                t-field="docs.insurance_amount" />
+                        </div>
+                    </t>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!--========ALEX
+        PARA EFECTIVO ======-->
+        <t t-if="docs.payment_form == 'cash' ">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Billetes 50 dólares:</strong>
+                    <!--<br
+                    /> -->
+                    <span t-field="docs.val_cincuenta"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Billetes 100 dólares:</strong>
+                    <!--<br
+                    /> -->
+                    <span t-field="docs.val_cien"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
             </div>
         </t>
+        <!--=======================================-->
+
+        <!--================
+        PARA CHEQUES =========-->
+        <t t-elif="docs.payment_form == 'check'">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong>Banco emisor</strong>
+                    <br />
+                    <span t-field="docs.banco_emisor.name"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong>Cheque No:</strong>
+                    <br />
+                    <span t-field="docs.number_check"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <div style="width:32%;">
+                    <strong>Cuenta:</strong>
+                    <br />
+                    <span t-field="docs.account_check"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <div style="width:32%;">
+                    <strong>Fecha del Cheque</strong>
+                    <br />
+                    <span t-field="docs.date_check"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+            </div>
+        </t>
+        <!--=======================================-->
+
+        <!--=======
+        PARA TARJETAS DE CREDITO ======-->
+        <t t-elif="docs.payment_form == 'card_credit'">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Banco emisor</strong>
+                    <br />
+                    <span t-field="docs.banco_emisor.name"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Lote:</strong>
+                    <br />
+                    <span t-field="docs.lote_card"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <!-- <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Tarjeta:</strong>
+                    <br />
+                    <span t-field="docs.card_number"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div> -->
+                <!-- MAS DISCRETO-->
+                <t t-if="docs.tercero_name">
+                    <span style="font-size:12px;">
+                        Pago realizado por tercero
+                    </span>
+                </t>
+                <!-- MAS DISCRETO -->                
+
+            </div>
+        </t>
+        <!--=======================================-->
+
+        <!--=======
+        PARA TARJETAS DE DEBITO ======-->
+        <t t-elif="docs.payment_form == 'card_debit'">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Banco emisor</strong>
+                    <br />
+                    <span t-field="docs.banco_emisor.name"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Lote:</strong>
+                    <br />
+                    <span t-field="docs.lote_card"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <!-- <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Tarjeta:</strong>
+                    <br />
+                    <span t-field="docs.card_number"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div> -->
+
+                <!--ALEX-->
+                <!-- <t t-if="docs.tercero_name">
+                    <div style="font-weight:bold; color:red;">
+                        PAGO DE TERCERO
+                    </div>
+                </t> -->
+                <!-- MAS DISCRETO-->
+                <t t-if="docs.tercero_name">
+                    <span style="font-size:12px;">
+                        Pago realizado por tercero
+                    </span>
+                </t>
+                <!-- MAS DISCRETO -->
+
+                <!--ALEX-->
+
+            </div>
+        </t>
+        <!--=======================================-->
+
+        <!--=======
+        PARA TRANFERENCIAS ======-->
+        <t t-elif="docs.payment_form == 'transfer'">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Banco emisor</strong>
+                    <br />
+                    <span t-field="docs.banco_emisor.name"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Banco Receptor</strong>
+                    <br />
+                    <span t-field="docs.banco_receptor.name"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">No de Comprobante:</strong>
+                    <br />
+                    <span t-field="docs.comp_number"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <!-- <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Cuenta:</strong>
+                    <br />
+                    <span t-field="docs.acc_number"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div> -->
+                <!-- MAS DISCRETO-->
+                <t t-if="docs.tercero_name">
+                    <span style="font-size:12px;">
+                        Pago realizado por tercero
+                    </span>
+                </t>
+                <!-- MAS DISCRETO -->                
+
+            </div>
+        </t>
+        <!--=======================================-->
+
+        <!--=======
+        PARA DEPOSITOS ======-->
+        <t t-elif="docs.payment_form == 'deposit'">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Banco Receptor</strong>
+                    <br />
+                    <span t-field="docs.banco_receptor.name"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">No de Comprobante:</strong>
+                    <br />
+                    <span t-field="docs.comp_number"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+            </div>
+        </t>
+        <!--=======================================-->
+
+        <!--=======
+        PARA OTROS ======-->
+        <t t-elif="docs.payment_form == 'other'">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Descrip Otro Medio de Pago</strong>
+                    <br />
+                    <span t-field="docs.payment_other_desc"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Descripcion:</strong>
+                    <br />
+                    <span t-field="docs.description"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Cruce de Cuentas</strong>
+                    <br />
+                    <span t-field="docs.cruce_cuentas"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+
+                </div>
+
+                <div style="width:32%;">
+                    <strong style="font-family: Arial; font-size: 12px;">Vehiculo Usado:</strong>
+                    <br />
+                    <span t-field="docs.vehiculo_usado"
+                        style="font-family:Arial; font-size:10px; font-weight:normal;" />
+                </div>
+
+            </div>
+        </t>
+        <!--=======================================-->
+
+        <t t-else="">
+
+        </t>
+
+
+        <!-- ================= FOOTER ================= -->
+        <!-- <div style="font-size:9px; margin-top:10px; line-height:1.2;"> -->
+        <div
+            style="font-family: Arial, Helvetica, sans-serif; font-size:8px; margin-top:8px; line-height:1.2;">
+
+            <hr style="margin:5px 0;" />
+
+            <div>
+                CONOCEDOR(A) DE LAS PENAS DE PERJUICIO. DECLARO BAJO JURAMENTO QUE EL ORIGEN DE LOS
+                FONDOS ENTREGADOS ES LICITO.
+            </div>
+
+            <div style="margin-top:5px;">
+                CONOCEDOR(A) DE LAS DISPOCISIONES DE LA LEY PARA REPRIMIR EL LAVADO DE ACTIVOS,
+                AUTORIZO EXPRESAMENTE A REALIZAR ANALISIS Y VERIFICACIONES QUE SE CONSIDEREN
+                NECESARIOS: ASI COMO A LAS AUTORIDADES COMPETENTES EN CASO DE LLEGAR A DETERMINAR LA
+                EXISTENCIA DE OPERACIONES INUSUALES JUSTIFICADAS EN VIRTUD DE LO AUTORIZADO.
+                RENUNCIO A INSTALAR POR ESTE MOTIVO CUALQUIER TIPO DE ACCION CIVIL, PENAL O
+                ADMINISTRATIVA EN CONTRA DE GALARPLAN S.A.
+            </div>
+
+            <!-- <div style="margin-top:12px; overflow:hidden;">
+                <div style="width:45%; float:left;"> _________________________<br />
+                <span
+                        t-field="docs.partner_id.name" /><br />
+                <span t-field="docs.partner_id.vat" /><br />
+                <strong>Firma
+                    del Cliente</strong>
+                </div>
+
+                <div style="width:45%; float:right; text-align:right;"> _________________________<br />
+                <span
+                        t-field="docs.printed_by.name" /><br />
+                <strong>Firma del Cajero</strong>
+                </div>
+            </div> -->
+
+            <!-- ALEX -->
+            <div style="margin-top:40px; text-align:center;">
+
+                <div style="width:80%; margin:0 auto;">
+
+                    <div
+                        style="width:45%; display:inline-block; text-align:center; vertical-align:top;">
+                        _________________________<br />
+            <span t-field="docs.partner_id.name" /><br />
+            <span
+                            t-field="docs.partner_id.vat" /><br />
+            <strong>Firma del Cliente</strong>
+                    </div>
+
+                    <div
+                        style="width:45%; display:inline-block; text-align:center; vertical-align:top;">
+                        _________________________<br />
+            <span t-field="docs.printed_by.name" /><br />
+            <strong>Firma
+                        del Cajero</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div style="clear:both;"></div>
+        </div>
+
     </template>
+
 </odoo>

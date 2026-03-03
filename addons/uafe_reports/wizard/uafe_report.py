@@ -316,6 +316,7 @@ class UAFEReportWizard(models.TransientModel):
             partner = invoice.invoice_id.partner_id
             for line in invoice.invoice_id.invoice_line_ids:
                 product_id = line.product_id
+                print('====================prdid',product_id)
                 client_data.append(
                     [
                         partner.l10n_latam_identification_type_id.name or "",
@@ -333,6 +334,7 @@ class UAFEReportWizard(models.TransientModel):
 
                     ]
                 )
+                print('=====================cld',client_data)
         # Crear archivo Excel
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output)

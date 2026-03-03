@@ -138,6 +138,9 @@ class AccountSaving(models.Model):
                                ], string="Origen", default="automatic",compute="compute_origin_lines")
 
 
+    # previosly_payment_mount = fields.Float('Monto Previo')
+    # parent_id = fields.Many2one('account.saving','Plan Asociado')
+
     @api.depends('line_ids','line_ids.origin')
     def compute_origin_lines(self):
         for brw_each in self:

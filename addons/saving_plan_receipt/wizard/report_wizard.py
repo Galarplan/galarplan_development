@@ -5,6 +5,8 @@ from io import BytesIO
 import xlsxwriter
 from datetime import datetime
 
+from odoo.addons.saving_plan_receipt.models.check_payment import PAYMENT_FORM, PAYMENT_REASON, STATE_RECEIPT
+
 class ReportReceiptWz(models.TransientModel):
     _name = 'report.receipt.wz'
     _description = 'Wizard de Reporte de Pagos'
@@ -45,13 +47,36 @@ class ReportReceiptWz(models.TransientModel):
         string='Archivo Excel',
         readonly=True
     )
+
+
+    @staticmethod
+    def get_payment_form(payment_form_list,value):
+        for data in payment_form_list:
+            if data[0] == value:
+                return data[1]
+            
+    
+    @staticmethod
+    def get_payment_reason(payment_reason_list,value):
+        for data in payment_reason_list:
+            if data[0] == value:
+                return data[1]
+    
+
+    @staticmethod
+    def get_state_data(tuple_list,value):
+        for data in tuple_list:
+            if data[0] == value:
+                return data[1]
+
+
     
     def action_generate_report(self):
         self.ensure_one()
         
         # Construir dominio para filtrar recibos
         domain = [
-            ('state', 'in', ['posted', 'verified']),
+            ('state', 'in', ['posted', 'verified','draft','rejected']),
             ('date_payment', '>=', self.date_from),
             ('date_payment', '<=', self.date_to),
             ('company_id', '=', self.company_id.id)
@@ -107,26 +132,33 @@ class ReportReceiptWz(models.TransientModel):
         col = 0
         
         # Título de la compañía
-        company_name = self.company_id.name or 'ALARPLAN S.A.'
-        worksheet.merge_range(row, col, row, col + 17, company_name, title_format)
-        row += 1
+        company_name = self.company_id.name or 'GALARPLAN S.A.'
+        # worksheet.merge_range(row, col, row, col + len(headers) - 1, company_name, title_format)
+        # row += 1
         
+        total_columns = 24  # número real de columnas del reporte
+        worksheet.merge_range(row, col, row, col + total_columns - 1, company_name, title_format)
+        row += 1
+
         # Subtítulo del reporte
-        worksheet.merge_range(row, col, row, col + 17, 'REPORTE DE PAGOS', subtitle_format)
+        worksheet.merge_range(row, col, row, col + total_columns - 1, 'REPORTE DE PAGOS', subtitle_format)
         row += 1
         
         # Rango de fechas
         date_range = f"Del {self.date_from.strftime('%d %B %Y')} al {self.date_to.strftime('%d %B %Y')}"
-        worksheet.merge_range(row, col, row, col + 17, date_range, subtitle_format)
+        worksheet.merge_range(row, col, row, col + total_columns - 1, date_range, subtitle_format)
         row += 2
         
         # Cabeceras de columnas
         headers = [
-            'Fecha de Pago', 'Fecha de Recibo', '# Comp', 'Tipo Identificacion',
-            'Identificacion Cliente', 'Nombre cliente', 'Motivo del pago', 'Tipo pago',
-            'Valor pagado', 'Forma de pago', 'Tipo Tarjeta', 'Referencia de pago',
-            '# Cuenta', 'Fecha del cheque', 'Banco Emisor', 'Banco Receptor',
-            'AGENCIA', 'CAJERO'
+           'Fecha de Pago', 'Fecha de Recibo', '# Comp', 'Tipo Identificacion',
+    'Identificacion Cliente', 'Nombre cliente',
+    'Motivo del pago', 'Tipo pago', 'Valor pagado',
+    'Billetes $50', 'Billetes $100',
+    'Forma de pago', 'Tipo Tarjeta', 'Referencia de pago',
+    '# Cuenta', 'Fecha del cheque', 'Banco Emisor', 'Banco Receptor',
+    'Pago Tercero','Tercero ID','Tercero Nombre',
+    'AGENCIA','CAJERO','ESTADO'
         ]
         
         for i, header in enumerate(headers):
@@ -170,17 +202,14 @@ class ReportReceiptWz(models.TransientModel):
             col += 1
             
             # Motivo del pago
-            payment_reason = ''
-            # if receipt.payment_reason:
-            #     field_info = receipt._fields_get('payment_reason')
-            #     if field_info and 'selection' in field_info:
-            #         selection_dict = dict(field_info['selection'])
-            #         payment_reason = selection_dict.get(receipt.payment_reason, receipt.payment_reason)
+            # payment_reason = self.get_state_data(PAYMENT_REASON,receipt.payment_reason) or ''
+            payment_reason = receipt.payment_reason.name if receipt.payment_reason else ''
+                
             worksheet.write(row, col, payment_reason, text_format)
             col += 1
             
             # Tipo pago
-            payment_type = 'PLAN AHORRO'
+            payment_type = 'ANTICIPO DE CLIENTE'
             if receipt.saving_plan_payment:
                 if receipt.saving_plan_id and receipt.saving_plan_id.state == 'adjudicated_with_assets':
                     payment_type = 'ADJ CON BIEN'
@@ -194,8 +223,14 @@ class ReportReceiptWz(models.TransientModel):
             total_amount += receipt.amount
             col += 1
             
+            worksheet.write(row, col, receipt.val_cincuenta or 0, center_format)
+            col += 1
+
+            worksheet.write(row, col, receipt.val_cien or 0, center_format)
+            col += 1
+
             # Forma de pago
-            payment_form = ''
+            payment_form = self.get_state_data(PAYMENT_FORM,receipt.payment_form) or ''
             # payment_form = dict(receipt._fields['payment_form'].selection).get(receipt.payment_form, '')
             # if receipt.payment_form == 'other' and receipt.payment_other_desc:
             #     payment_form = receipt.payment_other_desc
@@ -246,8 +281,18 @@ class ReportReceiptWz(models.TransientModel):
             
             # Banco Receptor
             worksheet.write(row, col, receipt.banco_receptor.name if receipt.banco_receptor else '', text_format)
+            col += 1             
+
+            pago_tercero = 'SI' if receipt.tercero else 'NO'
+            worksheet.write(row, col, pago_tercero, center_format)
             col += 1
-            
+
+            worksheet.write(row, col, receipt.tercero_id or '', text_format)
+            col += 1
+
+            worksheet.write(row, col, receipt.tercero_name or '', text_format)
+            col += 1            
+
             # AGENCIA (Ubicación)
             worksheet.write(row, col, receipt.location_id.name or '', text_format)
             col += 1
@@ -256,6 +301,10 @@ class ReportReceiptWz(models.TransientModel):
             cashier = receipt.printed_by.name or receipt.asesor_id.name or receipt.create_uid.name or ''
             worksheet.write(row, col, cashier, text_format)
             col += 1
+
+            receipt_state = self.get_state_data(STATE_RECEIPT,receipt.state)
+            worksheet.write(row, col, receipt_state, text_format)
+            col += 1                
             
             row += 1
         
@@ -263,7 +312,8 @@ class ReportReceiptWz(models.TransientModel):
         row += 1
         worksheet.merge_range(row, 0, row, 7, 'TOTALES', header_format)
         worksheet.write(row, 8, total_amount, amount_format)
-        worksheet.merge_range(row, 9, row, 17, '', header_format)
+        last_col = len(headers) - 1
+        worksheet.merge_range(row, 9, row, last_col, '', header_format)
         
         # Aplicar formato de moneda a la columna de valor pagado
         worksheet.set_column(8, 8, 15, amount_format)

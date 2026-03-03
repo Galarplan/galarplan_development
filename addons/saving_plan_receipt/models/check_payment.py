@@ -2,6 +2,33 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError,ValidationError
 import base64
 
+
+PAYMENT_FORM = [
+            ('cash', 'Efectivo'),
+            ('check', 'Cheque'),
+            ('card_credit', 'Tarjeta de Credito'),
+            ('card_debit','Tarjeta de Debito'),
+            ('transfer', 'Transferencia'),
+            ('deposit','Deposito'),
+            ('other','Otros')]
+
+PAYMENT_REASON = [
+            ('inscrip', 'Inscripcion'),
+            ('quota', 'Cuota Plan'),
+            ('lici', 'Licitación'),
+            ('save', 'Seguro Vehicular'),
+            ('disp','Dispositivo'),
+            ('legal_waste','Gastos Legales') 
+        ]
+
+STATE_RECEIPT = [
+        ('draft', 'Borrador'),
+        ('posted', 'Publicado'),
+        ('verified', 'Verificado'),
+        ('rejected', 'Rechazado'),
+        ('applicated', 'Aplicado')
+    ]
+
 class ReceiptValidation(models.Model):
     _name = 'receipt.validation'
     _description = 'Validación de Comprobantes de Pago'
@@ -40,15 +67,17 @@ class ReceiptValidation(models.Model):
     
     date = fields.Date('Fecha', default=fields.Date.context_today, tracking=True)
     date_payment = fields.Date('Fecha Pago', default=fields.Date.context_today, tracking=True)
-    amount = fields.Float('Monto', tracking=True)
+    amount = fields.Float('Monto', tracking=True, required=True)
+    @api.constrains('amount')
+    def _check_amount(self):
+     for record in self:
+        if not record.amount or record.amount <= 0:
+            raise ValidationError(
+                "El monto debe ser mayor a 0."
+            )
     description = fields.Text('Descripción')
     attachment_id = fields.Many2many(comodel_name='ir.attachment', relation='receipt_documents', string='Adjuntar Documentos')
-    state = fields.Selection([
-        ('draft', 'Borrador'),
-        ('posted', 'Publicado'),
-        ('verified', 'Verificado'),
-        ('rejected', 'Rechazado')
-    ], string='Estado', default='draft', tracking=True)
+    state = fields.Selection(STATE_RECEIPT, string='Estado', default='draft', tracking=True)
     validated_by = fields.Many2one('res.users', 'Validado por')
     asesor_id = fields.Many2one('res.users','Asesor')
     validation_date = fields.Datetime('Fecha de Validación', tracking=True)
@@ -68,15 +97,21 @@ class ReceiptValidation(models.Model):
         help="Especifique el medio de pago cuando seleccione 'Otros'"
     )
 
-    payment_reason = fields.Selection(
-        selection='_compute_payment_reason',
-        string='Motivo de pago',
-        tracking = True,
-    )
+    # payment_reason = fields.Selection(
+    #     selection='_compute_payment_reason',
+    #     string='Motivo de pago',
+    #     tracking = True,
+    # )
+
+    payment_reason =  fields.Many2one('receipt.payment.reason',string='Razón de Pago',tracking = True)
 
     saving_plan_payment = fields.Boolean('Plan de ahorro?',default=False)
     payment_verification = fields.Boolean('En Verificacion?',default=False)
 
+    #campos adicionales para Efectivo ALEX CODE
+    val_cincuenta = fields.Integer('Billetes de $50', default=0)
+    val_cien = fields.Integer('Billetes de $100', default=0)
+    
     #campos adicionales para cheque, transferencia,deposito
     banco_emisor = fields.Many2one('res.bank','Banco Emisor')
     banco_receptor = fields.Many2one('res.bank','Banco Receptor')
@@ -92,6 +127,30 @@ class ReceiptValidation(models.Model):
     lote_card = fields.Char('# lote')
     card_number = fields.Char('# Tarjeta')
 
+    @api.constrains('tercero', 'tercero_id', 'tercero_name')
+    def _check_tercero_fields(self):
+        for record in self:
+            if record.tercero:
+                if not record.tercero_id or not record.tercero_name:
+                    raise ValidationError(
+                        "Debe ingresar #ID y Nombre cuando 'Es de un Tercero' está activado."
+                    )
+
+    #tercero = fields.Boolean('Es de un Tercero')
+    tercero = fields.Boolean(string="Es de un Tercero",readonly=True, states={'draft': [('readonly', False)]})
+    tercero_id = fields.Char('#ID')
+    tercero_name = fields.Char('Nombre')    
+
+    # # ALEX CODE
+    # @api.constrains('payment_form', 'val_cincuenta', 'val_cien')
+    # def _check_cash_values(self):
+    #     for rec in self:
+    #         if rec.payment_form == 'cash':
+    #             if rec.val_cincuenta <= 0 or rec.val_cien <= 0:
+    #                 raise ValidationError(
+    #                     "Debe ingresar los billetes cuando el pago es en efectivo."
+    #                 )    
+    # # END ALEX CODE
 
     #campos adicionales para transferencia y deposito
     comp_number = fields.Char('Numero de Comprobante')
@@ -103,7 +162,11 @@ class ReceiptValidation(models.Model):
     cruce_cuentas = fields.Char('Cruce Cuentas')
     vehiculo_usado = fields.Text('Vehiculo Usado')
 
-
+    # campos adicionales para pago adicional (otro seguro)
+    #campo booleano de check (obligatorio si check habilitado)
+    #campo Char de nombre de la persona (invisible si check es falso y obligatorio si es es true)
+    #campo Char para la cedula (invisible si check es falso y obligatorio si es true)
+    #Campo Char para el correo de la persona invisible si check es falso y obligatorio si es true
 
     # Campos relacionados con el plan de ahorros
     saving_plan_id = fields.Many2one(
@@ -163,7 +226,7 @@ class ReceiptValidation(models.Model):
     
     printed_by = fields.Many2one('res.users', 'Impreso por', readonly=True)
     print_date = fields.Datetime('Fecha de impresión', readonly=True)
-
+    active = fields.Boolean('Activo',default = True)
 
 
     def action_open_print_wizard(self):
@@ -182,21 +245,12 @@ class ReceiptValidation(models.Model):
         for record in self:
             record.mail_partner = record.partner_id.email if record.partner_id else False
             record.document_number = record.partner_id.vat if record.partner_id else False
-            record.street = record.partner_id.street if record.partner_id else False
+            record.street = record.partner_id.street if record.partner_id else False                 
 
     @api.depends_context('company_id')
     def _compute_payment_form_selection(self):
         # Opciones base
-        base_options = [
-            ('cash', 'Efectivo'),
-            ('check', 'Cheque'),
-            ('card_credit', 'Tarjeta de Credito'),
-            ('card_debit','Tarjeta de Debito'),
-            ('transfer', 'Transferencia'),
-            ('deposit','Deposito'),
-            ('other','Otros')
-
-        ]
+        base_options = PAYMENT_FORM
         
         # Aquí puedes añadir lógica para obtener opciones adicionales dinámicamente
         # Por ejemplo, de parámetros del sistema, otra tabla, etc.
@@ -206,21 +260,19 @@ class ReceiptValidation(models.Model):
     
     @api.depends_context('company_id')
     def _compute_payment_reason(self):
-        base_options = [
-            ('inscrip', 'Inscripcion'),
-            ('quota', 'Cuota Plan'),
-            ('lici', 'Licitación'),
-            ('save', 'Seguro Vehicular'),
-            ('disp','Dispositivo'),
-            ('legal_waste','Gastos Legales')
-            
-        ]
+        
+        data = self.env['receipt.payment.reason'].search([('company_id','=', self.company_id.id)])
+
+        print('=============================',data)
+        
+        #base_options = PAYMENT_REASON
         
         # Aquí puedes añadir lógica para obtener opciones adicionales dinámicamente
         # Por ejemplo, de parámetros del sistema, otra tabla, etc.
         
         
-        return base_options
+        #return base_options
+        return [(r.code, r.name) for r in data]
     
     def action_update_partner_data(self):
         """
@@ -230,8 +282,8 @@ class ReceiptValidation(models.Model):
         self.ensure_one()
         
         # Verificar permisos - solo administradores del módulo pueden ejecutar esta acción
-        if not self.env.user.has_group('saving_plan_receipt.group_validator_receipt_admin'):
-            raise UserError(_('No tienes permisos para ejecutar esta acción. Solo los administradores pueden actualizar datos de contactos.'))
+        # if not self.env.user.has_group('saving_plan_receipt.group_validator_receipt_admin'):
+        #     raise UserError(_('No tienes permisos para ejecutar esta acción. Solo los administradores pueden actualizar datos de contactos.'))
         
         if not self.partner_id:
             raise UserError(_('No hay un contacto asociado a este comprobante.'))
@@ -659,6 +711,11 @@ class ReceiptValidation(models.Model):
                     record.insurance_amount
                 )
    
+    @api.constrains('amount', 'payment_form')
+    def _check_cash_limit(self):
+        for record in self:
+            if record.payment_form == 'cash' and record.amount >= 10000.00:
+                raise ValidationError(_("De 10,000 en adelante no se admite efectivo. Por favor, use otro medio de pago."))
 
 
     def _get_additional_payment_forms(self):

@@ -45,6 +45,7 @@ class ProductTemplate(models.Model):
 
     # Campos para Modelo
     origin_vehicle = fields.Many2one('res.country',string='Pais de Origen')
+    # number_of_seats = fields.Integer(string="Número de Asientos")
     number_of_seats = fields.Integer(string="Número de Asientos")
     number_of_doors = fields.Integer(string="Número de Puertas")
     number_of_tires = fields.Integer(string="Número de Llantas")

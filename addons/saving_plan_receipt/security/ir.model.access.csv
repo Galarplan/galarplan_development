@@ -12,3 +12,5 @@ access_receipt_validation_savings_user,receipt.validation.savings.user,model_rec
 access_receipt_validation_savings_auditor,receipt.validation.savings.auditor,model_receipt_validation_savings,group_validator_receipt_auditor,1,1,1,0
 access_receipt_validation_savings_manager,receipt.validation.savings.manager,model_receipt_validation_savings,group_validator_receipt_admin,1,1,1,1
 access_report_receipt_wz_admin,report.receipt.wz.admin,model_report_receipt_wz,group_validator_receipt_admin,1,1,1,1
+access_receipt_payment_reason_user,receipt.payment.reason.user,model_receipt_payment_reason,group_receipt_user,1,0,0,0
+access_receipt_payment_reason_manager,receipt.payment.reason.manager,model_receipt_payment_reason,group_receipt_manager,1,1,1,1

@@ -21,7 +21,7 @@
     <record id="action_report_receipt_validation" model="ir.actions.report">
         <field name="name">Recibo de cobro</field>
         <field name="model">receipt.validation</field>  <!-- Cambiado a tu modelo wizard -->
-        <field name="report_type">qweb-html</field>
+        <field name="report_type">qweb-pdf</field>
         <field name="report_name">saving_plan_receipt.report_receipt_validation</field>
         <field name="paperformat_id" ref="saving_plan_receipt.paperformat_receipt" />
         <field name="binding_model_id" eval="False" />  <!-- Elimina el binding directo -->

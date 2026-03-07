@@ -267,11 +267,10 @@
         </t>
         <!--=======================================-->
 
-        <!--================
-        PARA CHEQUES =========-->
+        <!--================ PARA CHEQUES =========-->
         <t t-elif="docs.payment_form == 'check'">
 
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <!--(CONGELADO ALEX) <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
 
                 <div style="width:32%;">
                     <strong>Banco emisor</strong>
@@ -303,15 +302,14 @@
 
                 </div>
 
-            </div>
+            </div> (FIN CONGELADO ALEX)-->
         </t>
         <!--=======================================-->
 
-        <!--=======
-        PARA TARJETAS DE CREDITO ======-->
+        <!--====== PARA TARJETAS DE CREDITO ======-->
         <t t-elif="docs.payment_form == 'card_credit'">
 
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+           <!--(CONGELADO ALEX)  <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
 
                 <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Banco emisor</strong>
@@ -328,29 +326,26 @@
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
                 </div>
 
-                <!-- <div style="width:32%;">
+                <!-(COMENTADO) <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Tarjeta:</strong>
                     <br />
                     <span t-field="docs.card_number"
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
-                </div> -->
-                <!-- MAS DISCRETO-->
+                </div> ->
+
                 <t t-if="docs.tercero_name">
                     <span style="font-size:12px;">
                         Pago realizado por tercero
                     </span>
-                </t>
-                <!-- MAS DISCRETO -->                
-
-            </div>
+                </t>        
+            </div> (FIN CONGELADO ALEX)-->
         </t>
         <!--=======================================-->
 
-        <!--=======
-        PARA TARJETAS DE DEBITO ======-->
+        <!--======= PARA TARJETAS DE DEBITO ======-->
         <t t-elif="docs.payment_form == 'card_debit'">
 
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <!-- (CONGELADO) <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
 
                 <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Banco emisor</strong>
@@ -367,45 +362,38 @@
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
                 </div>
 
-                <!-- <div style="width:32%;">
+                <!-(COMENTADO) <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Tarjeta:</strong>
                     <br />
                     <span t-field="docs.card_number"
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
-                </div> -->
+                </div> ->
 
-                <!--ALEX-->
-                <!-- <t t-if="docs.tercero_name">
+                <!-(COMENTADO - BLOQUE DE ALEX) <t t-if="docs.tercero_name">
                     <div style="font-weight:bold; color:red;">
                         PAGO DE TERCERO
                     </div>
-                </t> -->
-                <!-- MAS DISCRETO-->
+                </t> ->
+
                 <t t-if="docs.tercero_name">
                     <span style="font-size:12px;">
                         Pago realizado por tercero
                     </span>
                 </t>
-                <!-- MAS DISCRETO -->
-
-                <!--ALEX-->
-
-            </div>
+            </div> (FIN CONGELADO ALEX)-->
         </t>
         <!--=======================================-->
 
-        <!--=======
-        PARA TRANFERENCIAS ======-->
+        <!--======= PARA TRANFERENCIAS ======-->
         <t t-elif="docs.payment_form == 'transfer'">
 
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <!-- <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
 
                 <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Banco emisor</strong>
                     <br />
                     <span t-field="docs.banco_emisor.name"
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
-
                 </div>
 
                 <div style="width:32%;">
@@ -422,26 +410,24 @@
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
                 </div>
 
-                <!-- <div style="width:32%;">
+                <!-"NO UTILIZAR ESTE BLOQUE A MENOS QUE SEA NECSARIO" <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Cuenta:</strong>
                     <br />
                     <span t-field="docs.acc_number"
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
-                </div> -->
-                <!-- MAS DISCRETO-->
+                </div> ->
+
                 <t t-if="docs.tercero_name">
                     <span style="font-size:12px;">
                         Pago realizado por tercero
                     </span>
-                </t>
-                <!-- MAS DISCRETO -->                
+                </t>       
 
-            </div>
+            </div> -->
         </t>
-        <!--=======================================-->
+        <!--======= PARA TRANFERENCIAS ======-->
 
-        <!--=======
-        PARA DEPOSITOS ======-->
+        <!--======= *CONGELADO* PARA DEPOSITOS ======-
         <t t-elif="docs.payment_form == 'deposit'">
 
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -462,11 +448,9 @@
                 </div>
 
             </div>
-        </t>
-        <!--=======================================-->
+        </t>-->
 
-        <!--=======
-        PARA OTROS ======-->
+        <!--======= PARA OTROS ======-->
         <t t-elif="docs.payment_form == 'other'">
 
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">

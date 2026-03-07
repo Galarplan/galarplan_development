@@ -63,6 +63,12 @@ class ReceiptValidation(models.Model):
         store=True  # Permite edición manual si es necesario
     )
 
+    phone_partner = fields.Char(
+        string='Teléfono',
+        compute='_compute_mail',
+        store=True # Permite edición manual si es necesario (CAMPOS ALEX)
+    )    
+
     is_data_updated = fields.Boolean('Datos Actualizados', default=False, tracking=True)
     
     date = fields.Date('Fecha', default=fields.Date.context_today, tracking=True)
@@ -245,7 +251,8 @@ class ReceiptValidation(models.Model):
         for record in self:
             record.mail_partner = record.partner_id.email if record.partner_id else False
             record.document_number = record.partner_id.vat if record.partner_id else False
-            record.street = record.partner_id.street if record.partner_id else False                 
+            record.street = record.partner_id.street if record.partner_id else False  
+            record.phone_partner = record.partner_id.phone if record.partner_id else False   
 
     @api.depends_context('company_id')
     def _compute_payment_form_selection(self):
@@ -717,6 +724,14 @@ class ReceiptValidation(models.Model):
             if record.payment_form == 'cash' and record.amount >= 10000.00:
                 raise ValidationError(_("De 10,000 en adelante no se admite efectivo. Por favor, use otro medio de pago."))
 
+    # CODE ALEX
+    @api.constrains('amount')
+    def _check_amount_positive(self):
+        for record in self:
+            if not record.amount or record.amount <= 0:
+                raise ValidationError(
+                    _("El monto debe ser mayor a 0.")
+                )    
 
     def _get_additional_payment_forms(self):
         """Método para obtener formas de pago adicionales"""
@@ -737,15 +752,37 @@ class ReceiptValidation(models.Model):
     
     def action_post(self):
         for rec in self:
+
+            # VALIDAR MONTO OBLIGATORIO
+            if not rec.amount or rec.amount <= 0:
+                raise ValidationError("El monto debe ser mayor a 0.")
+
+            # VALIDAR LIMITE EFECTIVO
+            if rec.payment_form == 'cash' and rec.amount >= 10000:
+                raise ValidationError(
+                    "No se permiten pagos en efectivo iguales o mayores a $10,000."
+                )
+
             rec.state = 'posted'
-    
+        
     def action_verify(self):
         for rec in self:
-            rec.write({
-                'state': 'verified',
-                'validated_by': self.env.user.id,
-                'validation_date': fields.Datetime.now()
-            })
+
+            # VALIDAR MONTO OBLIGATORIO
+            if not rec.amount or rec.amount <= 0:
+                raise ValidationError("El monto debe ser mayor a 0.")
+
+            # VALIDAR LIMITE EFECTIVO
+            if rec.payment_form == 'cash' and rec.amount >= 10000:
+                raise ValidationError(
+                    "No se permiten pagos en efectivo iguales o mayores a $10,000."
+                )
+
+        rec.write({
+            'state': 'verified',
+            'validated_by': self.env.user.id,
+            'validation_date': fields.Datetime.now()
+        })
     
     def action_reject(self):
         for rec in self:
@@ -817,6 +854,48 @@ class ReceiptValidation(models.Model):
                     'sticky': False,
                 }
             }
+    
+    def action_view_saving_line(self):
+        """Abrir la vista de la cuota del plan"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Cuota del Plan',
+            'res_model': 'account.saving.lines',
+            'res_id': self.saving_line_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+    
+    def action_open_apply_payment_wizard(self):
+        self.ensure_one()
+        return {
+            'name': _('Aplicar Pagos'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'assign.saving.lines.wz',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_receipt_id': self.id,
+                'default_user_id': self.partner_id.id,
+            }
+        }
+
+    def action_unapply_payment(self):
+        self.ensure_one()
+
+        payments = self.env['receipt.saving.payment'].search([
+            ('receipt_id', '=', self.id)
+        ])
+
+        if not payments:
+            raise ValidationError("Este recibo no tiene pagos aplicados.")
+
+        # Eliminar aplicaciones
+        payments.unlink()
+
+        # Cambiar estado del recibo
+        self.state = 'verified'
     
 
 class ReceiptValidationSavings(models.Model):
@@ -1061,14 +1140,4 @@ class ReceiptValidationSavings(models.Model):
                     f'el monto pendiente de la cuota ({record.saving_line_id.pendiente})'
                 )
     
-    def action_view_saving_line(self):
-        """Abrir la vista de la cuota del plan"""
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Cuota del Plan',
-            'res_model': 'account.saving.lines',
-            'res_id': self.saving_line_id.id,
-            'view_mode': 'form',
-            'target': 'current',
-        }
+    

@@ -27,6 +27,7 @@
         'wizard/print_receipt.xml',
         'wizard/access_wizard.xml',
         'wizard/report_wizard.xml',
+        'wizard/assign_saving_lines.xml',
         'views/receipt_validation_views.xml',
         'views/receipt_payment_reason.xml',
         'views/res_users_views.xml',

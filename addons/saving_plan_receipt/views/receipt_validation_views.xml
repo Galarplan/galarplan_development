@@ -65,8 +65,23 @@
                         groups="saving_plan_receipt.group_validator_receipt_admin,saving_plan_receipt.group_validator_receipt_user"
                         confirm="Esta por actualizar los campos verificar que la nueva informacion este completa antes de proceder"
                         attrs="{'invisible': [('is_data_updated', '=', True)]}" />
+                    <button name="action_open_apply_payment_wizard"
+                        string="Aplicar Pagos"
+                        type="object"
+                        states="verified"
+                        class="btn-primary" />
+                    <button name="action_unapply_payment"
+                        string="Desaplicar Pago"
+                        type="object"
+                        states="applicated"
+                        class="btn-danger" />
                 </header>
                 <sheet>
+                    <widget name="web_ribbon"
+                        title="APLICADO"
+                        bg_color="bg-success"
+                        attrs="{'invisible': [('state','!=','applicated')]}"/>
+                        
                     <div class="oe_title">
                         <h1>
                             <field name="name" class="oe_inline"
@@ -88,6 +103,10 @@
                             <field name="street" attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="mail_partner"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
+                            <!-- TELEFONO CODE ALEX -->
+                            <field name="phone_partner"
+                                attrs="{'readonly': [('state', '=', 'posted')]}" />
+                            <!--  FIN TELEFONO -->    
                             <field name="date" attrs="{'readonly': [('state', '=', 'posted')]}"
                                 required="1" />
                             <field name="date_payment"
@@ -294,15 +313,16 @@
                         <!-- Campos para Depósito -->
                         <group string="Detalles de Depósito"
                             attrs="{'invisible': [('payment_form', '!=', 'deposit')]}">
+
                             <field name="banco_receptor"
                                 attrs="{
-                                    'readonly': [('state', '=', 'posted')],
-                                    'required': [('payment_form', '=', 'deposit')]
+                                    'readonly': [('state', '=', 'posted')],     
+                                    'required': [('payment_form', '=', 'deposit')]                               
                                 }" />
-                            <field name="comp_number"
+                                <field name="comp_number"
                                 attrs="{
-                                    'readonly': [('state', '=', 'posted')],
-                                    'required': [('payment_form', '=', 'deposit')]
+                                    'readonly': [('state', '=', 'posted')],     
+                                    'required': [('payment_form', '=', 'deposit')]                               
                                 }" />
                         </group>
 

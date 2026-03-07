@@ -10,7 +10,7 @@
                     <group>
                         <group>
                             <field name="company_id" readonly="1" />
-                            <field name="location_id" required="1" />
+                            <field name="location_id" required="1"  options="{'no_open': True, 'no_create': True}" />
                         </group>
                         <group>
                             <field name="usuario" required="1"/>

@@ -345,7 +345,6 @@
                     <notebook>
                         <page string="Documentos">
                             <field name="attachment_id" widget="many2many_binary"
-                                options="{'no_create': True, 'no_open': False}"
                                 attrs="{'readonly': [('state', '=', 'posted')]}">
                                 <tree string="Documentos Adjuntos">
                                     <field name="name" />

@@ -123,7 +123,8 @@
                         <group>
                             <field name="state" readonly="1" />
                             <field name="validated_by" readonly="1" />
-                            <field name="asesor_id" readonly="1" />
+                            <!-- <field name="asesor_id" readonly="0" /> -->
+                            <field name="asesorcom"  attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="validation_date" readonly="1" />
                             <field name="location_id"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
@@ -131,6 +132,8 @@
                                 domain="[('company_id', '=', company_id)]"
                                 attrs="{'readonly': ['|', ('state', '=', 'posted'), ('saving_plan_payment', '=', True)],
                                 'required': [('saving_plan_payment', '=', False)]}" />
+                            <field name="coment_fpago"  attrs="{'readonly': [('state', '=', 'posted')]}" />"
+                            
                         </group>
                         <group>
                             <field name="payment_other_desc"

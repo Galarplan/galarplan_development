@@ -86,6 +86,7 @@ class ReceiptValidation(models.Model):
     state = fields.Selection(STATE_RECEIPT, string='Estado', default='draft', tracking=True)
     validated_by = fields.Many2one('res.users', 'Validado por')
     asesor_id = fields.Many2one('res.users','Asesor')
+    asesorcom = fields.Char('Asesor')
     validation_date = fields.Datetime('Fecha de Validación', tracking=True)
     company_id = fields.Many2one('res.company', 'Compañía', default=lambda self: self.env.company)
 
@@ -96,6 +97,8 @@ class ReceiptValidation(models.Model):
         string='Forma de Pago',
         tracking=True
     )
+
+    coment_fpago = fields.Char('Comentario F. de Pago')
 
     payment_other_desc = fields.Char(
         string='Descripción de Otro Medio de Pago',

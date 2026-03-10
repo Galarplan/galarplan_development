@@ -244,26 +244,20 @@
         <!--========ALEX
         PARA EFECTIVO ======-->
         <t t-if="docs.payment_form == 'cash' ">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-
+            <!-- <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                 <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Billetes 50 dólares:</strong>
-                    <!--<br
-                    /> -->
                     <span t-field="docs.val_cincuenta"
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
-
                 </div>
 
                 <div style="width:32%;">
                     <strong style="font-family: Arial; font-size: 12px;">Billetes 100 dólares:</strong>
-                    <!--<br
-                    /> -->
                     <span t-field="docs.val_cien"
                         style="font-family:Arial; font-size:10px; font-weight:normal;" />
                 </div>
 
-            </div>
+            </div> -->
         </t>
         <!--=======================================-->
 

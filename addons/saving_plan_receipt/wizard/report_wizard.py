@@ -76,7 +76,6 @@ class ReportReceiptWz(models.TransientModel):
         
         # Construir dominio para filtrar recibos
         domain = [
-            ('state', 'in', ['posted', 'verified','draft','rejected']),
             ('date_payment', '>=', self.date_from),
             ('date_payment', '<=', self.date_to),
             ('company_id', '=', self.company_id.id)

@@ -211,12 +211,14 @@
                     </span>
                 </div> -->
 
+                <t t-set="fpagocoment" t-value="docs.coment_fpago or '' "/>
+                
                 <div style="width:32%; font-family: Arial; font-size: 10px;">
                     <strong>Motivo:</strong>
                     <br />
                     <span t-if="docs.payment_reason"
                         style="display:block; margin-top:3px;">
-                        <t t-esc="docs.payment_reason.name +' - '+ docs.coment_fpago" />
+                        <t t-esc="docs.payment_reason.name +' - '+ fpagocoment" />
                     </span>
                 </div>
 

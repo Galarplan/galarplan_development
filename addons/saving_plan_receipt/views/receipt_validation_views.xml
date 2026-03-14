@@ -50,12 +50,12 @@
                         confirm="Esta Seguro que desea Grabar el recibo?" />
                     <button name="action_verify" string="Verificar" type="object"
                         class="oe_highlight" states="posted"
-                        groups="saving_plan_receipt.group_validator_receipt_auditor" />
+                        groups="saving_plan_receipt.group_receipt_rejector" />
                     <button name="print_receipt" string="Imprimir Recibo" states="posted,verified"
                         type="object" class="btn-primary"
                         groups="saving_plan_receipt.group_validator_receipt_user" />
                     <button name="action_reject" string="Rechazar" type="object" states="posted"
-                        groups="saving_plan_receipt.group_validator_receipt_auditor" />
+                        groups="saving_plan_receipt.group_receipt_rejector" />
                     <button name="action_reset_to_draft" string="Volver a Borrador" type="object"
                         states="posted,verified,rejected"
                         groups="saving_plan_receipt.group_validator_receipt_admin" />

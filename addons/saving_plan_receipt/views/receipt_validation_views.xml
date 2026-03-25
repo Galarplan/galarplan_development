@@ -11,6 +11,7 @@
                 <field name="amount" />
                 <field name="state" />
                 <field name="validated_by" />
+                <field name="printed_by" optional="show"/>
             </tree>
         </field>
     </record>

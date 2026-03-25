@@ -52,11 +52,11 @@
                 eval="[(4, ref('saving_plan_receipt.group_validator_receipt_admin'))]" />
         </record>
 
-
+        <!-- Regla: Pueden ver botonode de RECHAZAR y VERIFICAR -->
         <record id="group_receipt_rejector" model="res.groups">
             <field name="name">Rechazador de Comprobantes</field>
             <field name="category_id" ref="base.module_category_services" />
         </record>
-        
+
     </data>
 </odoo>

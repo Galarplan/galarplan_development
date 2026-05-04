@@ -12,5 +12,11 @@
         action="action_economy_activity"
         sequence="05"/>
 
-
+    <menuitem 
+        id="menu_res_country_parish"
+        name="Parroquias"
+        parent="contacts.menu_localisation"
+        action="action_res_country_parish"
+        sequence="6"/>
+        
 </odoo>

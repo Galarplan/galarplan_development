@@ -8,10 +8,11 @@
                 <field name="name" />
                 <field name="partner_id" />
                 <field name="date" />
+                <field name="date_payment" optional="hide" />
                 <field name="amount" />
                 <field name="state" />
                 <field name="validated_by" />
-                <field name="printed_by" optional="show"/>
+                <field name="printed_by" optional="hide"/>
             </tree>
         </field>
     </record>
@@ -98,7 +99,7 @@
                             <field name="partner_id"
                                 attrs="{'readonly': [('state', '=', 'posted')]}"
                                 required="1"
-                                domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]" />
+                                domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]"/>
                             <field name="document_number"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="street" attrs="{'readonly': [('state', '=', 'posted')]}" />
@@ -171,147 +172,189 @@
 
                         <!-- Campos para Cheque -->
                         <group string="Detalles de Cheque"
-                            attrs="{'invisible': [('payment_form', '!=', 'check')]}">
-                            <group colspan="1">
+                            attrs="{'invisible': [('payment_form', '!=', 'check')]}"
+                            col="4"
+                            class="o_full_width">
+
+                            <!-- Campos principales del cheque -->
+                            <group colspan="4" class="o_full_width">
                                 <field name="banco_emisor"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'check')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="number_check"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'check')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="account_check"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'check')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="date_check"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'check')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
+                                <field name="state" invisible="1" />
                             </group>
+                        </group>
 
-                            <!-- <group colspan="1">
-                                <field name="tercero" />
-                                <field name="tercero_id"
-                                    attrs="{'invisible': [('tercero','=',False)], 'readonly': [('state','=','posted')]}"/>
-                                <field name="tercero_name"
-                                    attrs="{'invisible': [('tercero','=',False)], 'readonly': [('state','=','posted')]}"/>
-                            </group> -->
-                            <field name="state" invisible="1" />
-
-                            <group colspan="1">
-                                <field name="tercero"
-                                    attrs="{'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_id"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_name"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                            </group>
+                        <!-- Campos de Tercero debajo de Detalles de Cheque -->
+                        <group string="Tercero" colspan="4" class="o_full_width"
+                            attrs="{'invisible': [('payment_form', '!=', 'check')]}">
+                            <field name="tercero" newline="1"
+                                attrs="{'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_id" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_name" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
                         </group>
 
                         <!-- Campos para Tarjeta de Crédito -->
-                        <group string="Detalles de Tarjeta de credito"
-                            attrs="{'invisible': [('payment_form', '!=', 'card_credit')]}">
-                            <field name="credit_card" invisible="1" />
-                            <group colspan="1" style="padding-right:40px;">
+                        <group string="Detalles de Tarjeta de Crédito"
+                            attrs="{'invisible': [('payment_form', '!=', 'card_credit')]}"
+                            col="4"
+                            class="o_full_width">
+
+                            <!-- Campos principales de la tarjeta -->
+                            <group colspan="4" class="o_full_width">
+                                <field name="credit_card" invisible="1" />
                                 <field name="lote_card"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'card_credit')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="banco_emisor"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'card_credit')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <!-- <field name="card_number"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'card_credit')]
-                                    }" /> -->
-                            </group>
-
-                            <group colspan="1">
-                                <field name="tercero"
-                                    attrs="{'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_id"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_name"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
+                                    }"
+                                    class="o_full_width" /> -->
                             </group>
                         </group>
 
-                        <group string="Detalles de Tarjeta de Debito"
-                            attrs="{'invisible': [('payment_form', '!=', 'card_debit')]}">
-                            <field name="credit_card" invisible="1" />
-                            <group colspan="1">
+                        <!-- Campos de Tercero debajo de Detalles de Tarjeta -->
+                        <group string="Tercero" colspan="4" class="o_full_width"
+                            attrs="{'invisible': [('payment_form', '!=', 'card_credit')]}">
+                            <field name="tercero" newline="1"
+                                attrs="{'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_id" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_name" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                        </group>
+
+                        <!-- Campos para Tarjeta de Débito -->
+                        <group string="Detalles de Tarjeta de Débito"
+                            attrs="{'invisible': [('payment_form', '!=', 'card_debit')]}"
+                            col="4"
+                            class="o_full_width">
+
+                            <!-- Campos principales de la tarjeta de débito -->
+                            <group colspan="4" class="o_full_width">
+                                <field name="credit_card" invisible="1" />
                                 <field name="lote_card"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'card_debit')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="banco_emisor"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'card_debit')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <!-- <field name="card_number"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'card_debit')]
-                                    }" /> -->
+                                    }"
+                                    class="o_full_width" /> -->
                             </group>
+                        </group>
 
-                            <group colspan="1">
-                                <field name="tercero"
-                                    attrs="{'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_id"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_name"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                            </group>
+                        <!-- Campos de Tercero debajo de Detalles de Tarjeta de Débito -->
+                        <group string="Tercero" colspan="4" class="o_full_width"
+                            attrs="{'invisible': [('payment_form', '!=', 'card_debit')]}">
+                            <field name="tercero" newline="1"
+                                attrs="{'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_id" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_name" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
                         </group>
 
                         <!-- Campos para Transferencia -->
                         <group string="Detalles de Transferencia"
                             attrs="{'invisible': [('payment_form', '!=', 'transfer')]}"
-                            col="4">
-                            <group colspan="2">
+                            col="4"
+                            class="o_full_width">
+
+                            <!-- Campos principales de la transferencia -->
+                            <group colspan="4" class="o_full_width">
                                 <field name="banco_emisor"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'transfer')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="banco_receptor"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'transfer')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <field name="comp_number"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'transfer')]
-                                    }" />
+                                    }"
+                                    class="o_full_width" />
                                 <!-- <field name="acc_number"
                                     attrs="{
                                         'readonly': [('state', '=', 'posted')],
                                         'required': [('payment_form', '=', 'transfer')]
-                                    }" /> -->
+                                    }"
+                                    class="o_full_width" /> -->
                             </group>
+                        </group>
 
-                            <group colspan="2">
-                                <field name="tercero"
-                                    attrs="{'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_id"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                                <field name="tercero_name"
-                                    attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}" />
-                            </group>
+                        <!-- Campos de Tercero debajo de Detalles de Transferencia -->
+                        <group string="Tercero" colspan="4" class="o_full_width"
+                            attrs="{'invisible': [('payment_form', '!=', 'transfer')]}">
+                            <field name="tercero" newline="1"
+                                attrs="{'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_id" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
+                            <field name="tercero_name" newline="1"
+                                attrs="{'invisible': [('tercero','=',False)],'readonly': [('state','=','posted')]}"
+                                class="o_full_width" />
                         </group>
 
                         <!-- Campos para Depósito -->
@@ -367,8 +410,7 @@
                             <group>
                                 <field name="saving_plan_id"
                                     attrs="{'readonly': [('state', '=', 'posted')]}" />
-
-
+                                
                                 <!-- Cambiar many2many_tags por One2many con vista tree -->
                                 <!-- <field name="saving_line_id" attrs="{'readonly': [('state',
                                 '=', 'posted')]}"> -->

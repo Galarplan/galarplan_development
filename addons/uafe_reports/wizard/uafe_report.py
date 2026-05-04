@@ -5,6 +5,8 @@ import base64
 import io
 import xlsxwriter
 import pandas as pd
+import unicodedata
+import re
 
 
 class UAFEReportWizard(models.TransientModel):
@@ -46,6 +48,52 @@ class UAFEReportWizard(models.TransientModel):
 
     file_name = fields.Char("File Name", readonly=True)
     file_data = fields.Binary("File", readonly=True)
+
+################################################
+    def _clean_special_characters(self, text):
+        """
+        Limpia caracteres especiales:
+        ñ -> n
+        Ñ -> N
+        áéíóú -> aeiou
+        elimina símbolos raros
+        reemplaza guiones por espacio
+        """
+
+        if not text:
+            return ""
+
+        text = str(text)
+
+        # Reemplazos manuales importantes
+        replacements = {
+            "ñ": "n",
+            "Ñ": "N",
+            "-": " ",
+            "_": " ",
+            "/": " ",
+            "\\": " ",
+            "&": " ",
+            "@": " ",
+        }
+
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+
+        # Quitar tildes
+        import unicodedata
+        text = unicodedata.normalize("NFKD", text)
+        text = text.encode("ASCII", "ignore").decode("utf-8")
+
+        # Dejar solo letras, números y espacios
+        import re
+        text = re.sub(r"[^A-Za-z0-9\s]", "", text)
+
+        # Quitar espacios múltiples
+        text = re.sub(r"\s+", " ", text).strip()
+
+        return text
+################################################
 
     def load_invoices(self):
         """Cargar las facturas en el rango de fechas."""
@@ -127,7 +175,7 @@ class UAFEReportWizard(models.TransientModel):
         """Genera el reporte de clientes con encabezado doble."""
 
         # Fecha de corte validada
-        fecha_corte = (
+        fecha_corte = ( 
             self.date_end.strftime("%Y%m%d")
             if self.date_end
             else datetime.now().strftime("%Y%m%d")
@@ -153,17 +201,20 @@ class UAFEReportWizard(models.TransientModel):
             ]
         ]
         detailed_header = [
-            [
-                "TIPO IDENTIFICACIÓN (TID)",
-                "IDENTIFICACIÓN (IDE)",
-                "NOMBRES APELLIDOS RAZÓN SOCIAL (NRS)",
-                "NACIONALIDAD (NAC)",
-                "DIRECCIÓN (DIR)",
-                "CANTÓN (CCC)",
+            [                 
+                "C",
+                "COD_TIPO_ID",
+                "ID_CLIENTE",
+                "NOMBRES_RAZON_SOCIAL",
+                "APELLIDOS_NOMBRE_COMERCIAL",
+                "COD_PAIS_NACIONALIDAD",
+                "DIRECCION",
+                "COD_PROVINCIA",
+                "COD_CANTON",
+                "COD_PARROQUIA",
                 "ACTIVIDAD ECONOMICA (AEC)",
-                "INGRESO MENSUAL (IMT)",
-                "CÓDIGO REGISTRO (CDR)",
-                "FECHA CORTE (FCT)",
+                "INGRESO_CLIENTE",
+                "CÓDIGO REGISTRO (CDR)",                                            
             ]
         ]
         client_data = [
@@ -190,16 +241,22 @@ class UAFEReportWizard(models.TransientModel):
             partner = invoice.invoice_id.partner_id
             client_data.append(
                 [
-                    partner.l10n_latam_identification_type_id.name or "",
+                    'J' if partner.vat and partner.vat[-3:] == '001'
+                        else 'N',
+                    'R' if partner.l10n_latam_identification_type_id.name == 'RUC'
+                        else 'C' if partner.l10n_latam_identification_type_id.name == 'Cédula'
+                        else "",
                     partner.vat or "",
+                    self._clean_special_characters(partner.name) or "",
                     partner.name or "",
                     partner.country_id.nationality_code or "",
-                    partner.street or "",
+                    self._clean_special_characters(partner.street) or "",
+                    partner.state_id.code or "",
                     partner.country_substate_id.code or "",
+                    partner.parish_id.code or "",
                     partner.economic_activity.code or "",
                     partner.monthly_income or "",
                     self.company_id.uafe_code,
-                    fecha_corte,
                 ]
             )
 
@@ -280,18 +337,27 @@ class UAFEReportWizard(models.TransientModel):
         ]
         detailed_header = [
             [
-                "TIPO IDENTIFICACIÓN (TID)",
-                "IDENTIFICACIÓN (IDE)",
-                "NUMERO DE OPERACIÓN/CONTRATO (NCT)",
-                "VALOR TOTAL DE LA OPERACIÓN (VTO)",
-                "FECHA DE OPERACIÓN (FDO)",
-                "TIPO DE VEHICULO O MAQUINARIA (TVHM)",	
-                "MODELO DE VEHICULO O MAQUINARIA (MVHM)",
-                "MARCA DE VEHICULO O MAQUINARIA (MAVM)"	,
-                "CHASIS DE VEHICULO O MAQUINARIA (NCVM)",
-                "CANTON O CIUDAD DEL VEHICULO O MAQUINARIA (CCT)",
-                "FECHA CORTE (FCT)",
-                "CÓDIGO REGISTRO (CDR)",
+                "COD_TIPO_ID",
+                "ID_CLIENTE",
+                "NUMERO_OPERACION",
+                "COD_TIPO_ OPERACION",
+                "TIPO_FINANCIAMIENTO",
+                "VALOR_FINANCIAMIENTO_DIRECTO",
+                "VALOR_FINANCIAMIENTO_EXTERNO",
+                "VALOR_TOTAL_OPERACION",
+                "FECHA_OPERACION",
+                "ANIO_FABRICACION",
+                "COD_TIPO_VEHICULO_MAQUINARIA",	
+                "MODELO_VEHICULO_MAQUINARIA",
+                "MARCA_VEHICULO_MAQUINARIA"	,
+                "NUMERO_CHASIS_VEHICULO_MAQUINARIA",
+                "CILINDRAJE_VEHICULO",
+                "COD_NIVEL_BLINDAJE",
+                "CONDICION_BIEN",
+                "NUMERO_PLACA",
+                "COD_PROV_OPERACION",
+                "COD_CANTON_OPERACION",
+                "COD_PARROQUIA_OPERACION",
             ]
         ]
         client_data = [
@@ -299,7 +365,7 @@ class UAFEReportWizard(models.TransientModel):
                 "OPR",
                 self.company_id.uafe_code,
                 fecha_corte,
-                self.registro_number_customer,
+                self.registro_number_operation,
                 "",
                 "",
                 "",
@@ -313,25 +379,41 @@ class UAFEReportWizard(models.TransientModel):
             ]
         ]
         for invoice in self.invoice_ids:
+            move = invoice.invoice_id
             partner = invoice.invoice_id.partner_id
-            for line in invoice.invoice_id.invoice_line_ids:
+            for line in invoice.invoice_id.invoice_line_ids:                
                 product_id = line.product_id
                 print('====================prdid',product_id)
                 client_data.append(
                     [
-                        partner.l10n_latam_identification_type_id.name or "",
+                        'R' if partner.l10n_latam_identification_type_id.name == 'RUC'
+                            else 'C' if partner.l10n_latam_identification_type_id.name == 'Cédula'
+                            else "",
                         partner.vat or "",
-                        "",
-                        line.price_unit or "",
-                        invoice.invoice_date or "",
+                        ''.join(filter(str.isdigit, line.move_id.name or "")),
+                        "COM",
+                        'EXT' if move.is_galarplan or move.is_credit_bank
+                            else 'NAP' if move.is_direct
+                            else 'DIR' if move.is_credit_sale
+                            else "",                        
+                        move.direct_financing_value or 0.00,
+                        move.external_financing_value or 0.00,
+                        int(line.price_unit or 0),
+                        move.invoice_date.strftime('%Y%m%d') if move.invoice_date else "",
+                        product_id.model_year or "",
                         product_id.vehicle_type.name or "",
                         product_id.name or "",
                         product_id.vehicle_model_id.name or "",
                         product_id.chassis_number or "",
-                        partner.country_substate_id.code or "",
-                        fecha_corte,
-                        self.company_id.uafe_code,
-
+                        product_id.cylinder_capacity or "",
+                        "NO",
+                        "N" if (product_id.vehicle_status or "").lower() == "nuevo" 
+                        else "U" if (product_id.vehicle_status or "").lower() == "usado" 
+                        else "",
+                        product_id.ramw_number or "",                        
+                        "09",
+                        "0901",
+                        partner.parish_id.code or "",                                                
                     ]
                 )
                 print('=====================cld',client_data)

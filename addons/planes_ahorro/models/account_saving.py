@@ -19,7 +19,7 @@ class AccountSaving(models.Model):
 
     name = fields.Char(string='Nombre', required=True,default=_get_default_name,tracking=True)
     saving_plan_id = fields.Many2one('account.saving.plan',string='Planes de Ahorro	',tracking=True)
-    partner_id = fields.Many2one('res.partner', string='Socio',required=True,tracking=True)
+    partner_id = fields.Many2one('res.partner', string='Socio (ID)',required=True,tracking=True)
     seller_id = fields.Many2one('res.users', string='Vendedor',tracking=True,default=lambda self: self.env.user )
     start_date = fields.Date(string='Fecha de inicio',default=fields.Date.today(),tracking=True)
     end_date = fields.Date(string='Fecha de fin',required=False,compute="onchange_lines_date",store=True,tracking=True)
@@ -557,3 +557,17 @@ class AccountSaving(models.Model):
 
     def action_print_saving_state(self):
         return self.env.ref('planes_ahorro.action_report_state_saving').report_action(self)
+
+    def name_get(self):
+        result = []
+        for rec in self:
+            name = rec.name or 'Plan'
+
+            if hasattr(rec, 'saving_amount') and rec.saving_amount:
+                name += f" - ${rec.saving_amount}"
+
+            if rec.state_plan_description:
+                name += f" - {rec.state_plan_description}"
+
+            result.append((rec.id, name))
+        return result

@@ -192,8 +192,8 @@
                 options="{'no_create':True,'no_edit':True}"
                 domain="[('state','=','posted'),('saving_type','=',saving_type)]" required='1'
                 attrs="{'readonly':[('state','!=','draft')]}" />
-              <field name="partner_id" options="{'no_create':True,'no_edit':True}" required='1'
-                attrs="{'readonly':[('state','!=','draft')]}" />
+              <field name="partner_id" required='1'
+              attrs="{'readonly':[('state','!=','draft')]}" />
 
               <field name="seller_id" required="1"
                 options="{'no_edit':True,'no_create':True,'no_edit':True}"

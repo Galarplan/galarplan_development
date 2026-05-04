@@ -1,5 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError,ValidationError
+from datetime import timedelta
+from odoo.fields import Date
 import base64
 
 
@@ -43,7 +45,7 @@ class ReceiptValidation(models.Model):
         readonly=True,
         default=lambda self: _('Borrador'),
     )
-    partner_id = fields.Many2one('res.partner', 'Cliente', tracking=True)
+    partner_id = fields.Many2one('res.partner', 'Cliente (ID)', tracking=True)
     
     document_number = fields.Char(
         string='Documento',
@@ -575,7 +577,33 @@ class ReceiptValidation(models.Model):
             if record.saving_line_id:
                 total = sum(line.amount_to_pay for line in record.saving_line_id)
                 record.amount = total
-    
+
+    ######## -VALIDACION PARA 10000 DOLARES EN 30 DIAS- ########
+    @api.constrains('amount', 'payment_form', 'partner_id', 'date_payment')
+    def _check_cash_limit_30_days(self):
+        for record in self:
+            if record.payment_form != 'cash' or not record.partner_id:
+                continue
+
+            date_from = record.date_payment - timedelta(days=30)
+
+            previous_receipts = self.search([
+                ('id', '!=', record.id),
+                ('partner_id', '=', record.partner_id.id),
+                ('payment_form', '=', 'cash'),
+                ('date_payment', '>=', date_from),
+                ('date_payment', '<=', record.date_payment),
+                ('state', 'in', ['draft', 'posted', 'verified'])  # importante
+            ])
+
+            total = sum(previous_receipts.mapped('amount')) + record.amount
+
+            if total > 10000:
+                raise ValidationError(
+                    f"El cliente supera el límite de $10,000 en efectivo en 30 días.\n"
+                    f"Total acumulado: ${total:.2f}"
+                )
+
     # @api.depends('saving_line_id')
     # def _compute_installment_data(self):
     #     for record in self:

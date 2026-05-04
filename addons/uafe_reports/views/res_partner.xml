@@ -10,6 +10,8 @@
                 <group>
                     <field name="economic_activity" string="Actividad Economica" options="{'no_create': True}"/>
                     <field name="monthly_income"/>
+                    <field name="person_type"/>
+                    <field name="parish_id"/>                    
                 </group>
             </xpath>
         </field>

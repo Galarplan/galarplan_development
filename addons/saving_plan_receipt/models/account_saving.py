@@ -24,4 +24,5 @@ class AccountSavingLines(models.Model):
             total_paid = sum(line.payment_receipt_ids.mapped('amount'))
             line.paid_receipt_amount = total_paid
             line.pending_receipt_amount = line.pendiente - total_paid
-    
+        
+

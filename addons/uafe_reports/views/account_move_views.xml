@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_move_form_inherit_financing" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.financing</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Ubicar después del campo invoice_date -->
+            <xpath expr="//field[@name='invoice_date']" position="after">
+
+                <field name="financing_type"/>
+
+                <field name="direct_financing_value"/>
+
+                <field name="external_financing_value"/>
+
+            </xpath>
+
+        </field>
+    </record>    
+</odoo>

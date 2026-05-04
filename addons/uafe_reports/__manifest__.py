@@ -27,6 +27,7 @@
         'views/res_company.xml',
         'views/res_country.xml',
         'views/res_partner.xml',
+        'views/res_parish.xml',
         'views/economy_activity.xml',
         'wizard/uafe_report.xml',
         'views/menuitems.xml',

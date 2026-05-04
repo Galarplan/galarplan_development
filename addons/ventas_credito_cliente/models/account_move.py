@@ -8,7 +8,9 @@ class AccountMove(models.Model):
     is_credit_bank = fields.Boolean(string="Venta por financiento banco")
     is_direct = fields.Boolean(string="Venta Por contado")
     is_galarplan = fields.Boolean(string="Venta Clientes Galarplan")
-
+    cod_operacion = fields.Char(
+        string="COD_OPERACION",
+        copy=False)
     def action_post(self):
         """Al confirmar la factura, usa la cuenta contable de crédito configurada en el cliente si es una venta a crédito."""
         for move in self:

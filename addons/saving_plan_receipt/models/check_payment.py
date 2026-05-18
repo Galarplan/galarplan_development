@@ -598,9 +598,9 @@ class ReceiptValidation(models.Model):
 
             total = sum(previous_receipts.mapped('amount')) + record.amount
 
-            if total > 10000:
+            if total > 9999.99:
                 raise ValidationError(
-                    f"El cliente supera el límite de $10,000 en efectivo en 30 días.\n"
+                    f"El cliente iguala o supera el límite de $10,000 en efectivo en 30 días.\n"
                     f"Total acumulado: ${total:.2f}"
                 )
 

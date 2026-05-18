@@ -8,7 +8,8 @@
             <xpath expr="//field[@name='street']/ancestor::group" position="after">
                 <!-- Nuestro nuevo grupo para campos personalizados -->
                 <group>
-                    <field name="country_substate_id" string="Canton" options="{'no_create': True}"/>
+                    <field name="country_substate_id" string="Canton" options="{'no_create': True}"
+                    domain="[('country_state', '=', state_id)]"/>
                     <field name="residence_type" string="Tipo de Residencia/Local"/>
                     <field name="address_number" string="Número de Dirección"/>
                     <field name="intersection" string="Intersección"/>

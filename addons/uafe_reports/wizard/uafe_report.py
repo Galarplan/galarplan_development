@@ -213,8 +213,7 @@ class UAFEReportWizard(models.TransientModel):
                 "COD_CANTON",
                 "COD_PARROQUIA",
                 "ACTIVIDAD ECONOMICA (AEC)",
-                "INGRESO_CLIENTE",
-                "CÓDIGO REGISTRO (CDR)",                                            
+                "INGRESO_CLIENTE",                                     
             ]
         ]
         client_data = [
@@ -241,8 +240,9 @@ class UAFEReportWizard(models.TransientModel):
             partner = invoice.invoice_id.partner_id
             client_data.append(
                 [
-                    'J' if partner.vat and partner.vat[-3:] == '001'
-                        else 'N',
+                    'J' if partner.l10n_latam_identification_type_id.id == 4
+                    else 'N' if partner.l10n_latam_identification_type_id.id == 5
+                    else '',
                     'R' if partner.l10n_latam_identification_type_id.name == 'RUC'
                         else 'C' if partner.l10n_latam_identification_type_id.name == 'Cédula'
                         else "",
@@ -256,7 +256,6 @@ class UAFEReportWizard(models.TransientModel):
                     partner.parish_id.code or "",
                     partner.economic_activity.code or "",
                     partner.monthly_income or "",
-                    self.company_id.uafe_code,
                 ]
             )
 
@@ -383,6 +382,10 @@ class UAFEReportWizard(models.TransientModel):
             partner = invoice.invoice_id.partner_id
             for line in invoice.invoice_id.invoice_line_ids:                
                 product_id = line.product_id
+
+                if not product_id.chassis_number:
+                    continue
+
                 print('====================prdid',product_id)
                 client_data.append(
                     [

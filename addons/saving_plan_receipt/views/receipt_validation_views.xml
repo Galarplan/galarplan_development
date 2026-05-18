@@ -23,7 +23,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" filter_domain="[('name', 'ilike', self)]" />
-                <field name="partner_id" />
+                <field name="partner_id"/>
                 <field name="state" />
                 <field name="date" />
                 <filter name="today" string="Hoy" domain="[('date', '=', context_today())]" />
@@ -99,7 +99,8 @@
                             <field name="partner_id"
                                 attrs="{'readonly': [('state', '=', 'posted')]}"
                                 required="1"
-                                domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]"/>
+                                domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]"
+                                options="{'no_quick_create': True}"/>
                             <field name="document_number"
                                 attrs="{'readonly': [('state', '=', 'posted')]}" />
                             <field name="street" attrs="{'readonly': [('state', '=', 'posted')]}" />

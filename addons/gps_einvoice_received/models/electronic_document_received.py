@@ -1077,7 +1077,7 @@ group by partner_group_id
                 srch_partner=OBJ_PARTNER.search([('vat','=',ruc)])
                 if not srch_partner:
                     raise ValidationError(_("Cliente/Proveedor con ID %s no existe") % (ruc,))
-                ###buscad documento
+                ###buscad documento             
                 srch_journal=OBJ_JOURNAL.search([('type','=',"purchase"),('code','=',"FACTU"),('company_id','=',brw_each.company_id.id)])
                 if not srch_journal:
                     raise ValidationError(_("No hay un diario definido por defecto para Facturas de Proveedores"))

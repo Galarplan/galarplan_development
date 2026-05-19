@@ -135,19 +135,31 @@ class ElectronicDocumentReceivedBatch(models.Model):
     def create_document(self,access_key,brw_each,identification,partner_name,document_ids):
         OBJ_DOCUMENT=self.env["electronic.document.received"]
         if access_key:
-            document_srch=OBJ_DOCUMENT.search([('access_key','=',access_key)])
+            document_srch = OBJ_DOCUMENT.search([
+                ('access_key', '=', access_key),
+                ('company_id', '=', brw_each.company_id.id)
+            ], limit=1)
+
             if not document_srch:
-                document_srch=OBJ_DOCUMENT.create({
-                                        "company_id":brw_each.company_id.id,
-                                        "state":"draft",
-                                        "identification":identification,
-                                        "partner_name":partner_name,
-                                        "name":"%s - %s" % (identification,partner_name),
-                                        "access_key":access_key
-                                        })
-                document_ids.append(document_srch.id)
+
+                document_srch = OBJ_DOCUMENT.create({
+                    "company_id": brw_each.company_id.id,
+                    "state": "draft",
+                    "identification": identification,
+                    "partner_name": partner_name,
+                    "name": "%s - %s" % (identification, partner_name),
+                    "access_key": access_key
+                })
+
             else:
-                document_ids.append(document_srch.id)
+
+                document_srch.write({
+                    "identification": identification,
+                    "partner_name": partner_name,
+                    "name": "%s - %s" % (identification, partner_name),
+                })
+
+            document_ids.append(document_srch.id)
         return document_ids
                 
     def process_text(self,ext,brw_each,document_ids):

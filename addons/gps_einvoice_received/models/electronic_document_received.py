@@ -148,7 +148,6 @@ class ElectronicDocumentReceived(models.Model):
         string="Compañia",
         required=True,
         copy=False,
-        default=lambda self: self.env.company,
     )
     state=fields.Selection([('draft','Preliminar'),('updated','Actualizada'),('error','Error'),('annulled','Anulado')],"Estado",default="draft")
     

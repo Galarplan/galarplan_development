@@ -147,7 +147,8 @@ class AccountPayment(models.Model):
         for rec in self:
             if rec.cheque_no:
                 print("rrrr",rec.cheque_no)
-                check_similar_records = self.env['pdc.registr'].search([('cheque_no', '=', rec.cheque_no)])
+                check_similar_records = self.env['pdc.registr'].search([('cheque_no', '=', rec.cheque_no),
+                ('bank_id', '=', rec.bank_id.id)])
                 if check_similar_records and len(check_similar_records) > 1:
                     raise UserError("Warning!! Duplicating Cheque Number...Use another Cheque no!!")
 

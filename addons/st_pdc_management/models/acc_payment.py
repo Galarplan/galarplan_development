@@ -141,6 +141,7 @@ class AccountPayment(models.Model):
                 'payment_type': self.payment_type
             })
 
+# SE MODIFICA VALIDACION PARA QUE TOEM ENCUENTA NO SOLO No DE CHQ SINO TAMBIEN AL BANCO
     def action_post(self):
         if self.amount <= 0.0:
             raise UserError('Payment amount should be positive')

@@ -142,6 +142,7 @@ class AccountPayment(models.Model):
             })
 
 # SE MODIFICA VALIDACION PARA QUE TOEM ENCUENTA NO SOLO No DE CHQ SINO TAMBIEN AL BANCO
+# LINEA DE PRUEBA PARA SUBIR SOLO CAMBIO POR ESTA LINEA SIN ALTERAR CODIGO
     def action_post(self):
         if self.amount <= 0.0:
             raise UserError('Payment amount should be positive')

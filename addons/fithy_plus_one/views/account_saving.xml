@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista que hereda el formulario de account.saving para agregar una nueva página -->
+    <record id="view_account_saving_form_inherit" model="ir.ui.view">
+        <field name="name">account.saving.form.inherit</field>
+        <field name="model">account.saving</field>
+        <field name="inherit_id" ref="planes_ahorro.account_saving_form_view" />
+        <field name="arch" type="xml">
+
+
+            <!-- Agregar NUEVA PÁGINA después de Configuración -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Pagos Automáticos" name="automatic_payments_page">
+                    <group>
+                        <group string="Configuración de Pagos Automáticos">
+                            <field name="enable_automatic_payments"
+                                help="Activa esta opción para habilitar los pagos automáticos"
+                            />
+                            <field name="first_inscription_percentage"
+                                attrs="{'readonly':[('enable_automatic_payments','!=',True)]}"
+                                help="Porcentaje del valor de inscripción para el primer pago"
+                            />
+                            <field name="second_inscription_percentage"
+                                attrs="{'readonly':[('enable_automatic_payments','!=',True)]}"
+                                help="Porcentaje del valor de inscripción para el segundo pago"
+                            />
+                            <field name="serv_inscription_amount"
+                                string="Valor Inscripción Total"
+                                readonly="1"
+                            />
+                            <field name="first_inscription_amount"
+                                string="Valor 1er Pago"
+                                compute="_compute_inscription_amounts"
+                                readonly="1"
+                            />
+                            <field name="second_inscription_amount"
+                                string="Valor 2do Pago"
+                                compute="_compute_inscription_amounts"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Estado de Pagos Automáticos">
+                            <field name="first_payment_status"
+                                string="1er Pago"
+                                widget="badge"
+                                decoration-success="first_payment_status == 'pagado'"
+                                decoration-warning="first_payment_status == 'pendiente'"
+                                decoration-danger="first_payment_status == 'no_aplicable'"
+                            />
+                            <field name="second_payment_status"
+                                string="2do Pago"
+                                widget="badge"
+                                decoration-success="second_payment_status == 'pagado'"
+                                decoration-warning="second_payment_status == 'pendiente'"
+                                decoration-danger="second_payment_status == 'no_aplicable'"
+                            />
+                            <field name="first_payment_date"
+                                string="Fecha 1er Pago"
+                                readonly="1"
+                            />
+                            <field name="second_payment_date"
+                                string="Fecha 2do Pago"
+                                readonly="1"
+                            />
+                            <field name="first_invoice_id"
+                                string="Factura 1er Pago"
+                                readonly="1"
+                            />
+                            <field name="second_invoice_id"
+                                string="Factura 2do Pago"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Acciones">
+                            <!-- <button name="first_payment"
+                                string="Ejecutar 1er Pago (50% Inscripción + Cuota 1)"
+                                icon="fa-credit-card"
+                                type="object"
+                                class="btn-primary"
+                                groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                                attrs="{'invisible':[('enable_automatic_payments','!=',True),('state','not in',('open',)),('first_payment_status','=','pagado')]}"
+                                help="Genera el pago y factura para la primera parte de la inscripción (50%) + Cuota 1"
+                            />
+                            <button name="second_payment"
+                                string="Ejecutar 2do Pago (50% Inscripción + Cuota 2)"
+                                icon="fa-credit-card"
+                                type="object"
+                                class="btn-success"
+                                groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                                attrs="{'invisible':[('enable_automatic_payments','!=',True),('state','not in',('open',)),('second_payment_status','=','pagado')]}"
+                                help="Genera el pago y factura para la segunda parte de la inscripción (50%) + Cuota 2"
+                            /> -->
+                            
+                            <button name="%(action_payment_inscription_wz)d"
+                                string="Facturar Inscripción"
+                                icon="fa-file-invoice"
+                                type="action"
+                                class="btn-primary"
+                                attrs="{'invisible':[('state','not in',('open',))]}"
+                                groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+                                help="Factura la inscripción y concilia con el pago correspondiente"
+                            />
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Información Adicional">
+                            <field name="first_payment_info"
+                                string="Info 1er Pago"
+                                readonly="1"
+                            />
+                            <field name="second_payment_info"
+                                string="Info 2do Pago"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

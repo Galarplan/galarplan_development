@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <!-- Vista del wizard de facturación de inscripción -->
+    <record id="view_payment_inscription_wz_form" model="ir.ui.view">
+        <field name="name">payment.inscription.wz.form</field>
+        <field name="model">payment.inscription.wz</field>
+        <field name="arch" type="xml">
+            <form string="Facturar Inscripción">
+                <header>
+                    <button name="action_validate"
+                        string="Validar"
+                        type="object"
+                        class="btn-secondary"
+                        confirm="¿Está seguro que desea validar los datos?"
+                    />
+                    <button name="action_process"
+                        string="Procesar"
+                        type="object"
+                        class="btn-primary"
+                        confirm="¿Está seguro que desea procesar la facturación de inscripción?"
+                    />
+                    <button name="action_preview_invoice"
+                        string="Previsualizar Factura"
+                        type="object"
+                        class="btn-info"
+                    />
+                    <button string="Cancelar"
+                        class="btn-secondary"
+                        special="cancel"
+                    />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Facturación de Inscripción</h1>
+                    </div>
+
+                    <group>
+                        <group string="Datos del Plan">
+                            <field name="saving_id"
+                                string="Plan de Ahorro"
+                                options="{'no_create': True}"
+                                readonly="1"
+                            />
+                            <field name="partner_id"
+                                string="Cliente"
+                                readonly="1"
+                            />
+                            <field name="currency_id"
+                                string="Moneda"
+                                invisible="1"
+                            />
+                        </group>
+                        <group string="Datos de Inscripción">
+                            <field name="inscription_line_id"
+                                string="Línea de Inscripción"
+                                readonly="1"
+                            />
+                            <field name="inscription_amount"
+                                string="Valor Inscripción"
+                                widget="monetary"
+                                readonly="1"
+                            />
+                            <field name="paid_amount"
+                                string="Valor Pagado"
+                                widget="monetary"
+                                readonly="1"
+                            />
+                            <field name="pending_amount"
+                                string="Valor Pendiente"
+                                widget="monetary"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Datos de Pago">
+                            <field name="payment_amount"
+                                string="Monto a Pagar"
+                                widget="monetary"
+                                required="1"
+                                help="Ingrese el monto que desea pagar (no puede superar el pendiente)"
+                            />
+                            <field name="payment_date"
+                                string="Fecha de Pago"
+                                required="1"
+                            />
+                            <field name="deposit_date"
+                                string="Fecha de Depósito"
+                            />
+                            <field name="ref"
+                                string="Referencia"
+                                required="1"
+                            />
+                        </group>
+                        <group string="Datos Contables">
+                            <field name="payment_journal_id"
+                                string="Diario de Pago"
+                                required="1"
+                                options="{'no_create': True}"
+                            />
+                            <field name="payment_method_id"
+                                string="Método de Pago"
+                                required="1"
+                                options="{'no_create': True}"
+                            />
+                            <field name="company_id"
+                                string="Compañía"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+
+                    <group string="Información Adicional">
+                        <field name="state"
+                            string="Estado"
+                            readonly="1"
+                            widget="badge"
+                            decoration-success="state == 'done'"
+                            decoration-warning="state == 'draft'"
+                            decoration-danger="state == 'cancel'"
+                        />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para el wizard de facturación de inscripción -->
+    <record id="action_payment_inscription_wz" model="ir.actions.act_window">
+        <field name="name">Facturar Inscripción</field>
+        <field name="res_model">payment.inscription.wz</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'active_id': active_id}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Factura la inscripción del plan de ahorro
+            </p>
+            <p>
+                Este asistente te permite facturar la inscripción del plan de ahorro
+                y conciliarla automáticamente con el pago correspondiente.
+            </p>
+        </field>
+    </record>
+
+
+</odoo>

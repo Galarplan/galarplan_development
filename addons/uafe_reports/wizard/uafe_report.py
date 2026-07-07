@@ -37,11 +37,19 @@ class UAFEReportWizard(models.TransientModel):
     company_id = fields.Many2one(
         "res.company", string="Compañía", default=lambda self: self.env.company
     )
+
+    receipt_ids = fields.One2many(
+        comodel_name="uafe.report.wizard.receipt",  # Nombre del modelo relacionado
+        inverse_name="wizard_id",  # Relación inversa
+        string="Recibos",
+    )
+
     invoice_ids = fields.One2many(
         comodel_name="uafe.report.wizard.line",  # Nombre del modelo relacionado
         inverse_name="wizard_id",  # Relación inversa
         string="Facturas",
     )
+
 
     registro_number_customer = fields.Char(string="Número de Registro cliente")
     registro_number_operation = fields.Char(string="Número de Registro Operaciones")
@@ -131,6 +139,44 @@ class UAFEReportWizard(models.TransientModel):
         self.invoice_ids = lines
 
         # Acción para recargar el wizard sin cerrar
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": self._name,
+            "view_mode": "form",
+            "res_id": self.id,
+            "target": "new",
+        }
+    
+################################## ALEX    
+    def load_receipts(self):
+
+        receipts = self.env["receipt.validation"].search(
+            [
+                ("date", ">=", self.date_start),
+                ("date", "<=", self.date_end),
+                ("company_id", "=", self.company_id.id),
+            ]
+        )
+
+        lines = []
+
+        for receipt in receipts:
+            lines.append(
+                (
+                    0,
+                    0,
+                    {
+                        "receipt_id": receipt.id,
+                        "name": receipt.name,
+                        "date": receipt.date,
+                        "amount": receipt.amount,
+                        "partner_name": receipt.partner_id.name,
+                    },
+                )
+            )
+
+        self.receipt_ids = lines
+
         return {
             "type": "ir.actions.act_window",
             "res_model": self._name,
@@ -466,6 +512,115 @@ class UAFEReportWizard(models.TransientModel):
             "target": "self",
         }
 
+############################################################ ALEX TRANSACCIONES
+
+    def generate_transactions_excel(self):
+        headers = [[
+            "COD_TIPO_ID",
+            "ID_CLIENTE",
+            "NUMERO_OPERACION",
+            "FECHA_TRANSACCION",
+            "NUMERO_TRANSACCION",
+            "CODIGO_TIPO_TRANSACCION",
+            "VALOR_DEBITO",
+            "VALOR_CREDITO",
+            "VALOR_EFECTIVO",
+            "VALOR_CHEQUE",
+            "VALOR_TARJETA_CREDITO",
+            "VALOR_TVALORES_BIENES",
+        ]]
+
+        data = []
+
+        for invoice in self.invoice_ids:
+
+            move = invoice.invoice_id
+            partner = move.partner_id
+
+            receipts = self.env['receipt.validation'].search([
+                ('partner_id', '=', partner.id),
+                ('date', '>=', self.date_start),
+                ('date', '<=', self.date_end),
+            ])
+
+            for receipt in receipts:
+
+                tipo_id = (
+                    'R' if partner.l10n_latam_identification_type_id.name == 'RUC'
+                    else 'C' if partner.l10n_latam_identification_type_id.name == 'Cédula'
+                    else ''
+                )
+
+                numero_operacion = ''.join(
+                    filter(str.isdigit, move.name or '')
+                )
+
+                print(
+                        'FACTURA:', move.name,
+                        'PARTNER:', partner.id,
+                        'VAT:', partner.vat,
+                        'RECIBO:', receipt.name,
+                        'FECHA:', receipt.date,
+                        'VALOR:', receipt.amount,
+                )   
+
+                data.append([
+                    tipo_id,
+                    partner.vat or '',
+                    numero_operacion,
+                    receipt.date.strftime('%Y%m%d') if receipt.date else '',
+                    receipt.name or '',
+                    '13',
+                    receipt.amount or 0.00,
+                ])
+
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet("Transacciones")
+
+        header_format = workbook.add_format({
+            "bold": True,
+            "bg_color": "#FFFF00",
+            "border": 1,
+            "align": "center",
+        })
+
+        data_format = workbook.add_format({
+            "border": 1,
+            "align": "center",
+        })
+
+        # Encabezados
+        for row, row_data in enumerate(headers):
+            for col, value in enumerate(row_data):
+                worksheet.write(row, col, value, header_format)
+
+        # Datos
+        for row, row_data in enumerate(data, start=1):
+            for col, value in enumerate(row_data):
+                worksheet.write(row, col, value, data_format)
+
+        workbook.close()
+        output.seek(0)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"TRA_{timestamp}.xlsx"
+
+        attachment = self.env["ir.attachment"].create({
+            "name": file_name,
+            "datas": base64.b64encode(output.read()),
+            "type": "binary",
+            "res_model": "uafe.report.wizard",
+            "res_id": self.id,
+        })
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/{attachment.id}?download=true",
+            "target": "self",
+        }
+
+################################################################################
 
 class UAFEReportWizardLine(models.TransientModel):
     _name = "uafe.report.wizard.line"
@@ -477,4 +632,23 @@ class UAFEReportWizardLine(models.TransientModel):
     invoice_id = fields.Many2one("account.move", string="Factura")  # Factura vinculada
     partner_name = fields.Char(string="Cliente")
     invoice_date = fields.Date(string="Fecha de Factura")
-    amount_total = fields.Float(string="Total")
+    amount_total = fields.Float(string="Total")  
+
+class UAFEReportWizardReceipt(models.TransientModel):
+    _name = "uafe.report.wizard.receipt"
+    _description = "Recibos UAFE"
+
+    wizard_id = fields.Many2one(
+        "uafe.report.wizard",
+        string="Wizard"
+    )
+
+    receipt_id = fields.Many2one(
+        "receipt.validation",
+        string="Recibo"
+    )
+
+    name = fields.Char(string="Número")
+    partner_name = fields.Char(string="Cliente")
+    date = fields.Date(string="Fecha")
+    amount = fields.Float(string="Valor")

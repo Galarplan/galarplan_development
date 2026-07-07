@@ -320,29 +320,31 @@ class AccountSaving(models.Model):
             remanente = 0.0 if nuevo_pendiente <= 0.01 else nuevo_pendiente
             
             # Actualizar cuota cero con SQL
-            query_inscription = """
+            query_inscription = f'''
                 UPDATE account_saving_lines 
                 SET 
-                    pagos = %s,
-                    pendiente = %s,
-                    estado_pago = %s,
-                    remanente = %s
-                WHERE id = %s
-            """
-            self.env.cr.execute(query_inscription, (nuevo_pagado, nuevo_pendiente, estado_pago, remanente, inscription_line.id))
+                    pagos = {nuevo_pagado},
+                    pendiente = {nuevo_pendiente},
+                    estado_pago = '{str(estado_pago)}',
+                    remanente = {remanente}
+                WHERE id = {inscription_line.id}
+            '''
+            print('=====================',query_inscription)
+
+            self.env.cr.execute(query_inscription)
             
             _logger.info("✅ Cuota cero actualizada: pagos=%s, pendiente=%s", nuevo_pagado, nuevo_pendiente)
         
         # --- ACTUALIZAR LA CUOTA FACTURADA CON SQL ---
         # La cuota se marca como pagada con el valor de saving_amount
-        query_quota = """
+        query_quota = f"""
             UPDATE account_saving_lines 
             SET 
-                pagos = %s,
-                pendiente = %s,
-                estado_pago = %s,
-                remanente = %s
-            WHERE id = %s
+                pagos = {quota_line.saving_amount},
+                pendiente = {0.0},
+                estado_pago = {'pagado'},
+                remanente = {0.0}
+            WHERE id = {quota_line.id}
         """
         self.env.cr.execute(query_quota, (quota_line.saving_amount, 0.0, 'pagado', 0.0, quota_line.id))
         

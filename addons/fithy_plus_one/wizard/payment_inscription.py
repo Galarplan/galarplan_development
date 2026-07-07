@@ -292,7 +292,7 @@ class PaymentInscriptionWz(models.TransientModel):
             SET 
                 pagos = {nuevo_pagado},
                 pendiente = {nuevo_pendiente},
-                estado_pago = {estado_pago},
+                estado_pago = '{estado_pago}',
                 remanente = {remanente}
             WHERE id = {id_line}
         """
@@ -356,15 +356,15 @@ class PaymentInscriptionWz(models.TransientModel):
         _logger.info("Estado: %s", estado_pago)
         
         # SQL UPDATE directo con parámetros (más seguro)
-        query = f"""
+        query = f'''
             UPDATE account_saving_lines 
             SET 
                 pagos = {nuevo_pagado},
                 pendiente = {nuevo_pendiente},
-                estado_pago = {estado_pago},
+                estado_pago = '{estado_pago}',
                 remanente = {remanente}
             WHERE id = {line_id}
-        """
+        '''
         print('==============================',query)
         
         self.env.cr.execute(query)

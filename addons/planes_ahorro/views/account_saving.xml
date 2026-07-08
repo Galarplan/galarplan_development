@@ -114,7 +114,24 @@
           <button name="%(action_account_saving_payment_wizard)d"
             string="Registrar Pago" icon="fa-money"
             type="action"
-            attrs="{'invisible':[('state','not in',('open',))]}"
+            attrs="{
+                'invisible': [
+                    '|',
+                    ('state', '!=', 'open'),
+                    ('state_plan', 'in', [
+                        'disabled',
+                        'retired',
+                        'cancelled',
+                        'precanceled',
+                        'moved',
+                        'closed',
+                        'assignment',
+                        'unified',
+                        'amount_change',
+                        'anulled'
+                    ])
+                ]
+            }"
             groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
           />
 
@@ -122,13 +139,47 @@
             string="Facturar" icon="fa-money"
             type="object"
             groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-            attrs="{'invisible':[('state','not in',('open',))]}"
+            attrs="{
+                'invisible': [
+                    '|',
+                    ('state', '!=', 'open'),
+                    ('state_plan', 'in', [
+                        'disabled',
+                        'retired',
+                        'cancelled',
+                        'precanceled',
+                        'moved',
+                        'closed',
+                        'assignment',
+                        'unified',
+                        'amount_change',
+                        'anulled'
+                    ])
+                ]
+            }"
           />
 
           <button name="action_draft"
             string="Reversar" icon="fa-rotate-left"
             type="object"
-            attrs="{'invisible':[('state','not in',('open',))]}"
+            attrs="{
+                'invisible': [
+                    '|',
+                    ('state', '!=', 'open'),
+                    ('state_plan', 'in', [
+                        'disabled',
+                        'retired',
+                        'cancelled',
+                        'precanceled',
+                        'moved',
+                        'closed',
+                        'assignment',
+                        'unified',
+                        'amount_change',
+                        'anulled'
+                    ])
+                ]
+            }"
             groups="planes_ahorro.grp_administrador"
           />
 
@@ -198,8 +249,9 @@
 
               <field name="seller_id" required="1"
                 options="{'no_edit':True,'no_create':True,'no_edit':True}"
-                attrs="{'readonly':[('state','!=','draft')]}"
-              />
+                attrs="{'readonly':[('state','!=','draft')]}"/>
+              <!-- <field name="promotion_50_1"/> -->
+              <field name="observation"/>
               <field name="start_date" required="1"
                 attrs="{'readonly':[('state','!=','draft')]}" />
               <field name="end_date" required="0" readonly="1" force_save="1" />

@@ -20,10 +20,14 @@ class AccountSaving(models.Model):
     name = fields.Char(string='Nombre', required=True,default=_get_default_name,tracking=True)
     saving_plan_id = fields.Many2one('account.saving.plan',string='Planes de Ahorro	',tracking=True)
     partner_id = fields.Many2one('res.partner', string='Socio (ID)',required=True,tracking=True)
-    seller_id = fields.Many2one('res.users', string='Vendedor',tracking=True,default=lambda self: self.env.user )
+    seller_id = fields.Many2one('res.users', string='Vendedor',tracking=True,default=lambda self: self.env.user,domain=[
+        ('x_is_seller', '=', True),
+        ('x_sales_active', '=', True),
+    ] )
     start_date = fields.Date(string='Fecha de inicio',default=fields.Date.today(),tracking=True)
     end_date = fields.Date(string='Fecha de fin',required=False,compute="onchange_lines_date",store=True,tracking=True)
-
+    # promotion_50_1 = fields.Boolean(string='Promoción 50+1',tracking=True)
+    observation = fields.Char(string='Observación',tracking=True)
     analytic_account_id = fields.Many2one('account.analytic.account', string='Cuenta analítica',tracking=True)
 
     state = fields.Selection([
@@ -49,6 +53,9 @@ class AccountSaving(models.Model):
         ('cancelled', 'Cancelado'),
         ('moved','Traspaso'),
         ('closed', 'Cerrado'),
+        ('assignment', 'Cesión'),
+        ('unified','Unificado'),
+        ('amount_change','Cambio de Monto'),
     ], string='Estado del Plan', default='draft',tracking=True)
 
     puede_cambiar_estados = fields.Boolean(

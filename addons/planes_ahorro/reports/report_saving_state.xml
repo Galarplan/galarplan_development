@@ -57,6 +57,13 @@
                             <p t-field="docs.serv_inscription_amount" />
                         </div>
 
+                        <t t-if="docs.observation">
+                            <div style="margin-top:10px;">
+                                <strong>Observación:</strong>
+                                <span t-field="docs.observation"/>
+                            </div>
+                        </t>
+
                     </div>
                     <h5 class="mt0 text-center">LÍNEAS DEL PLAN DE AHORRO</h5>
                     <div class="row" style="margin-left:10px; margin-right:10px;"

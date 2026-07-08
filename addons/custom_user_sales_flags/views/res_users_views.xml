@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+
+    <record id="view_users_form_inherit_sales_flags" model="ir.ui.view">
+        <field name="name">res.users.form.sales.flags</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//sheet/notebook" position="inside">
+
+                <page string="Ventas">
+
+                    <group>
+                        <field name="x_is_seller"/>
+                        <field name="x_sales_active"/>
+                        <field name="x_is_jefe"/>
+                        <field name="x_admin_crm"/>
+                    </group>
+
+                </page>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

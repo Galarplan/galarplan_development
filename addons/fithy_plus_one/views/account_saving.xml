@@ -11,7 +11,26 @@
 
             <!-- Agregar NUEVA PÁGINA después de Configuración -->
             <xpath expr="//notebook" position="inside">
-                <page string="Pagos Automáticos" name="automatic_payments_page">
+                <page string="Pagos Automáticos"
+                    name="automatic_payments_page"
+                    attrs="{
+                        'invisible': [
+                            '|',
+                            ('state', '!=', 'open'),
+                            ('state_plan', 'in', [
+                                'disabled',
+                                'retired',
+                                'cancelled',
+                                'precanceled',
+                                'moved',
+                                'closed',
+                                'assignment',
+                                'unified',
+                                'amount_change',
+                                'anulled'
+                            ])
+                        ]
+                    }">
                     <group>
                         <group string="Configuración de Pagos Automáticos">
                             <field name="enable_automatic_payments"

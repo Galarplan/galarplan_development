@@ -1,65 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <data>
-    <template id="report_invoice_line_comentario" inherit_id="vehicle_stock_info.report_invoice_document_custom">
-      <xpath expr="//td[@name='account_invoice_line_name']" position="replace">
-        <td name="account_invoice_line_name">
-          <span t-field="line.product_id.name"
-              t-options="{'widget': 'text', 'style': 'font-weight: bold;'}" />
-          <t t-if="line.x_comentario">
-            <span> - </span>
-            <span t-esc="line.x_comentario"/>
-          </t>
-          <t t-if="line.product_id.is_a_vehicle">
-            <div class="row">
-              <div class="col">
-                <strong>Chassis:</strong>
-                <span class="mx-2" t-field="line.product_id.chassis_number" />
-                <strong>Número de Motor:</strong>
-                <span class="mx-2" t-field="line.product_id.engine_number" />
-                <strong>Número RAMW:</strong>
-                <span class="mx-2" t-field="line.product_id.ramw_number" />
-                <strong>Marca:</strong>
-                <span class="mx-2" t-field="line.product_id.vehicle_brand_id.name" />
-                <strong>Modelo:</strong>
-                <span class="mx-2" t-field="line.product_id.vehicle_model_id.name" />
-                <strong>Modelo Homologado:</strong>
-                <span class="mx-2" t-field="line.product_id.modelo_homologado_ant" />
-                <strong>Modelo SRI:</strong>
-                <span class="mx-2" t-field="line.product_id.modelo_SRI" />
-                <strong>Color:</strong>
-                <span class="mx-2" t-field="line.product_id.vehicle_color" />
-                <strong>Asientos:</strong>
-                <span class="mx-2" t-field="line.product_id.number_of_seats" />
-                <strong>Puertas:</strong>
-                <span class="mx-2" t-field="line.product_id.vehicle_brand_id.name" />
-                <strong>Llantas:</strong>
-                <span class="mx-2" t-field="line.product_id.number_of_tires" />
-                <strong>Tonelaje:</strong>
-                <span class="mx-2" t-field="line.product_id.ton" />
-                <strong>Capacidad de Carga:</strong>
-                <span class="mx-2" t-field="line.product_id.load_capcity" />
-                <strong>Ejes:</strong>
-                <span class="mx-2" t-field="line.product_id.number_of_axles" />
-                <strong>Año del Modelo:</strong>
-                <span class="mx-2" t-field="line.product_id.model_year" />
-                <strong>Pais de origen:</strong>
-                <span class="mx-2" t-field="line.product_id.origin_vehicle.name" />
-                <strong>Transmisión:</strong>
-                <span class="mx-2" t-field="line.product_id.transmission" />
-                <strong>Combustible:</strong>
-                <span class="mx-2" t-field="line.product_id.fuel_type" />
-                <strong>Cilindraje:</strong>
-                <span class="mx-2" t-field="line.product_id.cylinder_capacity" />
-                <strong>Tipo:</strong>
-                <span class="mx-2" t-field="line.product_id.vehicle_type.name" />
-                <strong>Clase:</strong>
-                <span class="mx-2" t-field="line.product_id.vehicle_class" />
-              </div>
-            </div>
-          </t>
-        </td>
-      </xpath>
-    </template>
-  </data>
+    <data>
+
+        <template id="report_invoice_line_name"
+                  inherit_id="vehicle_stock_info.report_invoice_document_custom">
+
+            <xpath expr="//td[@name='account_invoice_line_name']/span[@t-field='line.product_id.name']"
+                   position="replace">
+
+                <span t-field="line.name"
+                      t-options="{'widget': 'text', 'style': 'font-weight: bold;'}"/>
+
+            </xpath>
+
+        </template>
+
+    </data>
 </odoo>

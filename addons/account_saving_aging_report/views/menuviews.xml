@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Menú para acceder al reporte -->
+        <menuitem 
+            id="menu_saving_aging_report"
+            name="Reporte de Antigüedad de Cuotas"
+            parent="planes_ahorro.planes_ahorro_root"
+            sequence="50"
+            action="action_saving_aging_wizard"/>
+    </data>
+</odoo>

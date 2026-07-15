@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="saving_aging_report_pdf">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-call="web.internal_layout">
+                        <div class="page">
+                            <!-- Encabezado -->
+                            <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                                <h1 style="font-size: 18px; margin: 0;">Reporte de Antigüedad de Cuotas por Cobrar</h1>
+                                <h2 style="font-size: 14px; color: #555; margin: 5px 0 0 0;">Planes de Ahorro</h2>
+                            </div>
+                            
+                            <!-- Información del reporte -->
+                            <table style="width: 100%; font-size: 10px; margin-bottom: 15px;">
+                                <tr>
+                                    <td style="width: 50%;">
+                                        <strong>Compañía:</strong> <span t-field="doc.company_id"/><br/>
+                                        <strong>Fecha de Corte:</strong> <span t-field="doc.report_date"/>
+                                    </td>
+                                    <td style="width: 50%; text-align: right;">
+                                        <strong>Fecha de Generación:</strong> <span t-esc="generation_date"/><br/>
+                                        <strong>Total de Planes:</strong> <span t-esc="len(data['data'])"/>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Mostrar mensaje si no hay datos -->
+                            <t t-if="not has_data">
+                                <div style="text-align: center; padding: 50px; border: 1px dashed #ccc;">
+                                    <p style="font-size: 14px; color: #999;">No se encontraron datos para los filtros seleccionados.</p>
+                                </div>
+                            </t>
+                            
+                            <!-- Tabla de Resumen por Socio -->
+                            <t t-if="has_data">
+                                <h3 style="font-size: 12px; margin: 10px 0 5px 0;">Resumen por Socio</h3>
+                                <table style="width: 100%; border-collapse: collapse; font-size: 9px; border: 1px solid #ddd;">
+                                    <thead>
+                                        <tr style="background-color: #2c3e50; color: white;">
+                                            <th style="padding: 4px; text-align: left; border: 1px solid #ddd;">Socio</th>
+                                            <th style="padding: 4px; text-align: left; border: 1px solid #ddd;">RUC/CI</th>
+                                            <th style="padding: 4px; text-align: center; border: 1px solid #ddd;">Planes</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd;">Por Vencer</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd;">1-30 d.</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd;">31-60 d.</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd;">61-90 d.</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd;">91-120 d.</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd;">+120 d.</th>
+                                            <th style="padding: 4px; text-align: right; border: 1px solid #ddd; background-color: #34495e;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="partner_summary.items()" t-as="partner_item">
+                                            <t t-set="partner" t-value="partner_item[1]"/>
+                                            <tr>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd;"><span t-esc="partner['partner_name']"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd;"><span t-esc="partner['partner_vat']"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: center;"><span t-esc="len(partner['plans'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(partner['total_not_due'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(partner['total_30'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(partner['total_60'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(partner['total_90'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(partner['total_120'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(partner['total_older'])"/></td>
+                                                <td style="padding: 3px 4px; border: 1px solid #ddd; text-align: right; font-weight: bold; background-color: #ecf0f1;">
+                                                    <span t-esc="format_currency(partner['total_residual'])"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="totals">
+                                            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                                <td colspan="3" style="padding: 4px; border: 1px solid #ddd; text-align: right;">TOTALES</td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(totals['total_not_due'])"/></td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(totals['total_30'])"/></td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(totals['total_60'])"/></td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(totals['total_90'])"/></td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(totals['total_120'])"/></td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(totals['total_older'])"/></td>
+                                                <td style="padding: 4px; border: 1px solid #ddd; text-align: right; background-color: #ecf0f1;">
+                                                    <span t-esc="format_currency(totals['total_residual'])"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                                
+                                <!-- Detalle de Cuotas por Plan -->
+                                <h3 style="font-size: 12px; margin: 15px 0 5px 0;">Detalle de Cuotas</h3>
+                                <t t-foreach="data['data']" t-as="plan">
+                                    <div style="margin-bottom: 10px; border: 1px solid #ddd; border-radius: 3px;">
+                                        <!-- Encabezado del Plan -->
+                                        <div style="background-color: #34495e; color: white; padding: 4px 8px; font-size: 9px; display: flex; flex-wrap: wrap; justify-content: space-between;">
+                                            <span><strong>Plan:</strong> <span t-esc="plan['plan_name']"/></span>
+                                            <span><strong>Socio:</strong> <span t-esc="plan['partner_name']"/></span>
+                                            <span><strong>Estado:</strong> <span t-esc="plan['state_plan_description']"/></span>
+                                            <span><strong>Total:</strong> <span t-esc="format_currency(plan['total_residual'])"/></span>
+                                        </div>
+                                        
+                                        <!-- Tabla de Cuotas -->
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 8px;">
+                                            <thead>
+                                                <tr style="background-color: #ecf0f1;">
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: center;">#</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: center;">Fecha</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: center;">Días Venc.</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">Total</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">Pagado</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">Pendiente</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">Por Vencer</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">1-30 d.</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">31-60 d.</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">61-90 d.</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">91-120 d.</th>
+                                                    <th style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;">+120 d.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="plan['lines']" t-as="line">
+                                                    <tr>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: center;"><span t-esc="line['number'] or '-'"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: center;"><span t-esc="line['date']"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: center;">
+                                                            <span t-if="line['days_overdue'] > 0" style="color: #c0392b;" t-esc="line['days_overdue']"/>
+                                                            <span t-else="" style="color: #27ae60;">0</span>
+                                                        </td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['total'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['paid'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right; font-weight: bold;">
+                                                            <span t-if="line['residual'] > 0" style="color: #c0392b;" t-esc="format_currency(line['residual'])"/>
+                                                            <span t-else="" t-esc="format_currency(0)"/>
+                                                        </td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['age_not_due'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['age_30'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['age_60'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['age_90'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['age_120'])"/></td>
+                                                        <td style="padding: 2px 3px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(line['age_older'])"/></td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                                    <td colspan="5" style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;">TOTAL PLAN:</td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right; background-color: #ecf0f1;">
+                                                        <span t-esc="format_currency(plan['total_residual'])"/>
+                                                    </td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(plan['total_not_due'])"/></td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(plan['total_30'])"/></td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(plan['total_60'])"/></td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(plan['total_90'])"/></td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(plan['total_120'])"/></td>
+                                                    <td style="padding: 3px 6px; border: 1px solid #ddd; text-align: right;"><span t-esc="format_currency(plan['total_older'])"/></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </t>
+                            </t>
+                            
+                            <!-- Pie de página -->
+                            <div style="text-align: center; font-size: 8px; color: #999; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 8px;">
+                                Reporte generado por <span t-esc="company_name"/> - <span t-esc="generation_date"/>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+        
+        <!-- Acción del Reporte PDF -->
+        <report
+            id="action_report_saving_aging"
+            model="saving.aging.wizard"
+            string="Reporte de Antigüedad de Cuotas"
+            report_type="qweb-pdf"
+            name="account_saving_aging_report.saving_aging_report_pdf"
+            attachment_use="False"
+            file="saving_aging_report"
+        />
+    </data>
+</odoo>

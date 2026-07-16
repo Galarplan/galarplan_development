@@ -397,7 +397,7 @@ class PaymentInscriptionWz(models.TransientModel):
             "product_id": service_id.id,
             "name": service_id.name,
             "quantity": 1,
-            "price_unit": round(base_amount/1.15,2),
+            "price_unit": base_amount,
             # "analytic_account_id": brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
             "tax_ids": [(6, 0,
                             service_id.taxes_id and service_id.taxes_id.ids or [])],

@@ -356,7 +356,7 @@ class PaymentInscriptionWz(models.TransientModel):
         _logger.info("Estado: %s", estado_pago)
         
         # SQL UPDATE directo con parámetros (más seguro)
-        query = f'''
+        query = f"""
             UPDATE account_saving_lines 
             SET 
                 pagos = {nuevo_pagado},
@@ -364,7 +364,7 @@ class PaymentInscriptionWz(models.TransientModel):
                 estado_pago = '{estado_pago}',
                 remanente = {remanente}
             WHERE id = {line_id}
-        '''
+        """
         print('==============================',query)
         
         self.env.cr.execute(query)
@@ -388,15 +388,29 @@ class PaymentInscriptionWz(models.TransientModel):
             self.payment_amount, 
             inscription_product.taxes_id
         )
+
+        service_id = self.saving_id.saving_plan_id.inscripcion_id
+
+        invoice_line_vals = []
+
+        invoice_line_vals.append((0, 0, {
+            "product_id": service_id.id,
+            "name": service_id.name,
+            "quantity": 1,
+            "price_unit": round(base_amount/1.15,2),
+            # "analytic_account_id": brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
+            "tax_ids": [(6, 0,
+                            service_id.taxes_id and service_id.taxes_id.ids or [])],
+        }))
         
-        invoice_line_vals = [(0, 0, {
-            'product_id': inscription_product.id,
-            'name': f"Inscripción Plan de Ahorro {self.saving_id.name}",
-            'quantity': 1,
-            'price_unit': base_amount,
-            'tax_ids': [(6, 0, inscription_product.taxes_id.ids or [])],
-            'account_id': account_receivable.id,
-        })]
+        # invoice_line_vals += [(0, 0, {
+        #     'product_id': inscription_product.id,
+        #     'name': f"Inscripción Plan de Ahorro {self.saving_id.name}",
+        #     'quantity': 1,
+        #     'price_unit': base_amount,
+        #     'tax_ids': [(6, 0, inscription_product.taxes_id.ids or [])],
+        #     'account_id': self.saving_id.property_account_receivable_id.id,
+        # })]
         
         invoice_vals = {
             'partner_id': self.partner_id.id,
@@ -421,9 +435,9 @@ class PaymentInscriptionWz(models.TransientModel):
         
         invoice = self.env['account.move'].create(invoice_vals)
         
-        for line in invoice.line_ids:
-            if line.account_id.reconcile:
-                line.account_id = account_receivable.id
+        # for line in invoice.line_ids:
+        #     if line.account_id.reconcile:
+        #         line.account_id = account_receivable.id
         
         invoice.action_post()
         
@@ -483,10 +497,15 @@ class PaymentInscriptionWz(models.TransientModel):
         
         payment = self.env['account.payment'].create(payment_vals)
         
-        for line in payment.line_ids:
-            if line.account_id.reconcile:
-                line.account_id = account_receivable.id
-                line.partner_id = self.partner_id.id
+        for line in payment.line_ids.filtered(lambda l: l.account_id == payment.partner_id.property_account_receivable_id):
+            # line.account_id = self.saving_id.property_account_receivable_id  # Usa la cuenta configurada en el cliente
+              line.account_id = self.saving_id.property_account_receivable_id
+
+
+        # for line in payment.line_ids:
+        #     if line.account_id.reconcile:
+        #         line.account_id = account_receivable.id
+        #         line.partner_id = self.partner_id.id
         
         payment.action_post()
         

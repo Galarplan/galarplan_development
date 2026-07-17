@@ -10,6 +10,10 @@
                         type="object"
                         string="Exportar Excel"
                         class="btn-primary"/>
+                <button name="action_export_invoice_xml"
+                        type="object"
+                        string="Exportar XML SRI"
+                        class="oe_highlight"/>                        
             </xpath>
         </field>
     </record>

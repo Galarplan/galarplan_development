@@ -5,6 +5,8 @@ from odoo.exceptions import UserError
 import io
 import base64
 import xlsxwriter
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 
 class AccountMove(models.Model):
@@ -331,3 +333,320 @@ class AccountMove(models.Model):
             'url': '/web/content/%s?download=true' % attachment.id,
             'target': 'self',
         }
+    def action_export_invoice_xml(self):
+        self.ensure_one()
+
+        # =====================================================
+        # CREAR ESTRUCTURA XML
+        # =====================================================
+
+        ventas = ET.Element("ventas")
+
+        datos_registrador = ET.SubElement(
+            ventas,
+            "datosRegistrador"
+        )
+
+        ET.SubElement(
+            datos_registrador,
+            "numeroRUC"
+        ).text = self.company_id.vat or ""    
+
+        # =====================================================
+        # DATOS DE LA VENTA
+        # =====================================================
+
+        datos_ventas = ET.SubElement(
+            ventas,
+            "datosVentas"
+        )
+
+        venta = ET.SubElement(
+            datos_ventas,
+            "venta"
+        )        
+
+        # =====================================================
+        # DATOS GENERALES FACTURA
+        # =====================================================
+
+        partner = self.partner_id
+
+
+        # =====================================================
+        # TIPO IDENTIFICACION
+        # =====================================================
+
+        tipo_identificacion = ""
+
+        if partner.l10n_latam_identification_type_id:
+
+            if partner.l10n_latam_identification_type_id.name == 'RUC':
+                tipo_identificacion = 'R'
+
+            elif partner.l10n_latam_identification_type_id.name == 'Cédula':
+                tipo_identificacion = 'C'
+
+
+        # =====================================================
+        # BUSCAR VEHICULO
+        # =====================================================
+
+        serial_vin = ""
+        camv_cpn = ""
+
+        if self.is_vehicle:
+
+            for line in self.invoice_line_ids:
+
+                product = line.product_id
+
+                if not product:
+                    continue
+
+                template = product.product_tmpl_id
+
+                if not template:
+                    continue
+
+                serial_vin = template.chassis_number or ""
+                camv_cpn = template.ramw_number or ""
+
+                if serial_vin or camv_cpn:
+                    break
+
+        # =====================================================
+        # DATOS VEHICULO / PROPIETARIO
+        # =====================================================
+
+        ET.SubElement(
+            venta,
+            "rucComercializador"
+        ).text = self.company_id.vat or ""
+
+
+        ET.SubElement(
+            venta,
+            "CAMVCpn"
+        ).text = camv_cpn
+
+
+        ET.SubElement(
+            venta,
+            "serialVin"
+        ).text = serial_vin
+
+
+        ET.SubElement(
+            venta,
+            "nombrePropietario"
+        ).text = partner.name or ""
+
+
+        ET.SubElement(
+            venta,
+            "tipoIdentificacionPropietario"
+        ).text = tipo_identificacion
+
+
+        ET.SubElement(
+            venta,
+            "numeroDocumentoPropietario"
+        ).text = partner.vat or ""     
+
+        # =====================================================
+        # DATOS COMPROBANTE SRI
+        # =====================================================
+
+        establecimiento = ""
+        emision = ""
+
+        sequence_prefix = self.sequence_prefix or ""
+
+        # quitar "Fact "
+        sequence_prefix = sequence_prefix.replace('Fact ', '')
+
+        sequence_parts = sequence_prefix.split('-')
+
+
+        if len(sequence_parts) >= 1:
+            establecimiento = sequence_parts[0]
+
+
+        if len(sequence_parts) >= 2:
+            emision = sequence_parts[1]
+
+        ET.SubElement(
+            venta,
+            "tipoComprobante"
+        ).text = "1"
+
+
+        ET.SubElement(
+            venta,
+            "establecimientoComprobante"
+        ).text = establecimiento
+
+
+        ET.SubElement(
+            venta,
+            "puntoEmisionComprobante"
+        ).text = emision
+
+
+        ET.SubElement(
+            venta,
+            "numeroComprobante"
+        ).text = (self.name or '').replace('Fact ', '')[-9:]
+
+
+        ET.SubElement(
+            venta,
+            "numeroAutorizacion"
+        ).text = self.l10n_ec_authorization_number or ""
+
+
+        ET.SubElement(
+            venta,
+            "fechaVenta"
+        ).text = (
+            self.invoice_date.strftime('%d-%m-%Y')
+            if self.invoice_date
+            else ""
+        )
+
+
+        ET.SubElement(
+            venta,
+            "precioVenta"
+        ).text = str(int(self.amount_total or 0))
+
+        ET.SubElement(
+            venta,
+            "codigoCantonMatriculacion"
+        ).text = "0901"        
+
+        # =====================================================
+        # DIRECCION
+        # =====================================================
+
+        datos_direccion = ET.SubElement(
+            venta,
+            "datosDireccion"
+        )
+
+
+        tipo = "OTRO"
+
+        if partner.type == 'contact':
+            tipo = "RESIDENCIA"
+
+        elif partner.type == 'invoice':
+            tipo = "OFICINA"
+
+
+        ET.SubElement(
+            datos_direccion,
+            "tipo"
+        ).text = tipo
+
+
+        ET.SubElement(
+            datos_direccion,
+            "calle"
+        ).text = partner.street or ""
+
+
+        ET.SubElement(
+            datos_direccion,
+            "numero"
+        ).text = "0"
+
+
+        ET.SubElement(
+            datos_direccion,
+            "interseccion"
+        ).text = "NP"
+
+        # =====================================================
+        # TELEFONO
+        # =====================================================
+
+        datos_telefono = ET.SubElement(
+            venta,
+            "datosTelefono"
+        )
+
+
+        ET.SubElement(
+            datos_telefono,
+            "provincia"
+        ).text = (
+            partner.state_id.code
+            if partner.state_id
+            else ""
+        )
+
+
+        ET.SubElement(
+            datos_telefono,
+            "numero"
+        ).text = partner.phone or ""
+
+        # =====================================================
+        # GENERAR ARCHIVO XML
+        # =====================================================
+
+        xml_bytes = ET.tostring(
+            ventas,
+            encoding="utf-8"
+        )
+
+
+        xml_pretty = minidom.parseString(
+            xml_bytes
+        ).toprettyxml(
+            indent="    ",
+            encoding="utf-8"
+        )
+
+        # =====================================================
+        # CREAR ADJUNTO
+        # =====================================================
+
+        file_data = base64.b64encode(
+            xml_pretty
+        )
+
+
+        attachment = self.env["ir.attachment"].create({
+
+            "name": "Factura_%s.xml" % (
+                self.name or ""
+            ),
+
+            "type": "binary",
+
+            "datas": file_data,
+
+            "res_model": "account.move",
+
+            "res_id": self.id,
+
+            "mimetype": "application/xml",
+        })
+
+        # =====================================================
+        # DESCARGAR ARCHIVO
+        # =====================================================
+
+        return {
+            "type": "ir.actions.act_url",
+
+            "url": "/web/content/%s?download=true"
+                   % attachment.id,
+
+            "target": "self",
+        }
+
+        pass

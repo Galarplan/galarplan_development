@@ -331,6 +331,7 @@ class AccountSavingPaymentWizard(models.TransientModel):
             'payment_method_id': self.payment_method_id.id,
             'company_id': self.saving_id.company_id.id,
             'amount': self.amount,
+            'saving_id': self.saving_id.id,            
             'currency_id': self.currency_id.id,
             'partner_type': 'customer',  # Cambiar según necesidad
             'partner_id': self.saving_id.partner_id.id,  # Podrías vincular a un partner

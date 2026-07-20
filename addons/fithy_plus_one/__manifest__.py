@@ -18,6 +18,7 @@
         'data/ir_sequence.xml',
         'wizard/payment_inscription.xml',
         'views/account_saving.xml',
+        # 'views/planes_ahorro.xml',
     ],
     'installable': True,
     'application': True,

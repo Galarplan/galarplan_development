@@ -88,6 +88,33 @@ class AccountSaving(models.Model):
         compute='_compute_payment_info'
     )
 
+    
+    def get_saving_payments_count(self):
+        """Obtiene el conteo de pagos asociados al plan de ahorro actual"""
+        for record in self:
+            record.saving_payments_count_new = self.env['account.payment'].search_count([
+                ('saving_id', '=', record.id)  # CORREGIDO
+            ])
+    
+    saving_payments_count_new = fields.Integer(
+        string='Pagos del Plan',
+        compute='get_saving_payments_count',
+        store=False
+    )
+
+    def action_open_saving_payments(self):
+        """Abre los pagos asociados al plan de ahorro actual"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Pagos del Plan',
+            'res_model': 'account.payment',
+            'view_mode': 'tree,form',
+            'domain': [('saving_id', '=', self.id)],  # CORREGIDO
+            'context': {'default_saving_id': self.id},
+            'help': 'Pagos asociados al plan de ahorro seleccionado'
+        }
+    
     # --- Métodos de Cómputo Optimizados ---
     @api.depends('enable_automatic_payments', 'serv_inscription_amount', 
                  'first_inscription_percentage', 'second_inscription_percentage')

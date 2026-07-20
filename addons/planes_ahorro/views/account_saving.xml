@@ -72,7 +72,7 @@
         <field name="id" string="# ID" optional="hide" />
         <field name="company_id" optional="show" />
         <field name="name" />
-        <field name="partner_id" />
+        <field name="partner_id"/>
         <field name="saving_type" optional="show" />
         <field name="start_date" optional="show" />
         <field name="end_date" optional="show" />
@@ -112,7 +112,8 @@
             string="Excel" />
 
           <button name="%(action_account_saving_payment_wizard)d"
-            string="Registrar Pago" icon="fa-money"
+            string="Registrar Pago"
+            icon="fa-money"
             type="action"
             attrs="{
                 'invisible': [
@@ -132,13 +133,12 @@
                     ])
                 ]
             }"
-            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
-          />
+            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"/>
 
           <button name="action_invoice"
             string="Facturar" icon="fa-money"
             type="object"
-            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+            groups="planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"  
             attrs="{
                 'invisible': [
                     '|',
@@ -205,10 +205,12 @@
 
 
 
-          <field name="state_plan" widget="statusbar"
-          attrs="{'readonly':[('puede_cambiar_estados','!=',True)]}"
- options="{'clickable': True}"
-          />
+         <field name="state_plan"
+       widget="statusbar"
+       statusbar_visible="draft,posted,active,adjudicated_with_assets,adjudicated_without_assets,awarded,pending_authorizated,anulled,disabled,retired,precanceled,estructured,cancelled,moved,closed,assignment,unified,amount_change"
+       attrs="{'readonly':[('puede_cambiar_estados','!=',True)]}"
+       options="{'clickable': True}"
+/>
         </header>
         <sheet>
 
@@ -218,13 +220,13 @@
               type="object" string="Documentos"
               class="oe_stat_button"
               icon="fa-file-o">
-              <field name="documents_count" widget="statinfo" />
+              <!--<field name="documents_count" widget="statinfo" />-->
             </button>
             <button name="action_open_payments"
               type="object" string="Pagos"
               class="oe_stat_button"
               icon="fa-money">
-              <field name="payments_count" widget="statinfo" />
+              <!--<field name="payments_count" widget="statinfo" />-->
             </button>
           </div>
           <div class="oe_title" colspan="2">

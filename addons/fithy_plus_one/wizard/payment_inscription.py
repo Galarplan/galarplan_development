@@ -485,6 +485,7 @@ class PaymentInscriptionWz(models.TransientModel):
         payment_vals = {
             'date': self.payment_date,
             'journal_id': self.payment_journal_id.id,
+            'saving_id': self.saving_id.id,
             'payment_method_id': self.payment_method_id.id,
             'company_id': self.company_id.id,
             'amount': self.payment_amount,

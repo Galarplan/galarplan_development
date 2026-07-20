@@ -7,6 +7,14 @@ from odoo.exceptions import ValidationError
 from datetime import timedelta
 from odoo import fields
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
+def write(self, vals):
+    _logger.warning("ANTES DEL WRITE: %s", vals)
+    return super(AccountSaving, self).write(vals)
+
 class AccountSaving(models.Model):
     _inherit="account.saving.plan"
     _name = 'account.saving'
@@ -91,8 +99,7 @@ class AccountSaving(models.Model):
     payments_count = fields.Integer(compute="_compute_documents", store=True, readonly=False, string="# Pagos")
     documents_count = fields.Integer(compute="_compute_documents", store=False, readonly=False, string="# Documentos")
     payment_move_ids = fields.One2many("account.payment",compute="_compute_documents", store=False, readonly=False, string="Pagos")
-    all_move_ids = fields.One2many("account.move", compute="_compute_documents", store=False, readonly=False,
-                                       string="Documentos")
+    all_move_ids = fields.One2many("account.move", compute="_compute_documents", store=False, readonly=False,string="Documentos")
 
     por_pagar = fields.Monetary(string='Por Pagar', compute="_compute_documents", store=True, readonly=False,tracking=True)
     pagos = fields.Monetary(string='Pagos', compute="_compute_documents", store=True, readonly=False,tracking=True)
@@ -532,7 +539,7 @@ class AccountSaving(models.Model):
                 (self.env.ref('account.view_out_invoice_tree').id, 'tree'),
                 (self.env.ref('account.view_move_form').id, 'form')
             ],
-            'domain': [('id', 'in', self.all_move_ids.ids)],
+            'domain': ['|',('id', 'in', self.all_move_ids.ids),('saving_id', '=', self.id)],
         }
 
     def action_open_payments(self):
@@ -546,7 +553,7 @@ class AccountSaving(models.Model):
                 (self.env.ref('account.view_account_payment_tree').id, 'tree'),
                 (self.env.ref('account.view_account_payment_form').id, 'form')
             ],
-            'domain': [('id', 'in', self.payment_move_ids.ids)],
+            'domain': ['|',('id', 'in', self.payment_move_ids.ids),('saving_id', '=', self.id)],
         }
 
     def action_invoice(self):

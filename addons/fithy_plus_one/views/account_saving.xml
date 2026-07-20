@@ -8,7 +8,21 @@
         <field name="inherit_id" ref="planes_ahorro.account_saving_form_view" />
         <field name="arch" type="xml">
 
-
+            <!-- <button name="action_open_payments" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </button> -->
+            
+            <!-- Agregar nuevo botón que use el método del modelo -->
+            <!--<button name="action_open_payments" position="after">
+                <button name="action_open_saving_payments" 
+                        type="object" 
+                        string="Pagos del Plan" 
+                        class="oe_stat_button" 
+                        icon="fa-money">
+                    <field name="saving_payments_count_new" widget="statinfo" />
+                </button>
+            </button>-->
+            
             <!-- Agregar NUEVA PÁGINA después de Configuración -->
             <xpath expr="//notebook" position="inside">
                 <page string="Pagos Automáticos" name="automatic_payments_page">

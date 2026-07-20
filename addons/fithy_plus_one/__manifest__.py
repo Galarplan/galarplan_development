@@ -11,6 +11,8 @@
     'website': 'https://www.tuempresa.com',
     'depends': [
         'planes_ahorro',
+        'base',
+        'account'
     ],
     'data': [
         # Security

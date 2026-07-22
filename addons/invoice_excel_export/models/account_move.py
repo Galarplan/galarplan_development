@@ -261,7 +261,7 @@ class AccountMove(models.Model):
         sheet.write(
             row,
             13,
-            '0901',
+            '10901',
             normal_format
         )
 
@@ -296,7 +296,7 @@ class AccountMove(models.Model):
         sheet.write(
             row,
             18,
-            partner.state_id.code if partner.state_id else '',
+            '109',
             normal_format
         )
 

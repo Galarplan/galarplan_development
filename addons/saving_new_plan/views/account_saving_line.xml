@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Herencia de la vista form de account.saving -->
+    <record id="account_saving_form_view_inherit_discount" model="ir.ui.view">
+        <field name="name">account.saving.form.inherit.discount</field>
+        <field name="model">account.saving</field>
+        <field name="inherit_id" ref="planes_ahorro.account_saving_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Agregar el campo enable_discount debajo del campo pendiente -->
+            <field name="pendiente" position="after">
+                <field name="enable_discount" 
+                       string="Habilitar Descuento Especial" 
+                       attrs="{'invisible': [('state_plan', 'in', ('close','cancel'))], 'readonly': [('state_plan', '!=', 'draft')]}"/>
+            </field>
+
+            <!-- Agregar página de Descuento Especial antes de la página Configuracion -->
+            <xpath expr="//page[last()]" position="before">
+                <page string="Descuento Especial" 
+                      name="discount_page" 
+                      attrs="{'invisible': [('enable_discount', '=', False)]}">
+                    
+                    <group colspan="2">
+                        <group col="2" string="Configuración del Descuento">
+                           
+                            <field name="percent_discount" 
+                                   string="Porcentaje de Descuento" 
+                                   widget="percent" 
+                                   attrs="{'required': [('enable_discount', '=', True)], 'readonly': [('state_plan', '!=', 'draft')]}"/>
+                            <field name="last_date" 
+                                   string="Fecha de Aplicación" 
+                                   attrs="{'readonly': [('state_plan', '!=', 'draft')]}"/>
+                        </group>
+                    </group>
+                    
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

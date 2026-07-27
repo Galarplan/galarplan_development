@@ -30,6 +30,10 @@
                             <field name="last_date" 
                                    string="Fecha de Aplicación" 
                                    attrs="{'readonly': [('state_plan', '!=', 'draft')]}"/>
+                            
+                            <newline />
+                                   
+                            <button string="Aplicar" name="apply_discount_values" type="object" class="oe_highlight" attrs="{'invisible': [('state_plan', '!=', 'draft')]}"/>
                         </group>
                     </group>
                     

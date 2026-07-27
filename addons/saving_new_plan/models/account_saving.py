@@ -8,116 +8,108 @@ class AccountSaving(models.Model):
     percent_discount = fields.Float('Descuento')
     last_date = fields.Date('new date')
 
-   
 
-    @api.onchange('enable_discount', 'percent_discount')
-    def _compute_discount_values(self):
-        """Calcula los valores de descuento para la cuota 0"""
+    def apply_discount_values(self):
+        """Calcula los valores de descuento para la cuota 0 y actualiza fechas de otras cuotas"""
         for saving in self:
-            # Buscar la cuota 0 (number=0)
-            quota_zero = saving.line_ids.filtered(lambda l: l.number == 0)
-            print('=====================',quota_zero)
-            if quota_zero:
-                if saving.enable_discount and saving.percent_discount > 0:
-                    # Calcular el descuento
-                    original_amount = quota_zero.serv_inscription_amount
-                    if quota_zero.last_serv_inscription_amount == 0:
-                        # Si no tiene valor guardado, guardar el original
-                        quota_zero.last_serv_inscription_amount = original_amount
-                    
-                    # Aplicar descuento
-                    discount_amount = original_amount * (saving.percent_discount / 100)
-                    quota_zero.serv_inscription_amount = original_amount - discount_amount
-                    quota_zero.discount = saving.percent_discount
-                    quota_zero.discount_value = discount_amount
-                    quota_zero.pendiente = original_amount - discount_amount
-                    self.serv_inscription_amount = original_amount - discount_amount
-                    
-                    # Actualizar fecha
-                    self._compute_quota_zero_date(saving)
-                else:
-                    # Restaurar valor original si no está habilitado
-                    if quota_zero.last_serv_inscription_amount > 0:
-                        quota_zero.serv_inscription_amount = quota_zero.last_serv_inscription_amount
-                        quota_zero.discount = 0
-                        quota_zero.discount_value = 0
+            # Procesar cuota 0 (descuento)
+            self._process_quota_zero_discount(saving)
+            
+            # Procesar fechas de otras cuotas (excluyendo 0 y 1)
+            self._update_other_quotes_dates(saving)
 
-    def _compute_quota_zero_date(self, saving=None):
-        """Calcula la fecha de la cuota 0 basada en la cuota 1"""
-        if saving is None:
-            for saving in self:
-                self._update_quota_zero_date(saving)
-        else:
+    def _process_quota_zero_discount(self, saving):
+        """Procesa el descuento de la cuota 0"""
+        quota_zero = saving.line_ids.filtered(lambda l: l.number == 0)
+        
+        if not quota_zero:
+            return
+        
+        if saving.enable_discount and saving.percent_discount > 0:
+            # Aplicar descuento
+            original_amount = quota_zero.serv_inscription_amount
+            
+            # Guardar valor original solo si no existe
+            if quota_zero.last_serv_inscription_amount == 0:
+                quota_zero.last_serv_inscription_amount = original_amount
+            
+            # Calcular y aplicar descuento
+            discount_amount = original_amount * (saving.percent_discount / 100)
+            final_amount = original_amount - discount_amount
+            
+            # Actualizar campos de la cuota 0
+            quota_zero.update({
+                'serv_inscription_amount': final_amount,
+                'discount': saving.percent_discount,
+                'discount_value': discount_amount,
+                'pendiente': final_amount,
+            })
+            
+            # Actualizar campo en el registro principal
+            saving.serv_inscription_amount = final_amount
+            
+            # Actualizar fecha de cuota 0 basada en cuota 1
             self._update_quota_zero_date(saving)
+            
+        else:
+            # Restaurar valor original si el descuento está deshabilitado
+            if quota_zero.last_serv_inscription_amount > 0:
+                quota_zero.update({
+                    'serv_inscription_amount': quota_zero.last_serv_inscription_amount,
+                    'discount': 0,
+                    'discount_value': 0,
+                })
+
+    def _update_other_quotes_dates(self, saving):
+        """Actualiza las fechas de las cuotas excluyendo 0 y 1"""
+        other_quotes = saving.line_ids.filtered(lambda l: l.number not in [0,1])
+        
+        for line in other_quotes:
+            if not line.date:
+                continue
+                
+            new_date = self._calculate_new_date(line.date, saving)
+            line.date = new_date
+
+        # Actualizar también la fecha de fin
+        if saving.end_date:
+            new_end_date = self._calculate_new_date(saving.end_date, saving)
+            saving.end_date = new_end_date
+
+    def _calculate_new_date(self, date, saving):
+        """Solo reemplaza el día según el mes de inicio del plan"""
+        # Obtener el mes de inicio
+        start_month = saving.start_date.month if saving.start_date else date.month
+        
+        # Determinar el día objetivo
+        if start_month == 7:
+            target_day = 20
+        elif start_month == 8:
+            target_day = 21
+        else:
+            # Si no es julio ni agosto, mantener el mismo día
+            return date
+        
+        # Sumar un mes y reemplazar solo el día
+        new_date = date 
+        return new_date.replace(day=target_day)
+
+
+
+
+
+        
+        
 
     def _update_quota_zero_date(self, saving):
-        """Actualiza la fecha de la cuota 0 basada en la fecha de la cuota 1"""
-        # Buscar la cuota 1 (number=1)
+        """Actualiza la fecha de la cuota 0 basada en la cuota 1"""
         quota_one = saving.line_ids.filtered(lambda l: l.number == 1)
-        # quota_zero = saving.saving_line_ids.filtered(lambda l: l.number == 0)
         
         if quota_one and quota_one.date:
-            date_one = quota_one.date
-            
-            # Calcular la fecha de la cuota 0 (un mes después de la cuota 1)
-            # Ajustamos al día 20 o 21 según el mes
-            if date_one.month == 7:  # Julio
-                new_date = date_one + relativedelta(months=1, day=20)
-            elif date_one.month == 8:  # Agosto
-                new_date = date_one + relativedelta(months=1, day=21)
-            else:
-                # Para otros meses, usar la misma lógica: un mes después
-                new_date = date_one + relativedelta(months=1)
-            
-            # Actualizar la fecha de la cuota 0
+            new_date = self._calculate_new_date(quota_one.date,saving)
             quota_one.date = new_date
-            quota_one.last_date = date_one
-            # También actualizar last_date en account.saving
-            # saving.last_date = new_date
+            quota_one.last_date = quota_one.date  # Guardar fecha anterior si es necesario
 
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     """Sobrescribir el create para aplicar descuento al crear"""
-    #     records = super(AccountSaving, self).create(vals_list)
-        
-    #     for record in records:
-    #         # Forzar el cálculo de los campos computados
-    #         record._compute_discount_values()
-        
-    #     return records
-
-    # def write(self, vals):
-    #     """Sobrescribir el write para manejar cambios relevantes"""
-    #     result = super(AccountSaving, self).write(vals)
-        
-    #     # Si se cambiaron campos relevantes, recalcular
-    #     if 'enable_discount' in vals or 'percent_discount' in vals or 'saving_line_ids' in vals:
-    #         for record in self:
-    #             record._compute_discount_values()
-        
-    #     return result
-
-    # Campos computados (opcional) para mostrar información en la vista
-    # discount_applied = fields.Float(
-    #     string='Discount Applied',
-    #     compute='_compute_discount_info',
-    #     store=False
-    # )
-    
-    # original_quota_zero_amount = fields.Float(
-    #     string='Original Amount',
-    #     compute='_compute_discount_info',
-    #     store=False
-    # )
-
-    # @api.depends('enable_discount', 'percent_discount', 'saving_line_ids.serv_inscription_amount')
-    # def _compute_discount_info(self):
-    #     """Muestra información del descuento aplicado"""
-    #     for saving in self:
-    #         quota_zero = saving.saving_line_ids.filtered(lambda l: l.number == 0)
-    #         if quota_zero and saving.enable_discount:
-    #             saving.discount_applied = saving.percent_discount
-    #             saving.original_quota_zero_amount = quota_zero.last_serv_inscription_amount or quota_zero.serv_inscription_amount
-    #         else:
-    #             saving.discount_applied = 0.0
-    #             saving.original_quota_zero_amount = 0.0
+    def _get_quota_lines_by_number(self, saving, number):
+        """Obtiene líneas de cuota por número (helper method)"""
+        return saving.line_ids.filtered(lambda l: l.number == number)

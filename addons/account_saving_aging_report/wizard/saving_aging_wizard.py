@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import ValidationError
 from datetime import datetime, timedelta
 import logging
 import io
 import base64
 import xlsxwriter
-from odoo.tools import date_utils
+from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
 
-class SavingAgingWizard(models.TransientModel):
-    _name = 'saving.aging.wizard'
-    _description = 'Wizard para Reporte de Antigüedad de Cuotas de Ahorro'
+class SavingPortfolioWizard(models.TransientModel):
+    _name = 'saving.portfolio.wizard'
+    _description = 'Wizard para Reporte de Estructura de Cartera'
 
     company_id = fields.Many2one(
         'res.company',
@@ -23,8 +23,14 @@ class SavingAgingWizard(models.TransientModel):
         default=lambda self: self.env.company
     )
     
-    report_date = fields.Date(
-        string='Fecha de Corte',
+    date_from = fields.Date(
+        string='Fecha Inicial',
+        required=True,
+        default=fields.Date.today
+    )
+    
+    date_to = fields.Date(
+        string='Fecha Final',
         required=True,
         default=fields.Date.today
     )
@@ -41,16 +47,11 @@ class SavingAgingWizard(models.TransientModel):
         help='Dejar vacío para incluir todos los planes'
     )
     
-    state_plan_filter = fields.Selection([
-        ('all', 'Todos'),
-        ('posted', 'Confirmados'),
-        ('active', 'Activos'),
-        ('adjudicated_with_assets', 'Adjudicados con Bien'),
-        ('adjudicated_without_assets', 'Adjudicados sin Bien'),
-        ('awarded', 'Adjudicados'),
-        ('estructured', 'Estructurados'),
-        ('moved', 'Movidos'),
-    ], string='Estado del Plan', default='all')
+    state_plan_ids = fields.Many2many(
+        'account.saving.plan.type',
+        string='Estados del Plan',
+        help='Seleccionar uno o varios estados para filtrar'
+    )
     
     show_zero_balance = fields.Boolean(
         string='Mostrar saldo cero',
@@ -58,26 +59,10 @@ class SavingAgingWizard(models.TransientModel):
         help='Mostrar planes con saldo pendiente igual a cero'
     )
     
-    show_paid_lines = fields.Boolean(
-        string='Mostrar cuotas pagadas',
-        default=False,
-        help='Mostrar líneas de cuotas que ya están pagadas'
-    )
-    
     output_format = fields.Selection([
         ('pdf', 'PDF'),
         ('xlsx', 'Excel'),
     ], string='Formato de Salida', default='xlsx')
-    
-    xlsx_file = fields.Binary(
-        string='Archivo Excel',
-        attachment=True
-    )
-    
-    xlsx_filename = fields.Char(
-        string='Nombre del Archivo Excel',
-        default='Reporte_Antiguedad_Cuotas.xlsx'
-    )
 
     def action_generate_report(self):
         """Genera el reporte según el formato seleccionado"""
@@ -90,17 +75,257 @@ class SavingAgingWizard(models.TransientModel):
     
     def _export_pdf(self):
         """Exporta el reporte en formato PDF"""
-        return self.env.ref('account_saving_aging_report.action_report_saving_aging').report_action(self)
+        return self.env.ref('account_saving_aging_report.action_report_saving_portfolio').report_action(self)
+    
+    def _get_portfolio_data(self):
+        """Obtiene los datos del reporte de cartera usando CTE optimizado"""
+        date_from = self.date_from
+        date_to = self.date_to
+        company_id = self.company_id.id
+        
+        # Construir filtros
+        partner_filter = ""
+        saving_filter = ""
+        state_filter = ""
+        
+        if self.partner_ids and self.partner_ids.ids:
+            ids = tuple(self.partner_ids.ids)
+            partner_filter = f"AND as1.partner_id IN {ids}" if len(ids) > 1 else f"AND as1.partner_id = {ids[0]}"
+        
+        if self.saving_plan_ids and self.saving_plan_ids.ids:
+            ids = tuple(self.saving_plan_ids.ids)
+            saving_filter = f"AND as1.id IN {ids}" if len(ids) > 1 else f"AND as1.id = {ids[0]}"
+        
+        if self.state_plan_ids and self.state_plan_ids.ids:
+            codes = [f"'{state.code}'" for state in self.state_plan_ids]
+            state_filter = f"AND as1.state_plan IN ({','.join(codes)})"
+        
+        query = f"""
+        WITH fecha_corte AS (
+            SELECT '{date_from}'::date AS fecha_inicio,
+                   '{date_to}'::date AS fecha_fin
+        ),
+        lineas_cuotas AS (
+            SELECT 
+                asl.saving_id,
+                asl.principal_amount,
+                asl.serv_admin_amount,
+                asl.seguro_amount,
+                asl.saving_amount,
+                asl.pendiente,
+                asl.date,
+                asl.estado_pago,
+                (asl.principal_amount + asl.serv_admin_amount + asl.seguro_amount) AS total_cuota,
+                (SELECT fecha_fin FROM fecha_corte) - asl.date AS days_diff
+            FROM account_saving_lines asl
+            WHERE asl.estado_pago IN ('pendiente', 'sin_aplicar', 'pagado')
+        ),
+        resumen_plan AS (
+            SELECT 
+                as1.id,
+                as1.name,
+                as1.start_date,
+                as1.end_date,
+                as1.state_plan,
+                as1.saving_amount,
+                as1.quota_amount,
+                as1.pendiente,
+                as1.partner_id,
+                as1.seller_id,
+                -- Saldos
+                COALESCE(SUM(CASE WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') THEN lc.principal_amount ELSE 0 END), 0) AS saldo_capital,
+                COALESCE(SUM(CASE WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') THEN lc.pendiente ELSE 0 END), 0) AS saldo_total,
+                -- Cuotas vencidas
+                COUNT(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.pendiente > 0 
+                        AND lc.date < (SELECT fecha_fin FROM fecha_corte) 
+                    THEN 1 
+                END) AS cuotas_vencidas,
+                -- Días de mora
+                --COALESCE(
+                --    EXTRACT(DAY FROM (age((SELECT fecha_fin FROM fecha_corte), MIN(CASE 
+                --        WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                --            AND lc.pendiente > 0 
+                --            AND lc.date < (SELECT fecha_fin FROM fecha_corte) 
+                --        THEN lc.date 
+                --    END)))),
+                --    0
+                --) AS dias_mora,
+                COALESCE(
+				    (SELECT fecha_fin FROM fecha_corte) - MIN(CASE 
+				        WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+				            AND lc.pendiente > 0 
+				            AND lc.date < (SELECT fecha_fin FROM fecha_corte) 
+				        THEN lc.date 
+				    END),
+				    0
+				) AS dias_mora,
+                -- MADURACIÓN DE CAPITAL (principal_amount)
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 0 AND 30 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_30_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 31 AND 90 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_90_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 91 AND 180 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_180_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 181 AND 270 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_270_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 271 AND 360 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_360_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff > 360 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_mas_360_dias,
+                -- Capital por vencer (futuro)
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.date > (SELECT fecha_fin FROM fecha_corte) 
+                    THEN lc.principal_amount ELSE 0 END), 0) AS capital_por_vencer,
+                -- MADURACIÓN TOTAL CUOTA
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 0 AND 30 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_30_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 31 AND 90 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_90_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 91 AND 180 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_180_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 181 AND 270 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_270_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff BETWEEN 271 AND 360 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_360_dias,
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.days_diff > 360 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_mas_360_dias,
+                -- Cuota por vencer (futuro)
+                COALESCE(SUM(CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.date > (SELECT fecha_fin FROM fecha_corte) 
+                    THEN lc.total_cuota ELSE 0 END), 0) AS cuota_por_vencer,
+                -- Gastos pagados
+                COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.serv_admin_amount ELSE 0 END), 0) AS gastos_legales,
+                COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.seguro_amount ELSE 0 END), 0) AS valor_seguro,
+                --COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.serv_admin_amount ELSE 0 END), 0) AS valor_dispositivo,
+                0 AS valor_dispositivo,
+                -- Gastos de cobranza (1% por cada 30 días de mora)
+                COALESCE(SUM(CASE 
+				    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+				        AND lc.pendiente > 0 
+				        AND lc.date < (SELECT fecha_fin FROM fecha_corte)
+				    THEN 
+				        CASE 
+				            WHEN lc.total_cuota <= 19.99 THEN 3
+				            WHEN lc.total_cuota BETWEEN 20 AND 39.99 THEN 5
+				            WHEN lc.total_cuota BETWEEN 40 AND 59.99 THEN 9
+				            WHEN lc.total_cuota BETWEEN 60 AND 79.99 THEN 12
+				            WHEN lc.total_cuota BETWEEN 80 AND 100 THEN 15
+				            WHEN lc.total_cuota > 100 THEN 18
+				            ELSE 0
+				        END
+				    ELSE 0 END), 0) AS gastos_cobranza
+            FROM account_saving as1
+            LEFT JOIN lineas_cuotas lc ON lc.saving_id = as1.id
+            WHERE as1.company_id = {company_id}
+                {partner_filter}
+                {saving_filter}
+                {state_filter}
+            GROUP BY 
+                as1.id, as1.name, as1.start_date, as1.end_date, as1.state_plan,
+                as1.saving_amount, as1.quota_amount, as1.pendiente, as1.partner_id, as1.seller_id
+        )
+        SELECT 
+            rp.vat AS identificacion, 
+            rp.name AS cliente,
+            rs.name AS nombre_plan,
+            SPLIT_PART(rs.name, '-', 1) AS grupo_plan_ahorro,
+            SPLIT_PART(rs.name, '-', 2) AS codigo_del_plan,
+            rs.state_plan AS estado,
+            rs.dias_mora,
+            rs.start_date AS inicio,
+            rs.end_date AS vencimiento,
+            rs.saving_amount AS valor_del_plan,
+            rs.saldo_capital,
+            rs.saldo_total,
+            rs.quota_amount AS valor_de_cuota,
+            rs.cuotas_vencidas,
+            -- Maduración de capital
+            rs.capital_30_dias,
+            rs.capital_90_dias,
+            rs.capital_180_dias,
+            rs.capital_270_dias,
+            rs.capital_360_dias,
+            rs.capital_mas_360_dias,
+            rs.capital_por_vencer,
+            -- Maduración total cuota
+            rs.cuota_30_dias,
+            rs.cuota_90_dias,
+            rs.cuota_180_dias,
+            rs.cuota_270_dias,
+            rs.cuota_360_dias,
+            rs.cuota_mas_360_dias,
+            rs.cuota_por_vencer,
+            -- Gastos
+            rs.gastos_legales,
+            rs.valor_seguro,
+            rs.valor_dispositivo,
+            rs.gastos_cobranza,
+            --ru.name AS official_cartera,
+            -- Tasa de interés (para reestructurados)
+            CASE WHEN rs.state_plan = 'estructured' THEN 12.0 ELSE 0.0 END AS tasa_interes,
+            -- Interés de mora cancelado
+            0 AS interes_mora_cancelado,
+            -- Valor castigo (futuro)
+            0 AS valor_castigo,
+            -- Provisión requerida (20% del saldo pendiente si mora > 60 días)
+            CASE 
+                WHEN rs.dias_mora >= 60 THEN rs.saldo_total * 0.20
+                ELSE 0
+            END AS provision_requerida
+        FROM resumen_plan rs
+        INNER JOIN res_partner rp ON rp.id = rs.partner_id
+        LEFT JOIN res_users ru ON ru.id = rs.seller_id
+        WHERE rs.start_date BETWEEN '{date_from}'::date and '{date_to}'::date
+        ORDER BY rp.name, rs.name
+        """
+        
+        try:
+            print('==================================',query)
+            self.env.cr.execute(query)
+            results = self.env.cr.dictfetchall()
+            _logger.info(f"Portfolio report results: {len(results)} registros")
+        except Exception as e:
+            _logger.error(f"Error en consulta de cartera: {str(e)}")
+            _logger.error(f"Query: {query}")
+            return []
+        
+        return results
     
     def _export_xlsx(self):
-        """Exporta el reporte en formato Excel"""
-        # Obtener datos del reporte
-        report_data = self.get_report_data()
+        """Exporta el reporte en formato Excel con la estructura de cartera"""
+        data = self._get_portfolio_data()
         
-        if not report_data.get('data'):
+        if not data:
             raise ValidationError(_('No hay datos para exportar con los filtros seleccionados.'))
         
-        # Crear el archivo Excel en memoria
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         
@@ -113,16 +338,29 @@ class SavingAgingWizard(models.TransientModel):
             'valign': 'vcenter',
             'border': 1,
             'font_size': 10,
+            'text_wrap': True,
         })
         
-        subheader_format = workbook.add_format({
+        header_green = workbook.add_format({
             'bold': True,
-            'bg_color': '#34495e',
+            'bg_color': '#27ae60',
             'color': 'white',
             'align': 'center',
             'valign': 'vcenter',
             'border': 1,
-            'font_size': 9,
+            'font_size': 10,
+            'text_wrap': True,
+        })
+        
+        header_blue = workbook.add_format({
+            'bold': True,
+            'bg_color': '#2980b9',
+            'color': 'white',
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'font_size': 10,
+            'text_wrap': True,
         })
         
         money_format = workbook.add_format({
@@ -133,13 +371,22 @@ class SavingAgingWizard(models.TransientModel):
             'font_size': 9,
         })
         
-        money_bold_format = workbook.add_format({
+        money_red_format = workbook.add_format({
             'num_format': '#,##0.00',
             'align': 'right',
             'valign': 'vcenter',
             'border': 1,
-            'bold': True,
             'font_size': 9,
+            'color': '#c0392b',
+        })
+        
+        money_green_format = workbook.add_format({
+            'num_format': '#,##0.00',
+            'align': 'right',
+            'valign': 'vcenter',
+            'border': 1,
+            'font_size': 9,
+            'color': '#27ae60',
         })
         
         text_format = workbook.add_format({
@@ -166,196 +413,308 @@ class SavingAgingWizard(models.TransientModel):
             'num_format': '#,##0.00',
         })
         
-        total_text_format = workbook.add_format({
-            'bold': True,
-            'bg_color': '#ecf0f1',
-            'align': 'right',
-            'valign': 'vcenter',
-            'border': 1,
-            'font_size': 9,
-        })
+        # Crear hoja principal
+        sheet = workbook.add_worksheet('Estructura Cartera')
         
-        # HOJA 1: Resumen por Socio
-        sheet1 = workbook.add_worksheet('Resumen')
-        sheet1.set_column('A:A', 30)  # Socio
-        sheet1.set_column('B:B', 15)  # RUC/CI
-        sheet1.set_column('C:C', 8)   # Planes
-        sheet1.set_column('D:D', 14)  # Total Deuda
-        sheet1.set_column('E:E', 14)  # Por Vencer (no se usa en este query)
-        sheet1.set_column('F:F', 14)  # 1-30 d.
-        sheet1.set_column('G:G', 14)  # 31-60 d.
-        sheet1.set_column('H:H', 14)  # 61-90 d.
-        sheet1.set_column('I:I', 14)  # 91-120 d.
-        sheet1.set_column('J:J', 14)  # +120 d.
+        # Definir anchos de columnas
+        column_widths = {
+            'A': 15,   # Identificación
+            'B': 35,   # Cliente
+            'C': 15,   # Grupo Plan
+            'D': 20,   # Código del plan
+            'E': 20,   # Nombre del plan
+            'F': 12,   # Estado
+            'G': 12,   # Días mora
+            'H': 12,   # Fecha emisión
+            'I': 14,   # Fecha vencimiento
+            'J': 14,   # Valor del plan
+            'K': 14,   # Saldo capital
+            'L': 14,   # Saldo total
+            'M': 10,   # Valor de cuota
+            'N': 14,   # Cuotas vencidas
+            'O': 14,   # capital 30 dias
+            'P': 14,   # capital 90 dias
+            'Q': 14,   # capital 120 dias
+            'R': 14,   # capital 270 dias
+            'S': 14,   # capital 360 dias
+            'T': 14,   # capital mas de 360
+            'U': 14,   # saldo por vencer
+            'V': 14,   # cuota 30 dias
+            'W': 14,   # cuota 90 dias
+            'X': 25,   # cuota 120 dias
+            'Y': 20,   # cuota 270 dias
+            'Z': 20,   # cuota 360 dias
+            'AA': 20,  # cuota mas de 360
+            'AB': 20,  # cuota por vencer
+            'AC': 20,  # Gastos legales cancelados
+            'AD': 20,  # valor dispositivo cancelado
+            'AE': 20,  # valor seguro vehicular cancelad
+            'AF': 20,  # gastos de cobranza 
+            'AG': 20,  # tasa de interes
+            'AH': 20,  # interes de mora
+            'AI': 20,  # valor castigo
+            'AJ': 20,  # prov requerida
+            'AK': 20,  # Tipo de garantia
+            'AL': 20,  # oficial
+        }
+        
+        for col, width in column_widths.items():
+            sheet.set_column(f'{col}:{col}', width)
         
         row = 0
         
-        # Título
-        sheet1.merge_range(row, 0, row, 9, 'REPORTE DE ANTIGÜEDAD DE CUOTAS POR COBRAR', header_format)
+        # Título del reporte
+        sheet.merge_range(row, 0, row, 24, 'ESTRUCTURA DE CARTERA – CUENTAS POR COBRAR', header_format)
         row += 1
-        sheet1.merge_range(row, 0, row, 9, 'Planes de Ahorro', subheader_format)
-        row += 2
         
         # Información del reporte
-        sheet1.write(row, 0, 'Compañía:', text_format)
-        sheet1.write(row, 1, self.company_id.name, text_format)
-        sheet1.write(row, 5, 'Fecha de Corte:', text_format)
-        sheet1.write(row, 6, self.report_date.strftime('%d/%m/%Y'), text_format)
-        row += 1
-        sheet1.write(row, 0, 'Fecha de Generación:', text_format)
-        sheet1.write(row, 1, fields.Date.today().strftime('%d/%m/%Y'), text_format)
-        sheet1.write(row, 5, 'Total de Planes:', text_format)
-        sheet1.write(row, 6, len(report_data['data']), text_format)
+        sheet.merge_range(row, 0, row, 5, f'Fecha de Corte: {self.date_to.strftime("%d/%m/%Y")}', text_format)
+        sheet.merge_range(row, 6, row, 10, f'Período: {self.date_from.strftime("%d/%m/%Y")} - {self.date_to.strftime("%d/%m/%Y")}', text_format)
+        sheet.write(row, 11, f'Total Registros: {len(data)}', text_format)
         row += 2
         
-        # Cabecera del Resumen por Socio
-        headers = ['Socio', 'RUC/CI', 'Planes', 'Total Deuda', '1-30 d.', '31-60 d.', '61-90 d.', '91-120 d.', '+120 d.', 'Cuotas Vencidas']
+        # Cabeceras principales
+        headers = [
+            '# Identificación', 'Cliente', '# Grupo Plan', 'Código del plan','Nombre del plan', 'Estado',
+            'Días mora', 'Fecha emisión', 'Fecha vencimiento', 'Valor del plan',
+            'Saldo capital', 'Saldo total', 'Valor de cuota', '# Cuotas vencidas',
+            '30 dias', '90 dias', '180 dias', '270 dias', '360 dias', '+ 360 dias','Capital por vencer','30 dias', '90 dias', '180 dias', '270 dias', '360 dias', '+ 360 dias','Cuota por vencer', 'Gastos Legales',
+            'Valor Dispositivo', 'Valor Seguro', 'Gastos de Cobranzas',
+            'Tasa de interés', 'Interés de mora cancelado', 'Valor castigo',
+            'Provisión requerida', 'Tipo de Garantía', 'Oficial de cartera'
+        ]
+
+        COLUMNS = {
+            'identificacion': 0,
+            'cliente': 1,
+            'grupo_plan': 2,
+            'codigo_plan': 3,
+            'nombre_plan': 4,
+            'estado': 5,
+            'dias_mora': 6,
+            'fecha_emision': 7,
+            'fecha_vencimiento': 8,
+            'valor_plan': 9,
+            'saldo_capital': 10,
+            'saldo_total': 11,
+            'valor_cuota': 12,
+            'cuotas_vencidas': 13,
+            'capital_30': 14,
+            'capital_90': 15,
+            'capital_180': 16,
+            'capital_270': 17,
+            'capital_360': 18,
+            'capital_mas_360': 19,
+            'capital_por_vencer': 20,
+            'cuota_30': 21,
+            'cuota_90': 22,
+            'cuota_180': 23,
+            'cuota_270': 24,
+            'cuota_360': 25,
+            'cuota_mas_360': 26,
+            'cuota_por_vencer': 27,
+            'gastos_legales': 28,
+            'valor_dispositivo': 29,
+            'valor_seguro': 30,
+            'gastos_cobranza': 31,
+            'tasa_interes': 32,
+            'interes_mora': 33,
+            'valor_castigo': 34,
+            'provision': 35,
+            'tipo_garantia': 36,
+            'oficial': 37,
+        }
+
+        
+        # Colores alternados para cabeceras
         for col, header in enumerate(headers):
-            sheet1.write(row, col, header, subheader_format)
+            if col in [0, 1, 2, 3, 4, 5, 6, 7]:  # Información del cliente
+                fmt = header_format
+            elif col in [8, 9, 10, 11, 12]:  # Valores del plan
+                fmt = header_green
+            elif col in [13, 14,15,16,17,18,19,20,21,22,23,24,25,26]:  # Maduración
+                fmt = header_blue
+            else:
+                fmt = header_format
+            sheet.write(row, col, header, fmt)
         row += 1
         
-        # Datos del Resumen por Socio
-        partner_summary = {}
-        for item in report_data['data']:
-            partner_id = item['partner_id']
-            if partner_id not in partner_summary:
-                partner_summary[partner_id] = {
-                    'partner_name': item['partner_name'],
-                    'partner_vat': item['partner_vat'],
-                    'plans': [],
-                    'total_due': 0.0,
-                    'total_age_30': 0.0,
-                    'total_age_60': 0.0,
-                    'total_age_90': 0.0,
-                    'total_age_120': 0.0,
-                    'total_age_older': 0.0,
-                    'total_quota_count': 0,
-                }
-            partner_summary[partner_id]['plans'].append(item)
-            partner_summary[partner_id]['total_due'] += item['total_due']
-            partner_summary[partner_id]['total_age_30'] += item['total_age_30']
-            partner_summary[partner_id]['total_age_60'] += item['total_age_60']
-            partner_summary[partner_id]['total_age_90'] += item['total_age_90']
-            partner_summary[partner_id]['total_age_120'] += item['total_age_120']
-            partner_summary[partner_id]['total_age_older'] += item['total_age_older']
-            partner_summary[partner_id]['total_quota_count'] += item['overdue_quota_count']
+        # Datos
+        totals = {
+            'saving_amount': 0,
+            'capital_balance': 0,
+            'total_balance': 0,
+            'legal_expenses': 0,
+            'device_value': 0,
+            'insurance_value': 0,
+            'required_provision': 0,
+            'overdue_quotas': 0,
+            'gastos_cobranza': 0,  # Nuevo
+            'capital_30': 0,       # Nuevo
+            'capital_90': 0,       # Nuevo
+            'capital_180': 0,      # Nuevo
+            'capital_270': 0,      # Nuevo
+            'capital_360': 0,      # Nuevo
+            'capital_mas_360': 0,  # Nuevo
+            'capital_por_vencer': 0, # Nuevo
+            'cuota_30': 0,         # Nuevo
+            'cuota_90': 0,         # Nuevo
+            'cuota_180': 0,        # Nuevo
+            'cuota_270': 0,        # Nuevo
+            'cuota_360': 0,        # Nuevo
+            'cuota_mas_360': 0,    # Nuevo
+            'cuota_por_vencer': 0, # Nuevo
+        }
         
-        for partner_data in partner_summary.values():
-            sheet1.write(row, 0, partner_data['partner_name'], text_format)
-            sheet1.write(row, 1, partner_data['partner_vat'], text_format)
-            sheet1.write(row, 2, len(partner_data['plans']), text_center_format)
-            sheet1.write(row, 3, partner_data['total_due'], money_format)
-            sheet1.write(row, 4, partner_data['total_age_30'], money_format)
-            sheet1.write(row, 5, partner_data['total_age_60'], money_format)
-            sheet1.write(row, 6, partner_data['total_age_90'], money_format)
-            sheet1.write(row, 7, partner_data['total_age_120'], money_format)
-            sheet1.write(row, 8, partner_data['total_age_older'], money_format)
-            sheet1.write(row, 9, partner_data['total_quota_count'], text_center_format)
+        for record in data:
+            # Obtener el grupo del plan (primeros dígitos del nombre)
+            saving_name = record.get('nombre_plan', '')
+            group_plan = saving_name.split('-')[0] if '-' in saving_name else saving_name[:3]
+            
+            # Mapeo de estados
+            state_map = {
+                'draft': 'Borrador',
+                'posted': 'Publicado',
+                'active': 'Activo',
+                'adjudicated_with_assets': 'Adjudicado con Bien',
+                'adjudicated_without_assets': 'Adjudicado sin Bien',
+                'awarded': 'Adjudicado',
+                'pending_authorizated': 'Autorización de Retiro Pendiente',
+                'anulled': 'Anulado',
+                'disabled': 'Desactivado',
+                'retired': 'Retirado',
+                'precanceled': 'Pre-Cancelado',
+                'estructured': 'Re-estructurado',
+                'cancelled': 'Cancelado',
+                'moved': 'Traspaso',
+                'closed': 'Cerrado',
+            }
+            state_desc = state_map.get(record.get('estado', ''), record.get('estado', ''))
+            
+            # Escribir datos
+            sheet.write(row, 0, record.get('identificacion', ''), text_format)
+            sheet.write(row, 1, record.get('cliente', ''), text_format)
+            sheet.write(row, 2, record.get('grupo_plan_ahorro', ''), text_center_format)
+            sheet.write(row, 3, record.get('codigo_del_plan', ''), text_format)
+            sheet.write(row, 4, record.get('nombre_plan', ''), text_format)
+            sheet.write(row, 5, state_desc, text_format)
+            sheet.write(row, 6, max(0, record.get('dias_mora', 0) or 0), text_center_format)
+            sheet.write(row, 7, record.get('inicio').strftime('%d/%m/%Y') if record.get('inicio') else '', text_center_format)
+            sheet.write(row, 8, record.get('vencimiento').strftime('%d/%m/%Y') if record.get('vencimiento') else '', text_center_format)
+            
+            # Valores monetarios
+            sheet.write(row, 9, record.get('valor_del_plan', 0), money_format)
+            sheet.write(row, 10, record.get('saldo_capital', 0), money_format)
+            sheet.write(row, 11, record.get('saldo_total', 0), money_red_format)
+            sheet.write(row, 12, record.get('valor_de_cuota', 0), money_format)
+            sheet.write(row, 13, record.get('cuotas_vencidas', 0), text_center_format)
+            
+            # Maduración de capital
+            sheet.write(row, 14, record.get('capital_30_dias', 0) ,money_format)
+            sheet.write(row, 15, record.get('capital_90_dias', 0), money_format)
+            sheet.write(row, 16, record.get('capital_180_dias', 0) , money_format)
+            sheet.write(row, 17, record.get('capital_270_dias', 0) , money_format)
+            sheet.write(row, 18, record.get('capital_360_dias', 0) , money_format)
+            sheet.write(row, 19, record.get('capital_mas_360_dias', 0), money_format)
+            sheet.write(row, 20, record.get('capital_por_vencer', 0), money_format)
+        
+            # Maduración total cuota
+            sheet.write(row, 21, record.get('cuota_30_dias', 0), money_format)
+            sheet.write(row, 22, record.get('cuota_90_dias', 0), money_format)
+            sheet.write(row, 23, record.get('cuota_180_dias', 0), money_format)
+            sheet.write(row, 24, record.get('cuota_270_dias', 0), money_format)
+            sheet.write(row, 25, record.get('cuota_360_dias', 0), money_format)
+            sheet.write(row, 26, record.get('cuota_mas_360_dias', 0), money_format)
+            sheet.write(row, 27, record.get('cuota_por_vencer', 0), money_format)
+            
+
+            # Gastos
+            sheet.write(row, 28, record.get('gastos_legales', 0), money_format)
+            sheet.write(row, 29, record.get('valor_dispositivo', 0), money_format)
+            sheet.write(row, 30, record.get('valor_seguro', 0), money_format)
+            sheet.write(row, 31, record.get('gastos_cobranza', 0), money_format)
+            sheet.write(row, 32, record.get('tasa_interes', 0), money_format)
+            sheet.write(row, 33, record.get('interes_mora_cancelado', 0), money_format)
+            sheet.write(row, 34, record.get('valor_castigo', 0), money_format)
+            
+            # Provisión
+            provision = record.get('provision_requerida', 0)
+            sheet.write(row, 35, provision, money_red_format if provision > 0 else money_format)
+            
+            sheet.write(row, 36, record.get('vehicle_info', ''), text_format)
+            sheet.write(row, 37, record.get('official_cartera', ''), text_format)
+            
+            # Acumular totales
+            totals['saving_amount'] += record.get('valor_del_plan', 0)
+            totals['capital_balance'] += record.get('saldo_capital', 0)
+            totals['total_balance'] += record.get('saldo_total', 0)
+            totals['legal_expenses'] += record.get('gastos_legales', 0)
+            totals['device_value'] += record.get('valor_dispositivo', 0)
+            totals['insurance_value'] += record.get('valor_seguro', 0)
+            totals['required_provision'] += record.get('provision_requerida', 0)
+            totals['overdue_quotas'] += record.get('cuotas_vencidas', 0)
+            totals['gastos_cobranza'] += record.get('gastos_cobranza', 0)
+            
+            # Totales de maduración de capital
+            totals['capital_30'] += record.get('capital_30_dias', 0)
+            totals['capital_90'] += record.get('capital_90_dias', 0)
+            totals['capital_180'] += record.get('capital_180_dias', 0)
+            totals['capital_270'] += record.get('capital_270_dias', 0)
+            totals['capital_360'] += record.get('capital_360_dias', 0)
+            totals['capital_mas_360'] += record.get('capital_mas_360_dias', 0)
+            totals['capital_por_vencer'] += record.get('capital_por_vencer', 0)
+            
+            # Totales de maduración de cuota
+            totals['cuota_30'] += record.get('cuota_30_dias', 0)
+            totals['cuota_90'] += record.get('cuota_90_dias', 0)
+            totals['cuota_180'] += record.get('cuota_180_dias', 0)
+            totals['cuota_270'] += record.get('cuota_270_dias', 0)
+            totals['cuota_360'] += record.get('cuota_360_dias', 0)
+            totals['cuota_mas_360'] += record.get('cuota_mas_360_dias', 0)
+            totals['cuota_por_vencer'] += record.get('cuota_por_vencer', 0)
+            
             row += 1
         
-        # Totales
-        totals = report_data['totals']
-        sheet1.write(row, 2, 'TOTALES', total_text_format)
-        sheet1.write(row, 3, totals['total_due'], total_format)
-        sheet1.write(row, 4, totals['total_age_30'], total_format)
-        sheet1.write(row, 5, totals['total_age_60'], total_format)
-        sheet1.write(row, 6, totals['total_age_90'], total_format)
-        sheet1.write(row, 7, totals['total_age_120'], total_format)
-        sheet1.write(row, 8, totals['total_age_older'], total_format)
-        sheet1.write(row, 9, totals['total_quota_count'], total_text_format)
-        
-        # HOJA 2: Detalle de Cuotas por Plan
-        sheet2 = workbook.add_worksheet('Detalle de Cuotas')
-        sheet2.set_column('A:A', 15)  # Plan
-        sheet2.set_column('B:B', 30)  # Socio
-        sheet2.set_column('C:C', 12)  # Estado
-        sheet2.set_column('D:D', 8)   # #
-        sheet2.set_column('E:E', 12)  # Fecha
-        sheet2.set_column('F:F', 10)  # Días Venc.
-        sheet2.set_column('G:G', 12)  # Estado Pago
-        sheet2.set_column('H:H', 14)  # Total
-        sheet2.set_column('I:I', 14)  # Pagado
-        sheet2.set_column('J:J', 14)  # Pendiente
-        sheet2.set_column('K:K', 14)  # 1-30 d.
-        sheet2.set_column('L:L', 14)  # 31-60 d.
-        sheet2.set_column('M:M', 14)  # 61-90 d.
-        sheet2.set_column('N:N', 14)  # 91-120 d.
-        sheet2.set_column('O:O', 14)  # +120 d.
-        
-        row = 0
-        
-        # Título
-        sheet2.merge_range(row, 0, row, 14, 'DETALLE DE CUOTAS POR PLAN', header_format)
-        row += 2
-        
-        # Cabecera de Detalle
-        detail_headers = ['Plan', 'Socio', 'Estado', '#', 'Fecha', 'Días Venc.', 'Estado Pago', 'Total', 'Pagado', 'Pendiente', 
-                         '1-30 d.', '31-60 d.', '61-90 d.', '91-120 d.', '+120 d.']
-        for col, header in enumerate(detail_headers):
-            sheet2.write(row, col, header, subheader_format)
+        # Totales finales
         row += 1
-        
-        # Datos de Detalle
-        for plan in report_data['data']:
-            # Mostrar todas las líneas si show_paid_lines está activado
-            # o solo líneas con amount_residual > 0
-            for line in plan['lines']:
-                amount_residual = line.get('amount_residual') or 0
-                if self.show_paid_lines or amount_residual > 0:
-                    sheet2.write(row, 0, plan['saving_name'], text_format)
-                    sheet2.write(row, 1, plan['partner_name'], text_format)
-                    sheet2.write(row, 2, plan['state_plan_description'], text_format)
-                    sheet2.write(row, 3, line['quota_number'], text_center_format)
-                    sheet2.write(row, 4, line['quota_date'].strftime('%d/%m/%Y') if line['quota_date'] else '', text_center_format)
-                    sheet2.write(row, 5, line['days_overdue'] if line['days_overdue'] > 0 else 0, text_center_format)
-                    
-                    # Estado de pago
-                    estado_pago = line.get('estado_pago', '')
-                    estado_pago_desc = {
-                        'pendiente': 'Pendiente',
-                        'sin_aplicar': 'Sin Aplicar',
-                        'pagado': 'Pagado',
-                        'cancelado': 'Cancelado'
-                    }.get(estado_pago, estado_pago)
-                    sheet2.write(row, 6, estado_pago_desc, text_center_format)
-                    
-                    sheet2.write(row, 7, line['amount_total'], money_format)
-                    sheet2.write(row, 8, line['amount_paid'], money_format)
-                    sheet2.write(row, 9, line['amount_residual'], money_bold_format)
-                    sheet2.write(row, 10, line['age_30'], money_format)
-                    sheet2.write(row, 11, line['age_60'], money_format)
-                    sheet2.write(row, 12, line['age_90'], money_format)
-                    sheet2.write(row, 13, line['age_120'], money_format)
-                    sheet2.write(row, 14, line['age_older'], money_format)
-                    row += 1
-            
-            # Totales del plan
-            sheet2.write(row, 6, 'TOTAL PLAN:', total_text_format)
-            sheet2.write(row, 9, plan['total_due'], total_format)
-            sheet2.write(row, 10, plan['total_age_30'], total_format)
-            sheet2.write(row, 11, plan['total_age_60'], total_format)
-            sheet2.write(row, 12, plan['total_age_90'], total_format)
-            sheet2.write(row, 13, plan['total_age_120'], total_format)
-            sheet2.write(row, 14, plan['total_age_older'], total_format)
-            row += 1
-            
-            # Información de cuotas vencidas
-            sheet2.write(row, 6, 'Cuotas Vencidas:', total_text_format)
-            sheet2.write(row, 9, plan['overdue_quota_count'], text_center_format)
-            row += 1
-            
-            # Fila en blanco entre planes
-            row += 1
+        sheet.write(row, COLUMNS['nombre_plan'], 'TOTALES', total_format)
+        sheet.write(row, COLUMNS['valor_plan'], totals['saving_amount'], total_format)
+        sheet.write(row, COLUMNS['saldo_capital'], totals['capital_balance'], total_format)
+        sheet.write(row, COLUMNS['saldo_total'], totals['total_balance'], total_format)
+        sheet.write(row, COLUMNS['valor_cuota']+1, totals['overdue_quotas'], total_format)
+
+        # Totales de maduración de capital
+        sheet.write(row, COLUMNS['capital_30'], totals['capital_30'], total_format)
+        sheet.write(row, COLUMNS['capital_90'], totals['capital_90'], total_format)
+        sheet.write(row, COLUMNS['capital_180'], totals['capital_180'], total_format)
+        sheet.write(row, COLUMNS['capital_270'], totals['capital_270'], total_format)
+        sheet.write(row, COLUMNS['capital_360'], totals['capital_360'], total_format)
+        sheet.write(row, COLUMNS['capital_mas_360'], totals['capital_mas_360'], total_format)
+        sheet.write(row, COLUMNS['capital_por_vencer'], totals['capital_por_vencer'], total_format)
+
+        # Totales de maduración de cuota
+        sheet.write(row, COLUMNS['cuota_30'], totals['cuota_30'], total_format)
+        sheet.write(row, COLUMNS['cuota_90'], totals['cuota_90'], total_format)
+        sheet.write(row, COLUMNS['cuota_180'], totals['cuota_180'], total_format)
+        sheet.write(row, COLUMNS['cuota_270'], totals['cuota_270'], total_format)
+        sheet.write(row, COLUMNS['cuota_360'], totals['cuota_360'], total_format)
+        sheet.write(row, COLUMNS['cuota_mas_360'], totals['cuota_mas_360'], total_format)
+        sheet.write(row, COLUMNS['cuota_por_vencer'], totals['cuota_por_vencer'], total_format)
+
+        # Totales de gastos
+        sheet.write(row, COLUMNS['gastos_legales'], totals['legal_expenses'], total_format)
+        sheet.write(row, COLUMNS['valor_dispositivo'], totals['device_value'], total_format)
+        sheet.write(row, COLUMNS['valor_seguro'], totals['insurance_value'], total_format)
+        sheet.write(row, COLUMNS['gastos_cobranza'], totals['gastos_cobranza'], total_format)
+        sheet.write(row, COLUMNS['provision'], totals['required_provision'], total_format)
         
         workbook.close()
         output.seek(0)
         
         # Guardar el archivo
         xlsx_data = base64.b64encode(output.getvalue())
+        filename = f"Estructura_Cartera_{fields.Date.today().strftime('%Y%m%d_%H%M%S')}.xlsx"
         
-        filename = f"Reporte_Antiguedad_Cuotas_{fields.Date.today().strftime('%Y%m%d_%H%M%S')}.xlsx"
-        
-        # Crear el attachment
         attachment = self.env['ir.attachment'].create({
             'name': filename,
             'type': 'binary',
@@ -365,292 +724,8 @@ class SavingAgingWizard(models.TransientModel):
             'res_id': self.id,
         })
         
-        # Abrir el attachment para descarga
         return {
             'type': 'ir.actions.act_url',
             'url': f'/web/content/{attachment.id}?download=true',
             'target': 'new',
         }
-    
-    def get_report_data_sql(self):
-        """
-        Versión SQL optimizada con arrays - basada en el query original
-        """
-        report_date = self.report_date
-        company_id = self.company_id.id
-        
-        # Fecha de reporte como string para usar en f-string
-        report_date_str = report_date.strftime('%Y-%m-%d')
-        
-        # Construir filtros dinámicos
-        # filters = []
-        # params = []
-        
-        partner_id_clause = ""
-        saving_id_clause = ""
-        state_plan_clause = ""
-
-        if self.partner_ids and self.partner_ids.ids:
-            # Convertir a tupla y manejar caso de un solo elemento
-            ids_tuple = tuple(self.partner_ids.ids)
-            if len(ids_tuple) == 1:
-                partner_id_clause = f"AND as1.partner_id = {ids_tuple[0]}"
-            else:
-                partner_id_clause = f"AND as1.partner_id IN {ids_tuple}"
-        
-        if self.saving_plan_ids and self.saving_plan_ids.ids:
-            ids_tuple = tuple(self.saving_plan_ids.ids)
-            if len(ids_tuple) == 1:
-                saving_id_clause = f"AND as1.id = {ids_tuple[0]}"
-            else:
-                saving_id_clause = f"AND as1.id IN {ids_tuple}"
-            
-        if self.state_plan_filter != 'all':            
-            state_plan_clause = f"AND  as1.state_plan = '{self.state_plan_filter}'"
-
-        
-        # Filtro para mostrar/ocultar líneas pagadas
-        paid_lines_filter = ""
-        if not self.show_paid_lines:
-            paid_lines_filter = "AND asl.estado_pago IN ('pendiente', 'sin_aplicar')"
-        
-        # Query con la estructura exacta del query original
-        query = f"""
-        WITH saving_lines_data AS (
-            SELECT DISTINCT ON (asl.id)
-                as1.id AS saving_id,
-                as1.name AS saving_name,
-                as1.state_plan,
-                as1.partner_id,
-                rp.name AS partner_name,
-                rp.vat AS partner_vat,
-                asl.id AS line_id,
-                asl.number AS quota_number,
-                asl.date AS quota_date,
-                asl.principal_amount,
-                asl.serv_admin_amount,
-                asl.seguro_amount,
-                asl.serv_inscription_amount,
-                asl.por_pagar AS amount_total,
-                asl.pagos AS amount_paid,
-                asl.pendiente AS amount_residual,
-                asl.estado_pago,
-                asl.invoice_id,
-                am.name AS invoice_name,
-                rc.currency_id,
-                -- Días de vencimiento
-                ('{report_date_str}'::date - asl.date) AS days_overdue,
-                -- Clasificación por días de vencimiento
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date <= '{report_date_str}'::date THEN asl.pendiente 
-                    ELSE 0 
-                END AS amount_due,
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date > '{report_date_str}'::date THEN asl.pendiente 
-                    ELSE 0 
-                END AS age_not_due,
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date <= '{report_date_str}'::date 
-                        AND ('{report_date_str}'::date - asl.date) BETWEEN 0 AND 30 THEN asl.pendiente 
-                    ELSE 0 
-                END AS age_30,
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date <= '{report_date_str}'::date 
-                        AND ('{report_date_str}'::date - asl.date) BETWEEN 31 AND 60 THEN asl.pendiente 
-                    ELSE 0 
-                END AS age_60,
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date <= '{report_date_str}'::date 
-                        AND ('{report_date_str}'::date - asl.date) BETWEEN 61 AND 90 THEN asl.pendiente 
-                    ELSE 0 
-                END AS age_90,
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date <= '{report_date_str}'::date 
-                        AND ('{report_date_str}'::date - asl.date) BETWEEN 91 AND 120 THEN asl.pendiente 
-                    ELSE 0 
-                END AS age_120,
-                CASE 
-                    WHEN asl.pendiente = 0 OR asl.pendiente IS NULL THEN 0
-                    WHEN asl.date <= '{report_date_str}'::date 
-                        AND ('{report_date_str}'::date - asl.date) > 120 THEN asl.pendiente 
-                    ELSE 0 
-                END AS age_older
-            FROM account_saving as1
-            INNER JOIN res_partner rp ON rp.id = as1.partner_id
-            INNER JOIN account_saving_lines asl ON asl.saving_id = as1.id
-            LEFT JOIN account_move am ON am.id = asl.invoice_id
-            JOIN res_company rc ON as1.company_id = rc.id
-            WHERE as1.state_plan IN ('posted','active', 'adjudicated_with_assets','adjudicated_without_assets','awarded','estructured','moved')
-                AND as1.company_id = {company_id}
-                AND asl.date <= '{report_date_str}'::date
-                {partner_id_clause}
-                {saving_id_clause}
-                {state_plan_clause}
-                {paid_lines_filter}
-            ORDER BY asl.id
-        )
-        SELECT 
-            saving_id,
-            saving_name,
-            partner_id,
-            partner_name,
-            partner_vat,
-            state_plan,
-            array_agg(line_id ORDER BY quota_number ASC) AS line_ids,
-            array_agg(quota_number ORDER BY quota_number ASC) AS quota_numbers,
-            array_agg(quota_date ORDER BY quota_number ASC) AS quota_dates,
-            array_agg(amount_total ORDER BY quota_number ASC) AS amount_totals,
-            array_agg(amount_paid ORDER BY quota_number ASC) AS amount_paids,
-            array_agg(amount_residual ORDER BY quota_number ASC) AS amount_residuals,
-            array_agg(days_overdue ORDER BY quota_number ASC) AS days_overdues,
-            array_agg(age_30 ORDER BY quota_number ASC) AS ages_30,
-            array_agg(age_60 ORDER BY quota_number ASC) AS ages_60,
-            array_agg(age_90 ORDER BY quota_number ASC) AS ages_90,
-            array_agg(age_120 ORDER BY quota_number ASC) AS ages_120,
-            array_agg(age_older ORDER BY quota_number ASC) AS ages_older,
-            array_agg(estado_pago ORDER BY quota_number ASC) AS payment_states,
-            array_agg(invoice_name ORDER BY quota_number ASC) AS invoice_names,
-            COALESCE(SUM(age_30), 0) AS total_age_30,
-            COALESCE(SUM(age_60), 0) AS total_age_60,
-            COALESCE(SUM(age_90), 0) AS total_age_90,
-            COALESCE(SUM(age_120), 0) AS total_age_120,
-            COALESCE(SUM(age_older), 0) AS total_age_older,
-            COALESCE(SUM(amount_residual), 0) AS total_due,
-            COUNT(*) AS overdue_quota_count
-        FROM saving_lines_data
-        WHERE saving_id IS NOT NULL
-        GROUP BY 
-            saving_id, saving_name, partner_id, partner_name, partner_vat, state_plan
-        HAVING 
-            COALESCE(SUM(amount_residual), 0) > 0
-        ORDER BY 
-            partner_name, saving_name
-        """
-        
-        # Agregar parámetros para los placeholders %s
-        # company_id
-        # params.append(company_id)
-        
-        try:
-            # _logger.info("=== EJECUTANDO CONSULTA SQL ===")
-            # _logger.info(f"Params count: {len(params)}")
-            # _logger.info(f"Params: {params}")
-            
-            self.env.cr.execute(query)
-            results = self.env.cr.dictfetchall()
-            
-            _logger.info(f"Resultados obtenidos: {len(results)} registros")
-            
-        except Exception as e:
-            _logger.error(f"Error en consulta SQL: {str(e)}")
-            _logger.error(f"Query: {query}")
-            # Devolver estructura vacía en caso de error
-            return {
-                'report_date': report_date,
-                'company_name': self.company_id.name,
-                'data': [],
-                'totals': {
-                    'total_due': 0.0,
-                    'total_age_30': 0.0,
-                    'total_age_60': 0.0,
-                    'total_age_90': 0.0,
-                    'total_age_120': 0.0,
-                    'total_age_older': 0.0,
-                    'total_quota_count': 0,
-                    'plan_count': 0,
-                }
-            }
-        
-        # Procesar resultados y construir estructura de datos
-        report_data = []
-        totals = {
-            'total_due': 0.0,
-            'total_age_30': 0.0,
-            'total_age_60': 0.0,
-            'total_age_90': 0.0,
-            'total_age_120': 0.0,
-            'total_age_older': 0.0,
-            'total_quota_count': 0,
-        }
-        
-        for row in results:
-            # Construir líneas a partir de arrays
-            lines = []
-            if row.get('quota_numbers'):
-                for i in range(len(row['quota_numbers'])):
-                    residual = row['amount_residuals'][i] if row['amount_residuals'] and i < len(row['amount_residuals']) else 0.0
-                    days_overdue = row['days_overdues'][i] if row['days_overdues'] and i < len(row['days_overdues']) else 0
-                    
-                    lines.append({
-                        'line_id': row['line_ids'][i] if row['line_ids'] and i < len(row['line_ids']) else 0,
-                        'quota_number': row['quota_numbers'][i],
-                        'quota_date': row['quota_dates'][i],
-                        'days_overdue': days_overdue,
-                        'amount_total': row['amount_totals'][i] if row['amount_totals'] and i < len(row['amount_totals']) else 0.0,
-                        'amount_paid': row['amount_paids'][i] if row['amount_paids'] and i < len(row['amount_paids']) else 0.0,
-                        'amount_residual': residual,
-                        'age_30': row['ages_30'][i] if row['ages_30'] and i < len(row['ages_30']) else 0.0,
-                        'age_60': row['ages_60'][i] if row['ages_60'] and i < len(row['ages_60']) else 0.0,
-                        'age_90': row['ages_90'][i] if row['ages_90'] and i < len(row['ages_90']) else 0.0,
-                        'age_120': row['ages_120'][i] if row['ages_120'] and i < len(row['ages_120']) else 0.0,
-                        'age_older': row['ages_older'][i] if row['ages_older'] and i < len(row['ages_older']) else 0.0,
-                        'estado_pago': row['payment_states'][i] if row['payment_states'] and i < len(row['payment_states']) else '',
-                        'invoice_name': row['invoice_names'][i] if row['invoice_names'] and i < len(row['invoice_names']) else '',
-                    })
-            
-            # Obtener descripción del estado
-            state_desc = ''
-            for selection in self._fields['state_plan_filter'].selection:
-                if selection[0] == row['state_plan']:
-                    state_desc = selection[1]
-                    break
-            
-            plan_data = {
-                'saving_id': row['saving_id'],
-                'saving_name': row['saving_name'],
-                'partner_id': row['partner_id'],
-                'partner_name': row['partner_name'],
-                'partner_vat': row['partner_vat'] or '',
-                'state_plan': row['state_plan'],
-                'state_plan_description': state_desc,
-                'lines': lines,
-                'total_due': row['total_due'] or 0.0,
-                'total_age_30': row['total_age_30'] or 0.0,
-                'total_age_60': row['total_age_60'] or 0.0,
-                'total_age_90': row['total_age_90'] or 0.0,
-                'total_age_120': row['total_age_120'] or 0.0,
-                'total_age_older': row['total_age_older'] or 0.0,
-                'overdue_quota_count': row['overdue_quota_count'] or 0,
-            }
-            
-            report_data.append(plan_data)
-            
-            # Acumular totales
-            totals['total_due'] += row['total_due'] or 0.0
-            totals['total_age_30'] += row['total_age_30'] or 0.0
-            totals['total_age_60'] += row['total_age_60'] or 0.0
-            totals['total_age_90'] += row['total_age_90'] or 0.0
-            totals['total_age_120'] += row['total_age_120'] or 0.0
-            totals['total_age_older'] += row['total_age_older'] or 0.0
-            totals['total_quota_count'] += row['overdue_quota_count'] or 0
-        
-        totals['plan_count'] = len(report_data)
-        
-        return {
-            'report_date': report_date,
-            'company_name': self.company_id.name,
-            'data': report_data,
-            'totals': totals,
-        }
-
-    def get_report_data(self):
-        """
-        Método principal - usa la versión SQL optimizada
-        """
-        return self.get_report_data_sql()

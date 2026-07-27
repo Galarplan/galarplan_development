@@ -7,6 +7,6 @@
             name="Reporte de Antigüedad de Cuotas"
             parent="planes_ahorro.planes_ahorro_root"
             sequence="50"
-            action="action_saving_aging_wizard"/>
+            action="action_saving_portfolio_wizard"/>
     </data>
 </odoo>

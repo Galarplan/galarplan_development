@@ -1,26 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Vista del Wizard -->
-        <record id="view_saving_aging_wizard_form" model="ir.ui.view">
-            <field name="name">saving.aging.wizard.form</field>
-            <field name="model">saving.aging.wizard</field>
+        <!-- Vista del Wizard para Estructura de Cartera -->
+        <record id="view_saving_portfolio_wizard_form" model="ir.ui.view">
+            <field name="name">saving.portfolio.wizard.form</field>
+            <field name="model">saving.portfolio.wizard</field>
             <field name="arch" type="xml">
-                <form string="Reporte de Antigüedad de Cuotas de Ahorro">
+                <form string="Estructura de Cartera">
                     <sheet>
                         <div class="oe_title">
-                            <h1>Reporte de Antigüedad de Cuotas por Cobrar</h1>
+                            <h1>Estructura de Cartera - Cuentas por Cobrar</h1>
                         </div>
                         <group>
                             <group>
                                 <field name="company_id" options="{'no_create': True}"/>
-                                <field name="report_date"/>
+                                <field name="date_from"/>
+                                <field name="date_to"/>
                                 <field name="output_format" invisible="1"/>
                             </group>
                             <group>
-                                <field name="state_plan_filter"/>
-                                <field name="show_zero_balance"/>
-                                <field name="show_paid_lines"/>
+                                <!-- Selección múltiple con tags -->
+                                <field name="state_plan_ids" widget="many2many_checkboxes"/>
+                                <!-- <field name="show_zero_balance"/> -->
                             </group>
                         </group>
                         <group string="Filtros Adicionales">
@@ -37,9 +38,9 @@
         </record>
 
         <!-- Acción del Wizard -->
-        <record id="action_saving_aging_wizard" model="ir.actions.act_window">
-            <field name="name">Reporte de Antigüedad de Cuotas</field>
-            <field name="res_model">saving.aging.wizard</field>
+        <record id="action_saving_portfolio_wizard" model="ir.actions.act_window">
+            <field name="name">Estructura de Cartera</field>
+            <field name="res_model">saving.portfolio.wizard</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
         </record>

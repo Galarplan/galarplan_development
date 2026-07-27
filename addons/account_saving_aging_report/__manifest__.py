@@ -18,6 +18,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'data/plan_data.xml',
         'wizard/saving_aging_wizard_views.xml',
         'views/menuviews.xml',
         'reports/saving_aging_report_template.xml',

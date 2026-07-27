@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Estados del Plan de Ahorro -->
+        <record id="saving_plan_type_state_draft" model="account.saving.plan.type">
+            <field name="name">Borrador</field>
+            <field name="code">draft</field>
+            <field name="sequence">1</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_posted" model="account.saving.plan.type">
+            <field name="name">Publicado</field>
+            <field name="code">posted</field>
+            <field name="sequence">10</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_active" model="account.saving.plan.type">
+            <field name="name">Activo</field>
+            <field name="code">active</field>
+            <field name="sequence">20</field>
+            <field name="active">True</field>
+            <field name="color">10</field>
+        </record>
+        
+        <record id="saving_plan_type_state_adjudicated_with_assets" model="account.saving.plan.type">
+            <field name="name">Adjudicado con Bien</field>
+            <field name="code">adjudicated_with_assets</field>
+            <field name="sequence">30</field>
+            <field name="active">True</field>
+            <field name="color">2</field>
+        </record>
+        
+        <record id="saving_plan_type_state_adjudicated_without_assets" model="account.saving.plan.type">
+            <field name="name">Adjudicado sin Bien</field>
+            <field name="code">adjudicated_without_assets</field>
+            <field name="sequence">40</field>
+            <field name="active">True</field>
+            <field name="color">3</field>
+        </record>
+        
+        <record id="saving_plan_type_state_awarded" model="account.saving.plan.type">
+            <field name="name">Adjudicado</field>
+            <field name="code">awarded</field>
+            <field name="sequence">50</field>
+            <field name="active">True</field>
+            <field name="color">9</field>
+        </record>
+        
+        <record id="saving_plan_type_state_pending_authorizated" model="account.saving.plan.type">
+            <field name="name">Autorización de Retiro Pendiente</field>
+            <field name="code">pending_authorizated</field>
+            <field name="sequence">60</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_anulled" model="account.saving.plan.type">
+            <field name="name">Anulado</field>
+            <field name="code">anulled</field>
+            <field name="sequence">70</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_disabled" model="account.saving.plan.type">
+            <field name="name">Desactivado</field>
+            <field name="code">disabled</field>
+            <field name="sequence">80</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_retired" model="account.saving.plan.type">
+            <field name="name">Retirado</field>
+            <field name="code">retired</field>
+            <field name="sequence">90</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_precanceled" model="account.saving.plan.type">
+            <field name="name">Pre-Cancelado</field>
+            <field name="code">precanceled</field>
+            <field name="sequence">100</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_estructured" model="account.saving.plan.type">
+            <field name="name">Re-estructurado</field>
+            <field name="code">estructured</field>
+            <field name="sequence">110</field>
+            <field name="active">True</field>
+            <field name="color">7</field>
+        </record>
+        
+        <record id="saving_plan_type_state_cancelled" model="account.saving.plan.type">
+            <field name="name">Cancelado</field>
+            <field name="code">cancelled</field>
+            <field name="sequence">120</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="saving_plan_type_state_moved" model="account.saving.plan.type">
+            <field name="name">Traspaso</field>
+            <field name="code">moved</field>
+            <field name="sequence">130</field>
+            <field name="active">True</field>
+            <field name="color">6</field>
+        </record>
+        
+        <record id="saving_plan_type_state_closed" model="account.saving.plan.type">
+            <field name="name">Cerrado</field>
+            <field name="code">closed</field>
+            <field name="sequence">140</field>
+            <field name="active">True</field>
+        </record>
+    </data>
+</odoo>

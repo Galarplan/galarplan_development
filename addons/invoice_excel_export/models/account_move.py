@@ -524,7 +524,7 @@ class AccountMove(models.Model):
         ET.SubElement(
             venta,
             "codigoCantonMatriculacion"
-        ).text = "0901"        
+        ).text = "10901"        
 
         # =====================================================
         # DIRECCION
@@ -581,11 +581,7 @@ class AccountMove(models.Model):
         ET.SubElement(
             datos_telefono,
             "provincia"
-        ).text = (
-            partner.state_id.code
-            if partner.state_id
-            else ""
-        )
+        ).text = "109"
 
 
         ET.SubElement(

@@ -123,6 +123,7 @@
                         'disabled',
                         'retired',
                         'cancelled',
+                        'cancelled_due_to_restructuring',
                         'precanceled',
                         'moved',
                         'closed',
@@ -147,6 +148,7 @@
                         'disabled',
                         'retired',
                         'cancelled',
+                        'cancelled_due_to_restructuring',
                         'precanceled',
                         'moved',
                         'closed',
@@ -170,6 +172,7 @@
                         'disabled',
                         'retired',
                         'cancelled',
+                        'cancelled_due_to_restructuring',
                         'precanceled',
                         'moved',
                         'closed',
@@ -207,7 +210,7 @@
 
          <field name="state_plan"
        widget="statusbar"
-       statusbar_visible="draft,posted,active,adjudicated_with_assets,adjudicated_without_assets,awarded,pending_authorizated,anulled,disabled,retired,precanceled,estructured,cancelled,moved,closed,assignment,unified,amount_change"
+       statusbar_visible="draft,posted,active,adjudicated_with_assets,adjudicated_without_assets,awarded,pending_authorizated,anulled,disabled,retired,precanceled,cancelled_due_to_restructuring,estructured,cancelled,moved,closed,assignment,unified,amount_change"
        attrs="{'readonly':[('puede_cambiar_estados','!=',True)]}"
        options="{'clickable': True}"
 />

@@ -7,6 +7,7 @@ class AccountSaving(models.Model):
     enable_discount = fields.Boolean('Habilitar')
     percent_discount = fields.Float('Descuento')
     last_date = fields.Date('new date')
+    new_percent = fields.Float('Nuevo porcentaje')
 
 
     def apply_discount_values(self):
@@ -17,6 +18,10 @@ class AccountSaving(models.Model):
             
             # Procesar fechas de otras cuotas (excluyendo 0 y 1)
             self._update_other_quotes_dates(saving)
+
+            # Publicar el plan únicamente si sigue en borrador
+            if saving.state_plan == 'draft':
+                saving.state_plan = 'posted'                    
 
     def _process_quota_zero_discount(self, saving):
         """Procesa el descuento de la cuota 0"""
@@ -36,6 +41,11 @@ class AccountSaving(models.Model):
             # Calcular y aplicar descuento
             discount_amount = original_amount * (saving.percent_discount / 100)
             final_amount = original_amount - discount_amount
+
+            # Calcular nuevo porcentaje ALEX
+            new_percent = 0.0
+            if final_amount:
+                new_percent = (final_amount * 100) / saving.saving_amount
             
             # Actualizar campos de la cuota 0
             quota_zero.update({
@@ -43,10 +53,12 @@ class AccountSaving(models.Model):
                 'discount': saving.percent_discount,
                 'discount_value': discount_amount,
                 'pendiente': final_amount,
+                'new_percent': new_percent,
             })
             
             # Actualizar campo en el registro principal
             saving.serv_inscription_amount = final_amount
+            saving.new_percent = new_percent
             
             # Actualizar fecha de cuota 0 basada en cuota 1
             self._update_quota_zero_date(saving)
@@ -60,21 +72,36 @@ class AccountSaving(models.Model):
                     'discount_value': 0,
                 })
 
-    def _update_other_quotes_dates(self, saving):
-        """Actualiza las fechas de las cuotas excluyendo 0 y 1"""
-        other_quotes = saving.line_ids.filtered(lambda l: l.number not in [0,1])
-        
-        for line in other_quotes:
-            if not line.date:
-                continue
-                
-            new_date = self._calculate_new_date(line.date, saving)
-            line.date = new_date
+            saving.new_percent = 0.0
 
-        # Actualizar también la fecha de fin
-        if saving.end_date:
-            new_end_date = self._calculate_new_date(saving.end_date, saving)
-            saving.end_date = new_end_date
+
+    def _update_other_quotes_dates(self, saving):
+        """Actualiza las fechas de las cuotas a partir de la cuota 0"""
+
+        quota0 = saving.line_ids.filtered(lambda l: l.number == 0)
+        if not quota0 or not quota0.date:
+            return
+
+        quota0 = quota0[0]
+
+        # Determinar el día de pago
+        if quota0.date.month == 7:
+            target_day = 20
+        elif quota0.date.month == 8:
+            target_day = 21
+        else:
+            target_day = quota0.date.day
+
+        # Fecha de la cuota 1 = un mes después de la cuota 0
+        current_date = quota0.date + relativedelta(months=1)
+        current_date = current_date.replace(day=target_day)
+
+        # Actualizar cuotas 1 en adelante
+        quotes = saving.line_ids.filtered(lambda l: l.number > 0).sorted('number')
+
+        for line in quotes:
+            line.date = current_date
+            current_date = current_date + relativedelta(months=1)
 
     def _calculate_new_date(self, date, saving):
         """Solo reemplaza el día según el mes de inicio del plan"""
@@ -91,15 +118,16 @@ class AccountSaving(models.Model):
             return date
         
         # Sumar un mes y reemplazar solo el día
-        new_date = date 
+        # new_date = date 
+        # return new_date.replace(day=target_day)
+
+        # ALEX
+        from dateutil.relativedelta import relativedelta
+
+        # Sumar un mes y reemplazar el día
+        new_date = date + relativedelta(months=1)
         return new_date.replace(day=target_day)
 
-
-
-
-
-        
-        
 
     def _update_quota_zero_date(self, saving):
         """Actualiza la fecha de la cuota 0 basada en la cuota 1"""

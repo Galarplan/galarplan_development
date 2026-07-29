@@ -29,7 +29,8 @@
                                    attrs="{'required': [('enable_discount', '=', True)], 'readonly': [('state_plan', '!=', 'draft')]}"/>
                             <field name="last_date" 
                                    string="Fecha de Aplicación" 
-                                   attrs="{'readonly': [('state_plan', '!=', 'draft')]}"/>
+                                   attrs="{'invisible': True}"/>                                   
+                                   <!--attrs="{'readonly': [('state_plan', '!=', 'draft')]}"-->
                             
                             <newline />
                                    

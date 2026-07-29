@@ -136,8 +136,8 @@ class SavingPortfolioWizard(models.TransientModel):
                 MAX(
                 	CASE 
                     WHEN lc.estado_pago IN ('pagado','pendiente', 'sin_aplicar') 
-                        AND lc.pendiente > 0 
                         AND lc.date < (SELECT fecha_fin FROM fecha_corte) 
+                        AND lc.saving_amount <= 1000
                     THEN lc.saving_amount
                 END
                 ) as cuota,

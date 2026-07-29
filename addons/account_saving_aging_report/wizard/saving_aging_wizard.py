@@ -133,14 +133,14 @@ class SavingPortfolioWizard(models.TransientModel):
                 as1.state_plan,
                 as1.saving_amount,
                 as1.quota_amount,
-                COALESCE(MAX(
+                MAX(
                 	CASE 
-                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                    WHEN lc.estado_pago IN ('pagado','pendiente', 'sin_aplicar') 
                         AND lc.pendiente > 0 
                         AND lc.date < (SELECT fecha_fin FROM fecha_corte) 
                     THEN lc.saving_amount
                 END
-                ),0) as cuota,
+                ) as cuota,
                 as1.pendiente,
                 as1.partner_id,
                 as1.seller_id,

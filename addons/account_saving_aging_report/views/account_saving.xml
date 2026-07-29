@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Herencia de la vista form de account.saving -->
+    <record id="account_saving_form_view_inherit_invoices" model="ir.ui.view">
+        <field name="name">account.saving.form.inherit.invoices</field>
+        <field name="model">account.saving</field>
+        <field name="inherit_id" ref="planes_ahorro.account_saving_form_view" />
+        <field name="arch" type="xml">
+
+            <!-- Agregar página de Descuento Especial antes de la página Configuracion -->
+            <xpath expr="//page[last()]" position="after">
+                <page string="Información Cartera" name="cartera_page">
+
+                    <group colspan="2">
+                        <field name="vehicle_invoice_id"
+                            string="Vehiculo"
+                            domain="[('move_type', '=', 'out_invoice'), ('partner_id', '=', partner_id)]" />
+                        <field name="legal_invoice_id"
+                            string="Gastos Legales"
+                            domain="[('move_type', '=', 'out_invoice'), ('partner_id', '=', partner_id)]" />
+                        <field name="device_invoice_id"
+                            string="Dispositivo"
+                            domain="[('move_type', '=', 'out_invoice'), ('partner_id', '=', partner_id)]" />
+                        <field name="official_id" string="Oficial Cartera" />
+                        <field name="adjudicate_date" string="Fecha de Adjudicación"/>
+                    </group>
+
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

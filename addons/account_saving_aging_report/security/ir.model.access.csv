@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_saving_portfolio_wizard_user,saving.portfolio.wizard.user,model_saving_portfolio_wizard,base.group_user,1,1,1,1
 access_account_saving_plan_user,account.saving.plan.type.user,model_account_saving_plan_type,base.group_user,1,0,0,0
 access_account_saving_plan_manager,account.saving.plan.type.manager,model_account_saving_plan_type,base.group_system,1,1,1,1
+access_mass_importadj_wz_user,mass.importadj.wz.user,model_mass_importadj_wz,base.group_user,1,1,1,1

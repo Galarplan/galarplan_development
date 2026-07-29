@@ -87,11 +87,12 @@ class SavingPortfolioWizard(models.TransientModel):
         partner_filter = ""
         saving_filter = ""
         state_filter = ""
+        date_filter = f"WHERE rs.start_date BETWEEN '{date_from}'::date and '{date_to}'::date"
         
         if self.partner_ids and self.partner_ids.ids:
             ids = tuple(self.partner_ids.ids)
             partner_filter = f"AND as1.partner_id IN {ids}" if len(ids) > 1 else f"AND as1.partner_id = {ids[0]}"
-        
+            date_filter = ""
         if self.saving_plan_ids and self.saving_plan_ids.ids:
             ids = tuple(self.saving_plan_ids.ids)
             saving_filter = f"AND as1.id IN {ids}" if len(ids) > 1 else f"AND as1.id = {ids[0]}"
@@ -100,6 +101,9 @@ class SavingPortfolioWizard(models.TransientModel):
             codes = [f"'{state.code}'" for state in self.state_plan_ids]
             state_filter = f"AND as1.state_plan IN ({','.join(codes)})"
         
+        
+
+
         query = f"""
         WITH fecha_corte AS (
             SELECT '{date_from}'::date AS fecha_inicio,
@@ -129,6 +133,14 @@ class SavingPortfolioWizard(models.TransientModel):
                 as1.state_plan,
                 as1.saving_amount,
                 as1.quota_amount,
+                COALESCE(MAX(
+                	CASE 
+                    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
+                        AND lc.pendiente > 0 
+                        AND lc.date < (SELECT fecha_fin FROM fecha_corte) 
+                    THEN lc.saving_amount
+                END
+                ),0) as cuota,
                 as1.pendiente,
                 as1.partner_id,
                 as1.seller_id,
@@ -222,10 +234,11 @@ class SavingPortfolioWizard(models.TransientModel):
                         AND lc.date > (SELECT fecha_fin FROM fecha_corte) 
                     THEN lc.total_cuota ELSE 0 END), 0) AS cuota_por_vencer,
                 -- Gastos pagados
-                COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.serv_admin_amount ELSE 0 END), 0) AS gastos_legales,
+                --COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.serv_admin_amount ELSE 0 END), 0) AS gastos_legales,
+                am2.amount_total AS gastos_legales,
                 COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.seguro_amount ELSE 0 END), 0) AS valor_seguro,
                 --COALESCE(SUM(CASE WHEN lc.estado_pago = 'pagado' THEN lc.serv_admin_amount ELSE 0 END), 0) AS valor_dispositivo,
-                0 AS valor_dispositivo,
+                am3.amount_total AS valor_dispositivo,
                 -- Gastos de cobranza (1% por cada 30 días de mora)
                 COALESCE(SUM(CASE 
 				    WHEN lc.estado_pago IN ('pendiente', 'sin_aplicar') 
@@ -244,13 +257,16 @@ class SavingPortfolioWizard(models.TransientModel):
 				    ELSE 0 END), 0) AS gastos_cobranza
             FROM account_saving as1
             LEFT JOIN lineas_cuotas lc ON lc.saving_id = as1.id
+            LEFT JOIN account_move am1 on am1.id = as1.vehicle_invoice_id
+            LEFT JOIN account_move am2 on am2.id = as1.legal_invoice_id
+            LEFT JOIN account_move am3 on am3.id = as1.device_invoice_id
             WHERE as1.company_id = {company_id}
                 {partner_filter}
                 {saving_filter}
                 {state_filter}
             GROUP BY 
                 as1.id, as1.name, as1.start_date, as1.end_date, as1.state_plan,
-                as1.saving_amount, as1.quota_amount, as1.pendiente, as1.partner_id, as1.seller_id
+                as1.saving_amount, as1.quota_amount, as1.pendiente, as1.partner_id, as1.seller_id,am2.amount_total,am3.amount_total
         )
         SELECT 
             rp.vat AS identificacion, 
@@ -265,7 +281,8 @@ class SavingPortfolioWizard(models.TransientModel):
             rs.saving_amount AS valor_del_plan,
             rs.saldo_capital,
             rs.saldo_total,
-            rs.quota_amount AS valor_de_cuota,
+            --rs.quota_amount AS valor_de_cuota,
+            rs.cuota as valor_de_cuota,
             rs.cuotas_vencidas,
             -- Maduración de capital
             rs.capital_30_dias,
@@ -303,7 +320,7 @@ class SavingPortfolioWizard(models.TransientModel):
         FROM resumen_plan rs
         INNER JOIN res_partner rp ON rp.id = rs.partner_id
         LEFT JOIN res_users ru ON ru.id = rs.seller_id
-        WHERE rs.start_date BETWEEN '{date_from}'::date and '{date_to}'::date
+        {date_filter}
         ORDER BY rp.name, rs.name
         """
         
@@ -455,7 +472,6 @@ class SavingPortfolioWizard(models.TransientModel):
             'AI': 20,  # valor castigo
             'AJ': 20,  # prov requerida
             'AK': 20,  # Tipo de garantia
-            'AL': 20,  # oficial
         }
         
         for col, width in column_widths.items():
@@ -475,7 +491,7 @@ class SavingPortfolioWizard(models.TransientModel):
         
         # Cabeceras principales
         headers = [
-            '# Identificación', 'Cliente', '# Grupo Plan', 'Código del plan','Nombre del plan', 'Estado',
+            '# Identificación', 'Cliente', '# Grupo Plan', 'Código del plan', 'Estado',
             'Días mora', 'Fecha emisión', 'Fecha vencimiento', 'Valor del plan',
             'Saldo capital', 'Saldo total', 'Valor de cuota', '# Cuotas vencidas',
             '30 dias', '90 dias', '180 dias', '270 dias', '360 dias', '+ 360 dias','Capital por vencer','30 dias', '90 dias', '180 dias', '270 dias', '360 dias', '+ 360 dias','Cuota por vencer', 'Gastos Legales',
@@ -489,40 +505,39 @@ class SavingPortfolioWizard(models.TransientModel):
             'cliente': 1,
             'grupo_plan': 2,
             'codigo_plan': 3,
-            'nombre_plan': 4,
-            'estado': 5,
-            'dias_mora': 6,
-            'fecha_emision': 7,
-            'fecha_vencimiento': 8,
-            'valor_plan': 9,
-            'saldo_capital': 10,
-            'saldo_total': 11,
-            'valor_cuota': 12,
-            'cuotas_vencidas': 13,
-            'capital_30': 14,
-            'capital_90': 15,
-            'capital_180': 16,
-            'capital_270': 17,
-            'capital_360': 18,
-            'capital_mas_360': 19,
-            'capital_por_vencer': 20,
-            'cuota_30': 21,
-            'cuota_90': 22,
-            'cuota_180': 23,
-            'cuota_270': 24,
-            'cuota_360': 25,
-            'cuota_mas_360': 26,
-            'cuota_por_vencer': 27,
-            'gastos_legales': 28,
-            'valor_dispositivo': 29,
-            'valor_seguro': 30,
-            'gastos_cobranza': 31,
-            'tasa_interes': 32,
-            'interes_mora': 33,
-            'valor_castigo': 34,
-            'provision': 35,
-            'tipo_garantia': 36,
-            'oficial': 37,
+            'estado': 4,
+            'dias_mora': 5,
+            'fecha_emision': 6,
+            'fecha_vencimiento': 7,
+            'valor_plan': 8,
+            'saldo_capital': 9,
+            'saldo_total': 10,
+            'valor_cuota': 11,
+            'cuotas_vencidas': 12,
+            'capital_30': 13,
+            'capital_90': 14,
+            'capital_180': 15,
+            'capital_270': 16,
+            'capital_360': 17,
+            'capital_mas_360': 18,
+            'capital_por_vencer': 19,
+            'cuota_30': 20,
+            'cuota_90': 21,
+            'cuota_180': 22,
+            'cuota_270': 23,
+            'cuota_360': 24,
+            'cuota_mas_360': 25,
+            'cuota_por_vencer': 26,
+            'gastos_legales': 27,
+            'valor_dispositivo': 28,
+            'valor_seguro': 29,
+            'gastos_cobranza': 30,
+            'tasa_interes': 31,
+            'interes_mora': 32,
+            'valor_castigo': 33,
+            'provision': 34,
+            'tipo_garantia': 35,
+            'oficial': 36,
         }
 
         
@@ -584,7 +599,6 @@ class SavingPortfolioWizard(models.TransientModel):
                 'disabled': 'Desactivado',
                 'retired': 'Retirado',
                 'precanceled': 'Pre-Cancelado',
-                'cancelled_due_to_restructuring': 'Cancelado X Reestruc.',
                 'estructured': 'Re-estructurado',
                 'cancelled': 'Cancelado',
                 'moved': 'Traspaso',
@@ -597,53 +611,52 @@ class SavingPortfolioWizard(models.TransientModel):
             sheet.write(row, 1, record.get('cliente', ''), text_format)
             sheet.write(row, 2, record.get('grupo_plan_ahorro', ''), text_center_format)
             sheet.write(row, 3, record.get('codigo_del_plan', ''), text_format)
-            sheet.write(row, 4, record.get('nombre_plan', ''), text_format)
-            sheet.write(row, 5, state_desc, text_format)
-            sheet.write(row, 6, max(0, record.get('dias_mora', 0) or 0), text_center_format)
-            sheet.write(row, 7, record.get('inicio').strftime('%d/%m/%Y') if record.get('inicio') else '', text_center_format)
-            sheet.write(row, 8, record.get('vencimiento').strftime('%d/%m/%Y') if record.get('vencimiento') else '', text_center_format)
+            sheet.write(row, 4, state_desc, text_format)
+            sheet.write(row, 5, max(0, record.get('dias_mora', 0) or 0), text_center_format)
+            sheet.write(row, 6, record.get('inicio').strftime('%d/%m/%Y') if record.get('inicio') else '', text_center_format)
+            sheet.write(row, 7, record.get('vencimiento').strftime('%d/%m/%Y') if record.get('vencimiento') else '', text_center_format)
             
             # Valores monetarios
-            sheet.write(row, 9, record.get('valor_del_plan', 0), money_format)
-            sheet.write(row, 10, record.get('saldo_capital', 0), money_format)
-            sheet.write(row, 11, record.get('saldo_total', 0), money_red_format)
-            sheet.write(row, 12, record.get('valor_de_cuota', 0), money_format)
-            sheet.write(row, 13, record.get('cuotas_vencidas', 0), text_center_format)
+            sheet.write(row, 8, record.get('valor_del_plan', 0), money_format)
+            sheet.write(row, 9, record.get('saldo_capital', 0), money_format)
+            sheet.write(row, 10, record.get('saldo_total', 0), money_red_format)
+            sheet.write(row, 11, record.get('valor_de_cuota', 0), money_format)
+            sheet.write(row, 12, record.get('cuotas_vencidas', 0), text_center_format)
             
             # Maduración de capital
-            sheet.write(row, 14, record.get('capital_30_dias', 0) ,money_format)
-            sheet.write(row, 15, record.get('capital_90_dias', 0), money_format)
-            sheet.write(row, 16, record.get('capital_180_dias', 0) , money_format)
-            sheet.write(row, 17, record.get('capital_270_dias', 0) , money_format)
-            sheet.write(row, 18, record.get('capital_360_dias', 0) , money_format)
-            sheet.write(row, 19, record.get('capital_mas_360_dias', 0), money_format)
-            sheet.write(row, 20, record.get('capital_por_vencer', 0), money_format)
+            sheet.write(row, 13, record.get('capital_30_dias', 0) ,money_format)
+            sheet.write(row, 14, record.get('capital_90_dias', 0), money_format)
+            sheet.write(row, 15, record.get('capital_180_dias', 0) , money_format)
+            sheet.write(row, 16, record.get('capital_270_dias', 0) , money_format)
+            sheet.write(row, 17, record.get('capital_360_dias', 0) , money_format)
+            sheet.write(row, 18, record.get('capital_mas_360_dias', 0), money_format)
+            sheet.write(row, 19, record.get('capital_por_vencer', 0), money_format)
         
             # Maduración total cuota
-            sheet.write(row, 21, record.get('cuota_30_dias', 0), money_format)
-            sheet.write(row, 22, record.get('cuota_90_dias', 0), money_format)
-            sheet.write(row, 23, record.get('cuota_180_dias', 0), money_format)
-            sheet.write(row, 24, record.get('cuota_270_dias', 0), money_format)
-            sheet.write(row, 25, record.get('cuota_360_dias', 0), money_format)
-            sheet.write(row, 26, record.get('cuota_mas_360_dias', 0), money_format)
-            sheet.write(row, 27, record.get('cuota_por_vencer', 0), money_format)
+            sheet.write(row, 20, record.get('cuota_30_dias', 0), money_format)
+            sheet.write(row, 21, record.get('cuota_90_dias', 0), money_format)
+            sheet.write(row, 22, record.get('cuota_180_dias', 0), money_format)
+            sheet.write(row, 23, record.get('cuota_270_dias', 0), money_format)
+            sheet.write(row, 24, record.get('cuota_360_dias', 0), money_format)
+            sheet.write(row, 25, record.get('cuota_mas_360_dias', 0), money_format)
+            sheet.write(row, 26, record.get('cuota_por_vencer', 0), money_format)
             
 
             # Gastos
-            sheet.write(row, 28, record.get('gastos_legales', 0), money_format)
-            sheet.write(row, 29, record.get('valor_dispositivo', 0), money_format)
-            sheet.write(row, 30, record.get('valor_seguro', 0), money_format)
-            sheet.write(row, 31, record.get('gastos_cobranza', 0), money_format)
-            sheet.write(row, 32, record.get('tasa_interes', 0), money_format)
-            sheet.write(row, 33, record.get('interes_mora_cancelado', 0), money_format)
-            sheet.write(row, 34, record.get('valor_castigo', 0), money_format)
+            sheet.write(row, 27, record.get('gastos_legales', 0), money_format)
+            sheet.write(row, 28, record.get('valor_dispositivo', 0), money_format)
+            sheet.write(row, 29, record.get('valor_seguro', 0), money_format)
+            sheet.write(row, 30, record.get('gastos_cobranza', 0), money_format)
+            sheet.write(row, 31, record.get('tasa_interes', 0), money_format)
+            sheet.write(row, 32, record.get('interes_mora_cancelado', 0), money_format)
+            sheet.write(row, 33, record.get('valor_castigo', 0), money_format)
             
             # Provisión
             provision = record.get('provision_requerida', 0)
-            sheet.write(row, 35, provision, money_red_format if provision > 0 else money_format)
+            sheet.write(row, 34, provision, money_red_format if provision > 0 else money_format)
             
-            sheet.write(row, 36, record.get('vehicle_info', ''), text_format)
-            sheet.write(row, 37, record.get('official_cartera', ''), text_format)
+            sheet.write(row, 35, record.get('vehicle_info', ''), text_format)
+            sheet.write(row, 36, record.get('official_cartera', ''), text_format)
             
             # Acumular totales
             totals['saving_amount'] += record.get('valor_del_plan', 0)
@@ -678,7 +691,7 @@ class SavingPortfolioWizard(models.TransientModel):
         
         # Totales finales
         row += 1
-        sheet.write(row, COLUMNS['nombre_plan'], 'TOTALES', total_format)
+        sheet.write(row, COLUMNS['codigo_plan'], 'TOTALES', total_format)
         sheet.write(row, COLUMNS['valor_plan'], totals['saving_amount'], total_format)
         sheet.write(row, COLUMNS['saldo_capital'], totals['capital_balance'], total_format)
         sheet.write(row, COLUMNS['saldo_total'], totals['total_balance'], total_format)

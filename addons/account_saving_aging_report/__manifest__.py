@@ -20,6 +20,8 @@
         'security/ir.model.access.csv',
         'data/plan_data.xml',
         'wizard/saving_aging_wizard_views.xml',
+        'wizard/mass_importadj_wz.xml',
+        'views/account_saving.xml',
         'views/menuviews.xml',
         'reports/saving_aging_report_template.xml',
         # 'data/report_data.xml',

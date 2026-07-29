@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mass_importadj_wz_form" model="ir.ui.view">
+        <field name="name">mass.importadj.wz.form</field>
+        <field name="model">mass.importadj.wz</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_download_excel" 
+                            string="Descargar Excel" 
+                            type="object" 
+                            class="btn-primary"
+                            icon="fa-download"/>
+                    <button name="action_import_excel" 
+                            string="Importar Excel" 
+                            type="object" 
+                            class="btn-success"
+                            icon="fa-upload"
+                            attrs="{'invisible': [('state', '!=', 'import')]}"/>
+                    <button name="action_reset" 
+                            string="Resetear" 
+                            type="object" 
+                            class="btn-default"/>
+                </header>
+                
+                <group string="📋 INSTRUCCIONES" colspan="2">
+                    <div class="alert alert-info" style="margin-top: 10px; margin-bottom: 10px; width: 100%;" colspan="2">
+                        <strong>Paso 1:</strong> Haga clic en "Descargar Excel" para obtener el archivo con los registros adjudicados.<br/>
+                        <strong>Paso 2:</strong> Complete la columna "Fecha de Adjudicación" en el archivo Excel.<br/>
+                        <strong>Paso 3:</strong> Suba el archivo y haga clic en "Importar Excel" para actualizar las fechas.
+                    </div>
+                </group>
+                
+                <group string="📊 Estado de la Operación" colspan="2">
+                    <field name="state" invisible="0"/>
+                    <field name="total_records" readonly="1"/>
+                    <field name="updated_records" readonly="1"/>
+                    <field name="error_records" readonly="1"/>
+                </group>
+                
+                <group string="📁 Archivo para Importar" colspan="2" attrs="{'invisible': [('state', '!=', 'import')]}">
+                    <field name="file_data" widget="binary" filename="file_name" 
+                           attrs="{'required': [('state', '=', 'import')]}"/>
+                    <field name="file_name" invisible="1"/>
+                </group>
+                
+                <group string="📝 Mensaje de Resultado" colspan="2" 
+                       attrs="{'invisible': [('result_message', '=', False)]}">
+                    <field name="result_message" readonly="1" nolabel="1"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mass_importadj_wz" model="ir.actions.act_window">
+        <field name="name">Importar Fechas de Adjudicación</field>
+        <field name="res_model">mass.importadj.wz</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="type">ir.actions.act_window</field>
+    </record>
+</odoo>

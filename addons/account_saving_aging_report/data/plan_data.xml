@@ -112,12 +112,5 @@
             <field name="sequence">140</field>
             <field name="active">True</field>
         </record>
-
-        <record id="saving_plan_type_state_cancelled_due_to_restructuring" model="account.saving.plan.type">
-            <field name="name">Cancelado X Reestruc.</field>
-            <field name="code">cancelled_due_to_restructuring</field>
-            <field name="sequence">150</field>
-            <field name="active">True</field>
-        </record>        
     </data>
 </odoo>

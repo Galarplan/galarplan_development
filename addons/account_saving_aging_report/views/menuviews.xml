@@ -8,5 +8,12 @@
             parent="planes_ahorro.planes_ahorro_root"
             sequence="50"
             action="action_saving_portfolio_wizard"/>
+        
+        <menuitem
+            id="acount_saving_importadj_menu"
+            name="Importar Fechas"
+            action="action_mass_importadj_wz"
+            parent="planes_ahorro.plan_ahorro_conf_parent"
+            sequence="1"/>
     </data>
 </odoo>

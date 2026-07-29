@@ -659,15 +659,15 @@ class SavingPortfolioWizard(models.TransientModel):
             sheet.write(row, 36, record.get('official_cartera', ''), text_format)
             
             # Acumular totales
-            totals['saving_amount'] += record.get('valor_del_plan', 0)
-            totals['capital_balance'] += record.get('saldo_capital', 0)
-            totals['total_balance'] += record.get('saldo_total', 0)
-            totals['legal_expenses'] += record.get('gastos_legales', 0)
-            totals['device_value'] += record.get('valor_dispositivo', 0)
-            totals['insurance_value'] += record.get('valor_seguro', 0)
-            totals['required_provision'] += record.get('provision_requerida', 0)
-            totals['overdue_quotas'] += record.get('cuotas_vencidas', 0)
-            totals['gastos_cobranza'] += record.get('gastos_cobranza', 0)
+            totals['saving_amount'] += record.get('valor_del_plan', 0) or 0
+            totals['capital_balance'] += record.get('saldo_capital', 0) or 0
+            totals['total_balance'] += record.get('saldo_total', 0) or 0
+            totals['legal_expenses'] += record.get('gastos_legales', 0) or 0
+            totals['device_value'] += record.get('valor_dispositivo', 0) or 0
+            totals['insurance_value'] += record.get('valor_seguro', 0) or 0
+            totals['required_provision'] += record.get('provision_requerida', 0) or 0
+            totals['overdue_quotas'] += record.get('cuotas_vencidas', 0) or 0
+            totals['gastos_cobranza'] += record.get('gastos_cobranza', 0) or 0
             
             # Totales de maduración de capital
             totals['capital_30'] += record.get('capital_30_dias', 0)

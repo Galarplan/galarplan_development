@@ -12,7 +12,9 @@
         'account',        # Dependencia de contabilidad
     ],
     'data': [
+        'security/ir.model.access.csv',
         'views/account_saving_line.xml',  # Vista del formulario
+        'wizard/account_saving_discount_wizard_views.xml',
     ],
    
     'auto_install': False,

@@ -34,7 +34,8 @@
                             
                             <newline />
                                    
-                            <button string="Aplicar" name="apply_discount_values" type="object" class="oe_highlight" attrs="{'invisible': [('state_plan', '!=', 'draft')]}"/>
+                            <button string="Aplicar" name="action_open_discount_confirmation" type="object" class="oe_highlight" attrs="{'invisible': [('state_plan', '!=', 'draft')]}"/>
+                            <button string="Facturar Insc. con Desc" name="facturar_with_discount_3" type="object" class="oe_highlight" />
                         </group>
                     </group>
                     

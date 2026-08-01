@@ -453,8 +453,8 @@ class AccountSaving(models.Model):
             invoice_vals = {
                 'partner_id': saving.partner_id.id,
                 'move_type': 'out_invoice',
-                'date': date(2026, 7, 31),
-                'invoice_date': date(2026, 7, 31),
+                'date': fields.Date.today(),
+                'invoice_date': fields.Date.today(),
                 'journal_id': saving.journal_id.id,
                 'company_id': saving.company_id.id,
                 'currency_id': saving.currency_id.id,

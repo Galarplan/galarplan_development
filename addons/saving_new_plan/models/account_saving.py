@@ -403,18 +403,52 @@ class AccountSaving(models.Model):
             if not inscription_product:
                 raise ValidationError(_("Debe configurar un producto de inscripción en el plan de ahorro."))
             
-            # Obtener la cuenta de descuento (ID 1767 o la que corresponda)
-            discount_account = self.env['account.account'].browse(1767)
-            if not discount_account.exists():
-                raise ValidationError(_("No se encontró la cuenta contable de descuento (ID 1767)."))
+            # Obtener la cuenta de descuento
+            discount_account = self.env['account.account'].search([
+                ('code', 'ilike', '40109010102'),
+                ('company_id', '=', self.env.company.id)
+            ], limit=1)
+
+            inscription_account = self.env['account.account'].search([
+                ('code', 'ilike', '40102010101'),
+                ('company_id', '=', self.env.company.id)
+            ], limit=1)
+
+            if not discount_account:
+                raise ValidationError(_("No se encontró la cuenta contable de descuento."))
             
-            # Valores para la factura
-            original_amount = inscription_line.last_serv_inscription_amount or inscription_line.serv_inscription_amount
-            discount_percent = saving.percent_discount
-            discount_amount = original_amount * (discount_percent / 100)
-            final_amount = original_amount - discount_amount
+            # Cuenta por Cobrar
+            account_receivable = saving.partner_id.property_account_receivable_id
+            if not account_receivable:
+                raise ValidationError(_("No se encontró la cuenta por cobrar del cliente."))
             
-            # Crear factura
+            # ============================================================
+            # CÁLCULO DE VALORES CORRECTOS
+            # ============================================================
+            # El valor original incluye IVA
+            original_amount_with_tax = inscription_line.last_serv_inscription_amount or inscription_line.serv_inscription_amount
+            
+            # Calcular valor sin IVA (dividir entre 1.15)
+            original_amount = original_amount_with_tax / 1.15  # 1100 / 1.15 = 956.52
+            
+            discount_percent = saving.percent_discount  # 10%
+            
+            # Descuento sobre el valor sin IVA
+            discount_amount = original_amount * (discount_percent / 100)  # 956.52 * 0.10 = 95.65
+            
+            # Base con descuento (sin IVA)
+            base_amount = original_amount - discount_amount  # 956.52 - 95.65 = 860.87
+            
+            # IVA sobre la base con descuento
+            tax_rate = 0.15
+            tax_amount = base_amount * tax_rate  # 860.87 * 0.15 = 129.13
+            
+            # Total a cobrar (CXC)
+            total_receivable = base_amount + tax_amount  # 860.87 + 129.13 = 990.00
+            
+            # ============================================================
+            # CREAR FACTURA
+            # ============================================================
             invoice_vals = {
                 'partner_id': saving.partner_id.id,
                 'move_type': 'out_invoice',
@@ -438,61 +472,99 @@ class AccountSaving(models.Model):
             # Líneas de la factura
             invoice_line_vals = []
             
-            # Línea 1: INSCRIPCIÓN con valor ORIGINAL en el HABER
+            # Línea 1: INSCRIPCIÓN (valor SIN IVA)
             invoice_line_vals.append((0, 0, {
                 'product_id': inscription_product.id,
                 'name': f"Inscripción Plan de Ahorro {saving.name}",
                 'quantity': 1,
-                'price_unit': original_amount,  # VALOR ORIGINAL
+                'price_unit': original_amount,  # VALOR SIN IVA: 956.52
                 'tax_ids': [(6, 0, inscription_product.taxes_id.ids or [])],
+                'discount': discount_percent,
             }))
+
+            invoice_line_vals.append((0, 0, {
+                                'name': f"INSCRIPCION PLANES",
+                                'quantity': 1,
+                                'credit': discount_amount,  # NEGATIVO: -95.65
+                                'account_id': inscription_account.id,
+                                'tax_ids': [(6, 0, [])],
+                                'product_id': False,
+                                'display_type':'planes'
+                            }))
+
+
             
-            # Línea 2: DESCUENTO en el DEBE (usando cuenta de descuento con valor NEGATIVO)
+
+            
+            
+            # Línea 2: DESCUENTO en el DEBE (valor SIN IVA)
             if discount_amount > 0:
                 invoice_line_vals.append((0, 0, {
                     'name': f"DESCUENTO EN VENTAS {discount_percent}%",
                     'quantity': 1,
-                    'price_unit': -discount_amount,  # VALOR NEGATIVO para que vaya al DEBE
-                    'account_id': discount_account.id,  # Cuenta de descuento
+                    'debit': discount_amount,  # NEGATIVO: -95.65
+                    'account_id': discount_account.id,
                     'tax_ids': [(6, 0, [])],
                     'product_id': False,
+                    'display_type':'planes'
                 }))
             
             invoice_vals['invoice_line_ids'] = invoice_line_vals
             
-            # Crear la factura
+            # Crear la factura en borrador
             invoice = self.env['account.move'].create(invoice_vals)
             
-            # Forzar que la línea de descuento tenga la cuenta correcta y sea débito
+            # ============================================================
+            # AJUSTAR LÍNEAS CONTABLES
+            # ============================================================
             for line in invoice.line_ids:
-                if line.name and 'DESCUENTO' in line.name.upper():
-                    # Asegurar que la cuenta sea la de descuento
-                    line.account_id = discount_account.id
-                    # Si la línea tiene balance positivo, convertir a negativo para que sea débito
-                    if line.balance > 0:
-                        line.price_unit = -abs(line.price_unit)
+                # === 1. CUENTA POR COBRAR (payment_term) ===
+                if line.display_type == 'payment_term':
+                    line.price_unit = total_receivable  # 990.00
+                    line.credit = 0.0
+                    line.debit = total_receivable
+                    line.amount_currency = total_receivable
+                    line.balance = total_receivable
+                    print(f'=== CXC: {line.price_unit} ===')
+                
+                # === 2. IVA (tax) ===
+                elif line.display_type == 'tax':
+                    line.price_unit = tax_amount  # 129.13
+                    line.debit = 0.0
+                    line.credit = tax_amount
+                    line.amount_currency = tax_amount
+                    line.balance = -tax_amount
+                    print(f'=== IVA: {line.price_unit} ===')
+                
+                # === 3. DESCUENTO ===
+                elif line.name and 'DESCUENTO' in line.name.upper():
+                    line.price_unit = discount_amount  # 95.65
+                    line.credit = 0.0
+                    line.debit = discount_amount
+                    line.amount_currency = discount_amount
+                    line.balance = discount_amount
+                    print(f'=== DESCUENTO: {line.price_unit} ===')
+                
+                # === 4. INGRESO ===
+                elif line.product_id == inscription_product:
+                    line.price_unit = original_amount  # 956.52
+                    line.debit = 0.0
+                    line.credit = original_amount
+                    line.amount_currency = original_amount
+                    line.balance = -original_amount
+                    print(f'=== INGRESO: {line.price_unit} ===')
             
-            # Publicar la factura
+            # ============================================================
+            # PUBLICAR FACTURA
+            # ============================================================
             invoice.action_post()
             
-            # Actualizar la línea de inscripción con el invoice_id
+            # Actualizar la línea de inscripción
             inscription_line.write({
                 'invoice_id': invoice.id,
                 'enabled_for_invoice': False
             })
             
-            # Crear registro histórico
-            if 'account.saving.invoice' in self.env:
-                self.env['account.saving.invoice'].create({
-                    'saving_id': saving.id,
-                    'invoice_ref': invoice.name,
-                    'amount': invoice.amount_total,
-                    'invoice_date': invoice.invoice_date,
-                    'invoice_state': invoice.state,
-                    'type': 'out_invoice',
-                })
-            
-            # Devolver la acción para abrir la factura
             return {
                 'type': 'ir.actions.act_window',
                 'name': _('Factura de Inscripción con Descuento'),

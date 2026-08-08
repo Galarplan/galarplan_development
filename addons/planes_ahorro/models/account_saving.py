@@ -57,14 +57,14 @@ class AccountSaving(models.Model):
         ('disabled', 'Desactivado'),
         ('retired', 'Retirado'),
         ('precanceled','Pre-Cancelado'),
-        ('cancelled_due_to_restructuring','Cancelado X Reestruc.'),
+        ('cancelled_due_to_restructuring', 'Cancelado X Reestruc.'),
         ('estructured','Re-estructurado'),
         ('cancelled', 'Cancelado'),
         ('moved','Traspaso'),
         ('closed', 'Cerrado'),
         ('assignment', 'Cesión'),
         ('unified','Unificado'),
-        ('amount_change','Cambio de Monto'),
+        ('amount_change','Cambio de Monto'),        
     ], string='Estado del Plan', default='draft',tracking=True)
 
     puede_cambiar_estados = fields.Boolean(
@@ -540,7 +540,9 @@ class AccountSaving(models.Model):
                 (self.env.ref('account.view_out_invoice_tree').id, 'tree'),
                 (self.env.ref('account.view_move_form').id, 'form')
             ],
-            'domain': ['|',('id', 'in', self.all_move_ids.ids),('saving_id', '=', self.id)],
+            #'domain': ['|',('id', 'in', self.all_move_ids.ids),('saving_id', '=', self.id)],
+
+            'domain': ['&',('move_type', 'in', ('out_refund','out_invoice')),'|',('id', 'in', self.all_move_ids.ids),('saving_id', '=', self.id),],
         }
 
     def action_open_payments(self):

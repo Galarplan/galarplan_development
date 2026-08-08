@@ -359,7 +359,7 @@ class AccountSavingLines(models.Model):
                         ahorro_account_id = brw_each.saving_id.saving_plan_id.prepayment_account_id
                         print('=========================',ahorro_account_id)
 
-                        if brw_each.saving_id.state_plan == 'adjudicated_with_assets':
+                        if brw_each.saving_id.state_plan in ('adjudicated_with_assets','estructured'):
                             invoice_line_ids+= [#(5,),
                                      (0, 0, {
                                         'display_type':'planes',

@@ -39,7 +39,7 @@ class ResUsers(models.Model):
 
                 if '(CreaUser)' not in user_name:
                     vals['name'] = (
-                        f"{user_name} (CreaUser)"
+                        f"{user_name}"
                     )
 
                 # -------------------------------------------------
@@ -102,14 +102,12 @@ class ResUsers(models.Model):
                     'l10n_latam_identification_type_id'
                 ] = 3
 
+
                 # -------------------------------------------------
                 # EMAIL
                 # -------------------------------------------------
 
                 original_email = vals.get('email') or ''
-
-                # Si el usuario no trae email pero el login
-                # es un correo, utilizamos el login como base.
 
                 if (
                     not original_email
@@ -117,67 +115,7 @@ class ResUsers(models.Model):
                 ):
                     original_email = vals.get('login')
 
-                if (
-                    original_email
-                    and '@' in original_email
-                ):
-
-                    local_part, domain = (
-                        original_email.split('@', 1)
-                    )
-
-                    # Quitamos un posible +1, +2, etc.
-                    #
-                    # gato+1@abc.com
-                    # gato+2@abc.com
-                    #
-                    # se convierte en:
-                    #
-                    # gato@abc.com
-
-                    local_part = re.sub(
-                        r'\+\d+$',
-                        '',
-                        local_part
-                    )
-
-                    counter = 1
-
-                    email = (
-                        f"{local_part}+{counter}@{domain}"
-                    )
-
-                    while Partner.search_count([
-                        ('email', '=ilike', email)
-                    ]):
-
-                        counter += 1
-
-                        email = (
-                            f"{local_part}+{counter}@{domain}"
-                        )
-
-                    vals['email'] = email
-
-                else:
-
-                    counter = 1
-
-                    email = (
-                        f"copia{counter}@abc.com"
-                    )
-
-                    while Partner.search_count([
-                        ('email', '=ilike', email)
-                    ]):
-
-                        counter += 1
-
-                        email = (
-                            f"copia{counter}@abc.com"
-                        )
-
-                    vals['email'] = email
+                vals['email'] = original_email
 
         # =========================================================
         # CREAR USUARIO

@@ -64,6 +64,20 @@ class report_ventas_report_xlsx(models.AbstractModel):
     doc_document_type.name as  tipo_documento,
     replace(account_move.nAME,'-','') as numero_documento,
     account_move.invoice_date as fecha,
+    account_move.is_vehicle as is_vehicle,
+    rp_asesor.name AS asesor, 
+    CASE
+        WHEN account_move.payment_state = 'paid' THEN 'PAGADO'
+        WHEN account_move.payment_state = 'not_paid' THEN 'NO PAGADO'
+        WHEN account_move.payment_state = 'partial' THEN 'PAGO PARCIAL'
+        WHEN account_move.payment_state = 'in_payment' THEN 'EN PROCESO DE PAGO'
+        WHEN account_move.payment_state = 'reversed' THEN 'REVERSADO'
+        WHEN account_move.payment_state = 'legacy' THEN 'LEGACY'
+        ELSE account_move.payment_state
+    END AS payment_state,      
+    adl.campo AS campo,
+    adl.descripcion AS descripcion,  
+    account_move.manual_document_number as doc_afectado,   
     case when(account_move.state='draft') then 'preliminar' 
     when(account_move.state='posted') then 'publicado'
     when(account_move.state='cancel') then 'anulado' end as estado,
@@ -91,6 +105,10 @@ class report_ventas_report_xlsx(models.AbstractModel):
                     left join l10n_latam_identification_type on res_partner.l10n_latam_identification_type_id = l10n_latam_identification_type.id
                     left join l10n_ec_sri_payment doc_payment_type on doc_payment_type.id = account_move.l10n_ec_sri_payment_id 
                     left join l10n_latam_document_type doc_document_type on doc_document_type.id = account_move.l10n_latam_document_type_id and doc_document_type.code!='00' 
+                    LEFT JOIN account_saving saving ON saving.id = account_move.saving_id
+                    LEFT JOIN res_users ru ON ru.id = saving.seller_id
+                    LEFT JOIN res_partner rp_asesor ON rp_asesor.id = ru.partner_id       
+                    LEFT JOIN account_details_line adl ON adl.move_id = account_move.id AND LOWER(REGEXP_REPLACE(TRIM(adl.campo), '\s+', '', 'g')) = 'vendedor'
                     left join retenciones_detalle rdfte on rdfte.id=account_move.id and rdfte.l10n_ec_type='withhold_vat_sale'
                     left join retenciones_detalle rdiva on rdiva.id=account_move.id and rdiva.l10n_ec_type='withhold_income_sale'
         """,(start_date,end_date,brw_wizard.company_id.id))
@@ -121,12 +139,18 @@ class report_ventas_report_xlsx(models.AbstractModel):
                         ws['Q'+row]= each_result["total"]
                         ws['R'+row]= each_result["rte_fte"]
                         ws['S'+row]= each_result["rte_iva"]
+                        ws['T'+row] = "SI" if each_result["is_vehicle"] else "NO"
+                        ws['U'+row] = each_result["asesor"] or ""
+                        ws['V'+row] = each_result["payment_state"] or ""
+                        ws['W'+row] = each_result["campo"] or ""
+                        ws['X'+row] = each_result["descripcion"] or ""
+                        ws['Y'+row] = each_result["doc_afectado"] or ""                        
                         i+=1
                         last_row=INDEX_ROW+i
                     if last_row>=INDEX_ROW:
                         thin = Side(border_style="thin", color="000000")
                         border = Border(left=thin, right=thin, top=thin, bottom=thin)
-                        self.set_border(ws,'A'+str(INDEX_ROW)+':S'+str(last_row-1),border)
+                        self.set_border(ws,'A'+str(INDEX_ROW)+':Y'+str(last_row-1),border)
                 ws['B3']= len(result)
                 ws['A1']= brw_wizard.company_id.name
                 ws['B2']=start_date
@@ -165,6 +189,20 @@ class report_ventas_report_xlsx(models.AbstractModel):
                     doc_document_type.name as  tipo_documento,
                     replace(account_move.nAME,'-','') as numero_documento,
                     account_move.invoice_date as fecha,
+                    account_move.is_vehicle as is_vehicle,
+                    rp_asesor.name AS asesor,   
+                    CASE
+                        WHEN account_move.payment_state = 'paid' THEN 'PAGADO'
+                        WHEN account_move.payment_state = 'not_paid' THEN 'NO PAGADO'
+                        WHEN account_move.payment_state = 'partial' THEN 'PAGO PARCIAL'
+                        WHEN account_move.payment_state = 'in_payment' THEN 'EN PROCESO DE PAGO'
+                        WHEN account_move.payment_state = 'reversed' THEN 'REVERSADO'
+                        WHEN account_move.payment_state = 'legacy' THEN 'LEGACY'
+                        ELSE account_move.payment_state
+                    END AS payment_state,   
+                    adl.campo AS campo,
+                    adl.descripcion AS descripcion,    
+                    account_move.manual_document_number as doc_afectado,                                                 
                     case when(account_move.state='draft') then 'preliminar' 
                     when(account_move.state='posted') then 'publicado'
                     when(account_move.state='cancel') then 'anulado' end as estado,
@@ -203,6 +241,10 @@ class report_ventas_report_xlsx(models.AbstractModel):
                                     left join l10n_latam_identification_type on res_partner.l10n_latam_identification_type_id = l10n_latam_identification_type.id
                                     left join l10n_ec_sri_payment doc_payment_type on doc_payment_type.id = account_move.l10n_ec_sri_payment_id 
                                     left join l10n_latam_document_type doc_document_type on doc_document_type.id = account_move.l10n_latam_document_type_id and doc_document_type.code!='00' 
+                                    LEFT JOIN account_saving saving ON saving.id = account_move.saving_id
+                                    LEFT JOIN res_users ru ON ru.id = saving.seller_id
+                                    LEFT JOIN res_partner rp_asesor ON rp_asesor.id = ru.partner_id      
+                                    LEFT JOIN account_details_line adl ON adl.move_id = account_move.id AND LOWER(REGEXP_REPLACE(TRIM(adl.campo), '\s+', '', 'g')) = 'vendedor'
                                     left join retenciones_detalle rdfte on rdfte.id=account_move.id and rdfte.l10n_ec_type='withhold_vat_sale'
                                     left join retenciones_detalle rdiva on rdiva.id=account_move.id and rdiva.l10n_ec_type='withhold_income_sale'
 
@@ -243,13 +285,19 @@ class report_ventas_report_xlsx(models.AbstractModel):
                         ws['Y' + row] = each_result["price_subtotal"]
                         ws['Z' + row] = each_result["price_tax"]
                         ws['AA' + row] = each_result["price_total"]
+                        ws['AB' + row] = "SI" if each_result["is_vehicle"] else "NO"
+                        ws['AC' + row] = each_result["asesor"] or ""
+                        ws['AD' + row] = each_result["payment_state"] or ""
+                        ws['AE' + row] = each_result["campo"] or ""
+                        ws['AF' + row] = each_result["descripcion"] or ""
+                        ws['AG' + row] = each_result["doc_afectado"] or ""                        
 
                         i += 1
                         last_row = INDEX_ROW + i
                     if last_row >= INDEX_ROW:
                         thin = Side(border_style="thin", color="000000")
                         border = Border(left=thin, right=thin, top=thin, bottom=thin)
-                        self.set_border(ws, 'A' + str(INDEX_ROW) + ':AA' + str(last_row - 1), border)
+                        self.set_border(ws, 'A' + str(INDEX_ROW) + ':AG' + str(last_row - 1), border)
                 ws['B3'] = len(result)
                 ws['A1'] = brw_wizard.company_id.name
                 ws['B2'] = start_date

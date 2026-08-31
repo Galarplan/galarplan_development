@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_saving_plan_inherit_autoahow" model="ir.ui.view">
+        <field name="name">account.saving.plan.form.inherit.autoshow</field>
+        <field name="model">account.saving.plan</field>
+        <field name="inherit_id" ref="planes_ahorro.account_saving_plan_form_view" />
+        <field name="arch" type="xml">
+            <field name="quota_amount" position="after">
+                <field name="percent_big_quote"
+                    string="% Cuota Premiun"
+                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+
+                <field name="with_aditions"
+                    string="Adicionales"
+                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+
+                <field name="iva_amount_percent"
+                    string="IVA"
+                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+
+                <field name="gl_legal"
+                    string="Gasto Legal"
+                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+
+                <field name="device_value"
+                    string="Dispositivo"
+                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+
+            </field>
+
+        </field>
+    </record>
+
+    
+
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_saving_quotes_lectura,account.saving.quotes.lectura,model_account_saving_quotes,planes_ahorro.grp_lectura,1,0,0,0
+access_account_saving_quotes_usuario,account.saving.quotes.usuario,model_account_saving_quotes,planes_ahorro.grp_usuario,1,1,1,1
+access_account_saving_quotes_administrador,account.saving.quotes.administrador,model_account_saving_quotes,planes_ahorro.grp_administrador,1,1,1,1

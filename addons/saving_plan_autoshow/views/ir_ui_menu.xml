@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Sobrescribir el menú raíz existente -->
+        <menuitem id="planes_ahorro.planes_ahorro_root" 
+                  name="Planes de Ahorro" 
+                  sequence="0"
+                  groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+        <!-- Sobrescribir el menú "Planes de Ahorro" existente -->
+        <menuitem id="planes_ahorro.plan_ahorro"
+              name="Planes de Ahorro"
+              parent="planes_ahorro.planes_ahorro_root"
+              sequence="0"
+              groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+        <menuitem id="planes_ahorro.plan_ahorro_normal"
+              name="Planes de Ahorro"
+              parent="planes_ahorro.plan_ahorro"
+              action="account_saving_normal_plan"
+              sequence="1"
+              groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+        <menuitem id="planes_ahorro.plan_ahorro_ballon"
+              name="Planes de Ahorro Ballon"
+              parent="planes_ahorro.plan_ahorro"
+              action="account_saving_ballon_plan"
+              sequence="2"
+              groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+        <!-- Agregar nuevo: Planes Premium -->
+        <menuitem id="saving_plan_autoshow.planes_premium"
+              name="Planes Premium"
+              parent="planes_ahorro.plan_ahorro"
+              action="account_saving_premiun"
+              sequence="3"
+              groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+        <!-- Agregar nuevo: Planes Flex -->
+        <menuitem id="saving_plan_autoshow.planes_flex"
+              name="Planes Flex"
+              parent="planes_ahorro.plan_ahorro"
+              action="account_saving_flex"
+              sequence="4"
+              groups="planes_ahorro.grp_lectura,planes_ahorro.grp_usuario,planes_ahorro.grp_administrador"
+        />
+
+       
+
+    </data>
+</odoo>

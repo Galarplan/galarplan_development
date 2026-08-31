@@ -26,6 +26,11 @@
             </xpath>
 
 
+            <xpath expr="//field[@name='enable_discount']" position="attributes">
+                <attribute name="attrs">{'invisible': [('saving_type', 'in', ['premiun', 'flex'])]}</attribute>
+            </xpath>
+
+
             <field name="enable_discount" position="after">
                 <field name="number_quotas"
                     string="# Cuotas"

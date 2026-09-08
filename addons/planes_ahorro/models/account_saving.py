@@ -26,6 +26,64 @@ class AccountSaving(models.Model):
         return brw_ref.next_by_id()
 
     name = fields.Char(string='Nombre', required=True,default=_get_default_name,tracking=True)
+
+    # codigo de alex
+    @api.constrains('name')
+    def _check_unique_name(self):
+        for record in self:
+            if not record.name:
+                continue
+
+            duplicado = self.search([
+                ('name', '=', record.name),
+                ('id', '!=', record.id),
+            ], limit=1)
+
+            if duplicado:
+                raise ValidationError(
+                    'El código "%s" ya existe. '
+                    'No se puede registrar un código duplicado.'
+                    % record.name
+                )
+    # fin codigo de alex
+
+    # codiog alex dos
+    @api.onchange('name')
+    def _onchange_name(self):
+        if not self.name:
+            return
+
+        # Convertir automáticamente a mayúsculas
+        self.name = self.name.strip().upper()
+
+        domain = [
+            ('name', '=ilike', self.name),
+        ]
+
+        # Si estamos editando un registro existente,
+        # excluimos su propio ID.
+        if self.id and isinstance(self.id, int):
+            domain.append(('id', '!=', self.id))
+
+        duplicado = self.search(domain, limit=1)
+
+        if duplicado:
+            nombre_duplicado = self.name
+
+            self.name = False
+
+            return {
+                'warning': {
+                    'title': 'Código duplicado',
+                    'message': (
+                        'El código "%s" ya existe.\n\n'
+                        'Por favor, ingrese un código diferente.'
+                        % nombre_duplicado
+                    ),
+                }
+            }
+    # fin codigo alex dos
+
     saving_plan_id = fields.Many2one('account.saving.plan',string='Planes de Ahorro	',tracking=True)
     partner_id = fields.Many2one('res.partner', string='Socio (ID)',required=True,tracking=True)
     seller_id = fields.Many2one('res.users', string='Vendedor',tracking=True,default=lambda self: self.env.user,domain=[

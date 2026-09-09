@@ -302,18 +302,34 @@ class AccountSavingLines(models.Model):
                     }
                     invoice_line_ids = [(5,)]
                     sequence = 1
-                    if brw_each.seguro_amount>0:
-                        service_id=brw_each.saving_id.saving_plan_id.seguro_id
-                        if not  service_id:
-                            raise ValidationError(_("Debes configurar un servicio para el seguro en %s") % (brw_each.saving_id.name,) )
-                        base_seguro=self.calculate_base_amount(brw_each.seguro_amount, service_id.taxes_id)
+                    # SEGURO / GASTO ADMINISTRATIVO
+                    if brw_each.seguro_amount > 0:
+                        if brw_each.saving_id.state_plan in ('adjudicated_with_assets', 'estructured'):
+                            # ADJUDICATED_WITH_ASSETS o ESTRUCTURED → SEGURO
+                            service_id = brw_each.saving_id.seguro_id
+                        else:
+                            # Cualquier otro estado → GASTO ADMINISTRATIVO
+                            service_id = brw_each.saving_id.saving_plan_id.product_id
+
+                        if not service_id:
+                            raise ValidationError(
+                                _("Debes configurar el producto correspondiente en %s")
+                                % (brw_each.saving_id.name,)
+                            )
+
+                        base_seguro = self.calculate_base_amount(
+                            brw_each.seguro_amount,
+                            service_id.taxes_id
+                        )
+
                         invoice_line_ids.append((0, 0, {
-                                "product_id":service_id.id,
-                                "name": service_id.name,
-                                "quantity": 1,
-                                "price_unit": base_seguro,
-                                # "analytic_account_id":brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
-                                "tax_ids": [(6,0,service_id.taxes_id and service_id.taxes_id.ids or [])] ,
+                            "product_id": service_id.id,
+                            "name": service_id.name,
+                            "quantity": 1,
+                            "price_unit": base_seguro,
+                            "tax_ids": [
+                                (6, 0, service_id.taxes_id and service_id.taxes_id.ids or [])
+                            ],
                         }))
                     if brw_each.serv_admin_amount>0:
                         if not  brw_each.saving_id.saving_plan_id.product_id:

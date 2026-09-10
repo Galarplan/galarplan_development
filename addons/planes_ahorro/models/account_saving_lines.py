@@ -302,50 +302,109 @@ class AccountSavingLines(models.Model):
                     }
                     invoice_line_ids = [(5,)]
                     sequence = 1
-                    # SEGURO / GASTO ADMINISTRATIVO
-                    if brw_each.seguro_amount > 0:
-                        if brw_each.saving_id.state_plan in ('adjudicated_with_assets', 'estructured'):
-                            # ADJUDICATED_WITH_ASSETS o ESTRUCTURED → SEGURO
-                            service_id = brw_each.saving_id.seguro_id
-                        else:
-                            # Cualquier otro estado → GASTO ADMINISTRATIVO
-                            service_id = brw_each.saving_id.saving_plan_id.product_id
 
-                        if not service_id:
-                            raise ValidationError(
-                                _("Debes configurar el producto correspondiente en %s")
-                                % (brw_each.saving_id.name,)
+                    ### INICIO CODIGO ALEX
+                    # SEGURO / GASTO ADMINISTRATIVO
+                    if brw_each.saving_id.state_plan in ('adjudicated_with_assets', 'estructured'):
+
+                        # ==========================================================
+                        # ADJUDICATED_WITH_ASSETS / ESTRUCTURED
+                        # SEGURO EN SU PROPIA LINEA
+                        # ==========================================================
+                        if brw_each.seguro_amount > 0:
+
+                            service_id = brw_each.saving_id.seguro_id
+
+                            # Si no tiene producto de seguro, usa el producto administrativo
+                            if not service_id:
+                                service_id = brw_each.saving_id.saving_plan_id.product_id
+
+                            if not service_id:
+                                raise ValidationError(
+                                    _("Debes configurar el producto correspondiente en %s")
+                                    % (brw_each.saving_id.name,)
+                                )
+
+                            base_seguro = self.calculate_base_amount(
+                                brw_each.seguro_amount,
+                                service_id.taxes_id
                             )
 
-                        base_seguro = self.calculate_base_amount(
-                            brw_each.seguro_amount,
-                            service_id.taxes_id
+                            invoice_line_ids.append((0, 0, {
+                                "product_id": service_id.id,
+                                "name": service_id.name,
+                                "quantity": 1,
+                                "price_unit": base_seguro,
+                                "tax_ids": [
+                                    (6, 0, service_id.taxes_id and service_id.taxes_id.ids or [])
+                                ],
+                            }))
+
+                        # ==========================================================
+                        # GASTO ADMINISTRATIVO EN SU PROPIA LINEA
+                        # ==========================================================
+                        if brw_each.serv_admin_amount > 0:
+
+                            service_id = brw_each.saving_id.saving_plan_id.product_id
+
+                            if not service_id:
+                                raise ValidationError(
+                                    _("Debes configurar un servicio para el gasto administrativo en %s")
+                                    % (brw_each.saving_id.name,)
+                                )
+
+                            base_serv = self.calculate_base_amount(
+                                brw_each.serv_admin_amount,
+                                service_id.taxes_id
+                            )
+
+                            invoice_line_ids.append((0, 0, {
+                                "product_id": service_id.id,
+                                "name": service_id.name,
+                                "quantity": 1,
+                                "price_unit": base_serv,
+                                "tax_ids": [
+                                    (6, 0, service_id.taxes_id and service_id.taxes_id.ids or [])
+                                ],
+                            }))
+
+                    else:
+
+                        # ==========================================================
+                        # TODOS LOS DEMAS ESTADOS
+                        # SEGURO + GASTO ADMINISTRATIVO = UNA SOLA LINEA
+                        # PRODUCTO: CARGOS ADMINISTRATIVOS
+                        # ==========================================================
+                        total_admin = (
+                            (brw_each.seguro_amount or 0.0)
+                            + (brw_each.serv_admin_amount or 0.0)
                         )
 
-                        invoice_line_ids.append((0, 0, {
-                            "product_id": service_id.id,
-                            "name": service_id.name,
-                            "quantity": 1,
-                            "price_unit": base_seguro,
-                            "tax_ids": [
-                                (6, 0, service_id.taxes_id and service_id.taxes_id.ids or [])
-                            ],
-                        }))
-                    if brw_each.serv_admin_amount>0:
-                        if not  brw_each.saving_id.saving_plan_id.product_id:
-                            raise ValidationError(_("Debes configurar un servicio para el gasto administrativo  en %s") % (brw_each.saving_id.name,) )
-                        service_id=brw_each.saving_id.saving_plan_id.product_id
-                        base_serv = self.calculate_base_amount(brw_each.serv_admin_amount, service_id.taxes_id)
-                        invoice_line_ids.append((0, 0, {
-                            "product_id": service_id.id,
-                            "name": service_id.name,
-                            "quantity": 1,
-                            "price_unit": base_serv,
-                            #"analytic_account_id": brw_each.saving_id.analytic_account_id and brw_each.saving_id.analytic_account_id.id or False,
-                            "tax_ids": [(6, 0,
-                                         service_id.taxes_id and service_id.taxes_id.ids or [])],
-                        }))
-                    ###
+                        if total_admin > 0:
+
+                            service_id = brw_each.saving_id.saving_plan_id.product_id
+
+                            if not service_id:
+                                raise ValidationError(
+                                    _("Debes configurar un servicio para el gasto administrativo en %s")
+                                    % (brw_each.saving_id.name,)
+                                )
+
+                            base_serv = self.calculate_base_amount(
+                                total_admin,
+                                service_id.taxes_id
+                            )
+
+                            invoice_line_ids.append((0, 0, {
+                                "product_id": service_id.id,
+                                "name": service_id.name,
+                                "quantity": 1,
+                                "price_unit": base_serv,
+                                "tax_ids": [
+                                    (6, 0, service_id.taxes_id and service_id.taxes_id.ids or [])
+                                ],
+                            }))
+                    ### FIN CODIGO ALEX
                     if brw_each.serv_inscription_amount > 0:
                         if not brw_each.saving_id.saving_plan_id.inscripcion_id:
                             raise ValidationError(

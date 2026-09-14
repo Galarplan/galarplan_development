@@ -18,6 +18,27 @@ class ResPartner(models.Model):
                         "Ya existe un cliente/proveedor con ese número de identificación."
                     )    
 
+    # alex code
+    def copy(self, default=None):
+        default = dict(default or {})
+
+        if self.vat:
+            base_vat = self.vat
+            new_vat = base_vat + '-COPIA'
+
+            contador = 1
+
+            while self.search_count([
+                ('vat', '=', new_vat)
+            ]):
+                new_vat = f"{base_vat}-COPIA-{contador}"
+                contador += 1
+
+            default['vat'] = new_vat
+
+        return super().copy(default)
+    # fin alex code                
+
     economic_activity = fields.Many2one('economy.activity',string='Actividad Economica')
     monthly_income = fields.Float(string='Ingresos Mensuales')
     

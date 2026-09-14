@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_vehicle_type_tree_uafe" model="ir.ui.view">
+        <field name="name">vehicle.type.tree.uafe</field>
+        <field name="model">vehicle.type</field>
+        <field name="inherit_id" ref="vehicle_stock_info.view_vehicle_type_tree"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='code']" position="after">
+                <field name="uafe_code" string="Código UAFE"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

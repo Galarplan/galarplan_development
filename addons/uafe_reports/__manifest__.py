@@ -19,7 +19,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','account','credit_request'],
+    'depends': ['base','account','credit_request', 'vehicle_stock_info',],
 
     # always loaded
     'data': [
@@ -31,6 +31,7 @@
         'views/economy_activity.xml',
         'wizard/uafe_report.xml',
         'views/menuitems.xml',
+        'views/vehicle_type.xml',
     ],
     # only loaded in demonstration mode
     # 'demo': [

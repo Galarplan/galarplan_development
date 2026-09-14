@@ -450,7 +450,7 @@ class UAFEReportWizard(models.TransientModel):
                         int(line.price_unit or 0),
                         move.invoice_date.strftime('%Y%m%d') if move.invoice_date else "",
                         product_id.model_year or "",
-                        product_id.vehicle_type.name or "",
+                        product_id.vehicle_type.uafe_code or "",
                         product_id.name or "",
                         product_id.vehicle_model_id.name or "",
                         product_id.chassis_number or "",
@@ -528,6 +528,19 @@ class UAFEReportWizard(models.TransientModel):
             "VALOR_CHEQUE",
             "VALOR_TARJETA_CREDITO",
             "VALOR_TVALORES_BIENES",
+            "VALOR_TOTAL",
+            "COD_TIPO_MONEDA",
+            "CANTIDAD_BAD_50",
+            "MONTO_BAD_50",
+            "CANTIDAD_BAD_100",
+            "MONTO_BAD_100",
+            "COD_AGENCIA",
+            "COD_PAGO_COBRO_TERCEROS",
+            "COD_TIPO_ID_TERCEROS",
+            "ID_TERCEROS",
+            "NOMBRES_RAZON_SOCIAL_TERCEROS",
+            "APELLIDOS_RAZON_COMERCIAL_TERCEROS",
+            
         ]]
 
         data = []
@@ -569,9 +582,28 @@ class UAFEReportWizard(models.TransientModel):
                     partner.vat or '',
                     numero_operacion,
                     receipt.date.strftime('%Y%m%d') if receipt.date else '',
-                    receipt.name or '',
+                    (receipt.name or '').replace('-', ''),
                     '13',
-                    receipt.amount or 0.00,
+                     int(receipt.amount) if receipt.payment_form in ('transfer', 'deposit') else 0.00,
+                     0.00,
+                     int(receipt.amount) if receipt.payment_form == 'cash' else 0.00,
+                     int(receipt.amount) if receipt.payment_form == 'check' else 0.00,
+                     int(receipt.amount) if receipt.payment_form in ('card_credit', 'card_debit') else 0.00,
+                     int(receipt.amount) if receipt.payment_form == 'other' else 0.00,
+                     int(receipt.amount) or 0.00,
+                     'USD',
+                     receipt.val_cincuenta or "",
+                     receipt.val_cincuenta*50 or "",
+                     receipt.val_cien or "",
+                     receipt.val_cien*100 or "",
+                     '404281000',
+                     'DTC' if receipt.tercero else 'PRS',
+                     'C' if receipt.tercero and len(receipt.tercero_id or '') == 10
+                    else 'R' if receipt.tercero and len(receipt.tercero_id or '') == 13
+                    else 'N',
+                    receipt.tercero_id if receipt.tercero else 'NO APLICA',
+                    receipt.tercero_name if receipt.tercero else 'NO APLICA',
+                    receipt.tercero_name if receipt.tercero else 'NO APLICA',
                 ])
 
         output = io.BytesIO()

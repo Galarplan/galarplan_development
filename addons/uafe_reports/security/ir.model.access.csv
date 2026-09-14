@@ -3,3 +3,4 @@ access_uafe_report_wizard,uafe.report.wizard,model_uafe_report_wizard,base.group
 access_economy_activity,economy.activity,model_economy_activity,base.group_user,1,1,1,1
 access_uafe_report_wizard_line,uafe.report.wizard.line,model_uafe_report_wizard_line,,1,1,1,1
 access_res_country_parish_user,res.country.parish.user,model_res_country_parish,base.group_user,1,1,1,1
+access_uafe_report_wizard_receipt,uafe.report.wizard.receipt,model_uafe_report_wizard_receipt,,1,1,1,1

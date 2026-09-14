@@ -6,3 +6,4 @@ from . import res_partner
 from . import product_template
 from . import parroquias
 from . import account_move
+from . import vehicle_type

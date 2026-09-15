@@ -652,6 +652,298 @@ class UAFEReportWizard(models.TransientModel):
             "target": "self",
         }
 
+
+################################################################################ CABECERA ALEX
+
+    def generate_header_excel(self):
+        """
+        Genera el archivo CABECERA UAFE
+        tomando como referencia los mismos datos
+        utilizados para generar CLIENTES, OPERACIONES
+        y TRANSACCIONES.
+        """
+
+        # ---------------------------------------------------------
+        # DATOS GENERALES
+        # ---------------------------------------------------------
+
+        cod_registro = "38358"
+        cod_usuario = "NOSE34486"
+
+        periodo_reporte = (
+            self.date_end.strftime("%Y%m%d")
+            if self.date_end
+            else ""
+        )
+
+        # Fecha en que se genera el reporte
+        fecha_reporte = datetime.now().strftime("%Y%m%d")
+
+        # ---------------------------------------------------------
+        # CONTADORES
+        # ---------------------------------------------------------
+
+        total_reg_clientes = 0
+        total_reg_operaciones = 0
+        total_reg_transacciones = 0
+
+        # ---------------------------------------------------------
+        # TOTALES MONETARIOS
+        # ---------------------------------------------------------
+
+        total_operaciones = 0
+
+        total_debitos = 0
+        total_creditos = 0
+        total_efectivo = 0
+        total_cheque = 0
+        total_tarjeta_credito = 0
+        total_tvalores_bienes = 0
+        total_valor_total = 0
+
+        # =========================================================
+        # 1. CLIENTES
+        # =========================================================
+
+        for invoice in self.invoice_ids:
+
+            # Cada fila que genera generate_clients_excel()
+            # cuenta como un registro de cliente.
+            total_reg_clientes += 1
+
+        # =========================================================
+        # 2. OPERACIONES
+        # =========================================================
+
+        for invoice in self.invoice_ids:
+
+            move = invoice.invoice_id
+
+            for line in move.invoice_line_ids:
+
+                product_id = line.product_id
+
+                # La misma condición utilizada
+                # en generate_operations_excel()
+                if not product_id.chassis_number:
+                    continue
+
+                # Cada fila generada en OPR
+                total_reg_operaciones += 1
+
+                # VALOR_TOTAL_OPERACION
+                total_operaciones += int(line.price_unit or 0)
+
+        # =========================================================
+        # 3. TRANSACCIONES
+        # =========================================================
+
+        for invoice in self.invoice_ids:
+
+            move = invoice.invoice_id
+            partner = move.partner_id
+
+            receipts = self.env["receipt.validation"].search([
+                ("partner_id", "=", partner.id),
+                ("date", ">=", self.date_start),
+                ("date", "<=", self.date_end),
+            ])
+
+            for receipt in receipts:
+
+                amount = int(receipt.amount or 0)
+
+                # Cada fila generada en TRA
+                total_reg_transacciones += 1
+
+                # -------------------------------------------------
+                # DÉBITOS
+                # transfer + deposit
+                # -------------------------------------------------
+
+                if receipt.payment_form in (
+                    "transfer",
+                    "deposit",
+                ):
+                    total_debitos += amount
+
+                # -------------------------------------------------
+                # CRÉDITOS
+                # Actualmente no tenemos ninguno.
+                # -------------------------------------------------
+
+                # No hacemos nada.
+                # Si algún día aparece uno, aquí lo agregamos.
+
+                # -------------------------------------------------
+                # EFECTIVO
+                # -------------------------------------------------
+
+                if receipt.payment_form == "cash":
+                    total_efectivo += amount
+
+                # -------------------------------------------------
+                # CHEQUE
+                # -------------------------------------------------
+
+                if receipt.payment_form == "check":
+                    total_cheque += amount
+
+                # -------------------------------------------------
+                # TARJETA
+                # -------------------------------------------------
+
+                if receipt.payment_form in (
+                    "card_credit",
+                    "card_debit",
+                ):
+                    total_tarjeta_credito += amount
+
+                # -------------------------------------------------
+                # OTROS / VALORES / BIENES
+                # -------------------------------------------------
+
+                if receipt.payment_form == "other":
+                    total_tvalores_bienes += amount
+
+                # -------------------------------------------------
+                # TOTAL GENERAL DE TRANSACCIONES
+                # -------------------------------------------------
+
+                total_valor_total += amount
+
+        # =========================================================
+        # CABECERA
+        # =========================================================
+
+        headers = [[
+            "COD_REGISTRO",
+            "PERIODO_REPORTE",
+            "FECHA_REPORTE",
+            "COD_USUARIO",
+            "TOTAL_REG_CLIENTES",
+            "TOTAL_REG_OPERACIONES",
+            "TOTAL_REG_TRANSACCIONES",
+            "TOTAL_OPERACIONES",
+            "TOTAL_DEBITOS",
+            "TOTAL_CREDITOS",
+            "TOTAL_EFECTIVO",
+            "TOTAL_CHEQUE",
+            "TOTAL_TARJETA_CREDITO",
+            "TOTAL_TVALORES_BIENES",
+            "TOTAL_VALOR_TOTAL",
+        ]]
+
+        data = [[
+            cod_registro,
+            periodo_reporte,
+            fecha_reporte,
+            cod_usuario,
+            total_reg_clientes,
+            total_reg_operaciones,
+            total_reg_transacciones,
+            total_operaciones,
+            total_debitos,
+            total_creditos,
+            total_efectivo,
+            total_cheque,
+            total_tarjeta_credito,
+            total_tvalores_bienes,
+            total_valor_total,
+        ]]
+
+        # =========================================================
+        # CREAR EXCEL
+        # =========================================================
+
+        output = io.BytesIO()
+
+        workbook = xlsxwriter.Workbook(output)
+
+        worksheet = workbook.add_worksheet("Cabecera")
+
+        header_format = workbook.add_format({
+            "bold": True,
+            "bg_color": "#FFFF00",
+            "border": 1,
+            "align": "center",
+        })
+
+        normal_format = workbook.add_format({
+            "border": 1,
+            "align": "center",
+        })
+
+        money_format = workbook.add_format({
+            "border": 1,
+            "align": "center",
+            "num_format": "0",
+        })
+
+        # Encabezados
+        for row, row_data in enumerate(headers):
+            for col, value in enumerate(row_data):
+                worksheet.write(
+                    row,
+                    col,
+                    value,
+                    header_format
+                )
+
+        # Datos
+        for row, row_data in enumerate(data, start=1):
+
+            for col, value in enumerate(row_data):
+
+                # Desde TOTAL_OPERACIONES en adelante
+                # son valores monetarios.
+                if col >= 7:
+                    worksheet.write(
+                        row,
+                        col,
+                        value,
+                        money_format
+                    )
+                else:
+                    worksheet.write(
+                        row,
+                        col,
+                        value,
+                        normal_format
+                    )
+
+        workbook.close()
+
+        output.seek(0)
+
+        # =========================================================
+        # CREAR ARCHIVO
+        # =========================================================
+
+        timestamp = datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
+
+        file_name = f"CAB_{timestamp}.xlsx"
+
+        file_data = base64.b64encode(
+            output.read()
+        )
+
+        attachment = self.env["ir.attachment"].create({
+            "name": file_name,
+            "datas": file_data,
+            "type": "binary",
+            "res_model": "uafe.report.wizard",
+            "res_id": self.id,
+        })
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/{attachment.id}?download=true",
+            "target": "self",
+        }
+
 ################################################################################
 
 class UAFEReportWizardLine(models.TransientModel):

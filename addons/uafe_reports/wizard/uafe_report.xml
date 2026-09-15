@@ -89,6 +89,7 @@
                     <button name="generate_clients_excel" string="Generar Archivo Clientes" type="object" class="btn-secondary"/>
                     <button name="generate_operations_excel" string="Generar Archivo Operaciones" type="object" class="btn-secondary"/>
                     <button name="generate_transactions_excel" string="Generar Transacciones" type="object" class="btn-secondary"/>
+                    <button name="generate_header_excel" string="Generar CABECERA" type="object" class="btn-secondary"/>
                     <button string="Cancelar" class="btn-link" special="cancel"/>
                 </footer>
             </form>
